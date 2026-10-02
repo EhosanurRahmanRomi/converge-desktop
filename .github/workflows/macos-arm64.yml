@@ -38,14 +38,14 @@ jobs:
         run: npm test -- --test-concurrency=1 --test-reporter=tap 2>&1 | tee .live-test/macos-unit-tests.log
       - name: Build, ad-hoc sign and verify DMG and ZIP
         run: npm run build:mac
+      - name: Launch the actual packaged app and verify native editing and reopen
+        run: node scripts/qa-native-macos-startup.js
       - name: Run offline packaged integration checks
         env:
           CONVERGE_PACKAGED_ASAR: dist/mac-arm64/Converge.app/Contents/Resources/app.asar
         run: |
           node scripts/qa-packaged-desktop.js 2>&1 | tee .live-test/macos-packaged-qa.log
           node -e "const assert=require('node:assert/strict'),r=require('./desktop-cookie-packaged-qa-result.json'),p=require('./package.json'); assert.equal(r.passed,true); assert.equal(r.localFixturesOnly,true); assert.ok(r.tests.length>=24); assert.equal(r.packageVersion,p.version); assert.equal(r.launcherVersion,p.version); assert.equal(r.bootstrapVersion,p.version)"
-      - name: Launch the actual packaged app and verify native editing and reopen
-        run: node scripts/qa-native-macos-startup.js
       - name: Require a clean source tree after all build gates
         run: git diff --exit-code
       - name: Record verification scope

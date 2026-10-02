@@ -484,11 +484,14 @@ async function runNativeMacSmoke(lifecycle) {
       editing[side] = true;
     }
   } finally { await clipboard.writeText(previousClipboard); }
+  // Retain the WebContents handles before Close. Electron detaches a destroyed
+  // native WebContentsView's webContents property during teardown.
+  const ownedContents = SIDES.map(side => desktop.views[side].webContents);
   const firstClosed = new Promise(resolve => desktop.mainWindow.once('closed', resolve));
   // Exercise the real shell button and guarded preload/IPC close path.
   await desktop.mainWindow.webContents.executeJavaScript("document.getElementById('windowClose').click()").catch(() => {});
   await firstClosed; await desktop.whenClosed();
-  assert.ok(SIDES.every(side => desktop.views[side].webContents.isDestroyed()), 'Closed workspace retained a provider renderer');
+  assert.ok(ownedContents.every(contents => contents.isDestroyed()), 'Closed workspace retained a provider renderer');
   assert.equal(lifecycle.getCurrent(), null);
   app.emit('activate');
   const reopened = await lifecycle.showWindow();

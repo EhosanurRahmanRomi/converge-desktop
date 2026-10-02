@@ -24,6 +24,8 @@ The shell's content security policy loads local scripts/styles and does not prov
 
 The native host creates the frameless window and custom Minimize/Maximize/Close behavior. The renderer owns the task drawer, progress band, findings and candidate trail. Page views occupy the two large chat regions.
 
+`src/platform/desktop-lifecycle.js` owns the platform integration. On Mac it installs native editing menus, keeps the application available after its window closes, and serializes Dock activation and second-instance requests. Closing disposes the workspace's views, coordinator, download jobs and IPC handlers and clears that workspace's isolated session. Reopening creates a fresh workspace. On Windows the app still quits after its last window closes. The shared renderer, review coordinator and file brokers remain the same implementation on both platforms.
+
 ## Review lifecycle
 
 ```mermaid

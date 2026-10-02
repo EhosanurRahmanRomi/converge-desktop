@@ -42,14 +42,19 @@ if (!process.versions.electron) {
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     const win = new BrowserWindow({ show: false, width: 1366, height: 768, webPreferences: { offscreen: true, contextIsolation: false, nodeIntegration: false } });
     const evaluate = code => win.webContents.executeJavaScript(code);
-    const wait = condition => evaluate(`new Promise((resolve,reject)=>{const began=performance.now();const check=()=>{if(${condition})return resolve();if(performance.now()-began>5000)return reject(Error('Theme condition did not settle'));setTimeout(check,25)};check()})`);
+    const wait = condition => evaluate(`new Promise((resolve,reject)=>{const began=performance.now();const check=()=>{if(${condition})return resolve();if(performance.now()-began>5000)return reject(Error('Theme condition did not settle: '+${JSON.stringify(condition)}+'; state='+JSON.stringify({hidden:document.hidden,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches,ribbons:ConvergeStarRibbons.diagnostics()})));setTimeout(check,25)};check()})`);
     const diagnostics = () => evaluate('ConvergeStarRibbons.diagnostics()');
     const choose = theme => evaluate(`document.getElementById('animationTheme').value=${JSON.stringify(theme)};document.getElementById('animationTheme').dispatchEvent(new Event('change',{bubbles:true}))`);
     const task = () => evaluate('({status:themeFixture.state.status,runId:themeFixture.state.runId,round:themeFixture.state.round,starts:themeFixture.starts})');
     const reload = () => new Promise(resolve => { win.webContents.once('did-finish-load', resolve); win.webContents.reload(); });
     try {
+      // Theme movement is the behavior under test, so use a known media
+      // preference rather than the runner's accessibility settings.
+      win.webContents.debugger.attach('1.3');
       await win.loadURL(`http://127.0.0.1:${server.address().port}/`);
+      await win.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
       await wait("typeof ConvergeStarRibbons !== 'undefined' && ConvergeStarRibbons.diagnostics().length===2");
+      assert.equal(await evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches"), false);
       assert.deepEqual(await evaluate("[...document.getElementById('animationTheme').options].map(option=>option.value)"), ['stars', 'ghost', 'flowers']);
       assert.ok(await evaluate("[...document.querySelectorAll('.reviewer-copy')].every(copy=>getComputedStyle(copy,'::before').content==='none'&&getComputedStyle(copy).backgroundColor==='rgba(0, 0, 0, 0)')"), 'Reviewer labels must have no black plates');
       assert.ok(await evaluate("[...document.querySelectorAll('.reviewer h2,.reviewer p')].every(copy=>getComputedStyle(copy).textShadow!=='none')"), 'Reviewer text must retain its glow');

@@ -101,7 +101,13 @@ if (!process.versions.electron) {
     };
     const geometry = () => evaluate(`(()=>{const box=id=>{const r=document.getElementById(id).getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom}};return{viewport:innerWidth,left:box('leftSlot'),right:box('rightSlot'),deck:box('reviewDeck'),drawer:box('sidebar'),result:box('resultDrawer'),native:fixture.bounds.at(-1)}})()`);
     try {
-      await win.loadURL(`http://127.0.0.1:${server.address().port}/`); await settle();
+      // Test the normal and reduced-motion policies explicitly, independent
+      // of the Windows/macOS runner's accessibility defaults.
+      win.webContents.debugger.attach('1.3');
+      await win.loadURL(`http://127.0.0.1:${server.address().port}/`);
+      await win.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
+      await waitForUi("!document.body.classList.contains('effects-paused')"); await settle();
+      assert.equal(await evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches"), false);
       assert.equal(await evaluate("document.getElementById('reviewMode').value"), 'auto');
       assert.equal(await evaluate("document.querySelector('.galaxy').getAttribute('aria-hidden')"), 'true');
       assert.ok(await evaluate("document.getElementById('reviewDeck').getBoundingClientRect().height <= 96"), 'The compact bot deck consumes more than 96 vertical pixels');
@@ -214,7 +220,6 @@ if (!process.versions.electron) {
       await evaluate(`fixture.state={...fixture.state,lastTransfer:{runId:fixture.state.runId,requestId:'qa-self-review',from:'right',to:'right',candidateId:'C2',hasFiles:true}};fixture.listener(fixture.state)`); await settle();
       assert.equal(await evaluate('fixture.paperAnimations.length'), 3, 'Same-page self review pretended to transfer to the other bot');
 
-      win.webContents.debugger.attach('1.3');
       await win.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {features:[{name:'prefers-reduced-motion',value:'reduce'}]}); await settle();
       await waitForUi("document.getElementById('effectsButton').disabled && document.body.classList.contains('effects-paused')");
       assert.equal(await evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches"), true);

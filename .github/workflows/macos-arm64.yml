@@ -16,6 +16,9 @@ jobs:
   build-and-verify:
     runs-on: macos-15
     timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,7 +33,9 @@ jobs:
       - name: Install exact dependencies
         run: npm ci --no-audit --no-fund
       - name: Run the full source test suite
-        run: npm test -- --test-reporter=tap 2>&1 | tee .live-test/macos-unit-tests.log
+        # Native Mac visibility and focused editing share the WindowServer.
+        # Run GUI fixtures serially so another test cannot occlude their window.
+        run: npm test -- --test-concurrency=1 --test-reporter=tap 2>&1 | tee .live-test/macos-unit-tests.log
       - name: Build, ad-hoc sign and verify DMG and ZIP
         run: npm run build:mac
       - name: Run offline packaged integration checks

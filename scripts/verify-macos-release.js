@@ -34,6 +34,12 @@ function inside(parent, filename) {
   const relative = path.relative(parent, filename);
   return !path.isAbsolute(relative) && relative !== '..' && !relative.startsWith('..' + path.sep);
 }
+function bundleContainsRealPath(application, filename) {
+  // macOS exposes /var as an alias of /private/var. Resolve both sides before
+  // comparing extracted bundles so an app-owned framework link is not mistaken
+  // for an escape merely because its temporary parent has a canonical alias.
+  return inside(fs.realpathSync(application), fs.realpathSync(filename));
+}
 function filesBelow(directory) {
   const found = [];
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
@@ -65,7 +71,7 @@ function inspectBundle(application, label) {
       const target = fs.readlinkSync(filename);
       validateSymlinkTarget(`${appName}/${relative}`, target, appName);
       assert.ok(fs.existsSync(filename), `${label}: broken symlink ${relative}`);
-      assert.ok(inside(application, fs.realpathSync(filename)), `${label}: symlink escaped the app.`);
+      assert.ok(bundleContainsRealPath(application, filename), `${label}: symlink escaped the app.`);
       symlinks.push({ file: relative, target });
     } else if (stat.isFile()) {
       const descriptor = fs.openSync(filename, 'r'), header = Buffer.alloc(4);
@@ -189,4 +195,4 @@ async function main() {
   }
 }
 if (require.main === module) main().catch(error => { process.stderr.write(`${error.stack || error.message}\n`); process.exitCode = 1; });
-module.exports = { inspectZip };
+module.exports = { inspectZip, bundleContainsRealPath };

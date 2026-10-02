@@ -7,7 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { readMachO, validateZipEntry, validateSymlinkTarget, readIcns } = require('../scripts/macos-package-lib');
 const { validateBuildConfiguration } = require('../scripts/build-macos-release');
-const { inspectZip } = require('../scripts/verify-macos-release');
+const { inspectZip, bundleContainsRealPath } = require('../scripts/verify-macos-release');
 const { validateNativeSmoke } = require('../scripts/qa-native-macos-startup');
 const metadata = require('../package.json');
 
@@ -72,6 +72,22 @@ test('framework symlinks can stay relative but cannot leave the application', ()
   assert.equal(validateSymlinkTarget('Converge.app/Contents/Frameworks/F.framework/Resources', 'Versions/Current/Resources', 'Converge.app'), 'Converge.app/Contents/Frameworks/F.framework/Versions/Current/Resources');
   for (const target of ['../../../../escape', '/System/Library', 'C:/a']) assert.throws(() => validateSymlinkTarget('Converge.app/Contents/link', target, 'Converge.app'));
 });
+test('bundle containment canonicalizes a symlinked parent and still rejects outside targets', () => {
+  const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'converge-archive-unit-'));
+  const actual = path.join(folder, 'actual'), alias = path.join(folder, 'alias'), application = path.join(actual, 'Converge.app');
+  try {
+    fs.mkdirSync(path.join(application, 'Contents'), { recursive: true });
+    fs.symlinkSync(actual, alias, process.platform === 'win32' ? 'junction' : 'dir');
+    const insideFile = path.join(application, 'Contents', 'framework'); fs.writeFileSync(insideFile, 'synthetic framework');
+    const outsideFile = path.join(actual, 'outside'); fs.writeFileSync(outsideFile, 'outside app');
+    assert.equal(bundleContainsRealPath(path.join(alias, 'Converge.app'), insideFile), true);
+    assert.equal(bundleContainsRealPath(path.join(alias, 'Converge.app'), outsideFile), false);
+  } finally {
+    const relative = path.relative(path.resolve(os.tmpdir()), path.resolve(folder));
+    assert.ok(relative && !relative.startsWith('..') && !path.isAbsolute(relative) && path.basename(folder).startsWith('converge-archive-unit-'));
+    fs.rmSync(folder, { recursive: true, force: true });
+  }
+});
 test('release ZIP inspection requires executable permissions and framework links', () => {
   withArchive(archive(zipEntries()), file => assert.equal(inspectZip(file).symlinks.length, 3));
   const entries = zipEntries(); entries[0].mode = 0o100644; withArchive(archive(entries), file => assert.throws(() => inspectZip(file), /executable permissions/));
@@ -99,10 +115,10 @@ test('macOS release build cannot run as Windows cross-build or change signing an
   }
 });
 test('actual app smoke must cover native editing, disposal and activation in the correct packaged binary', () => {
-  const executable = path.resolve('fixture/Converge'), report = { status: 'PASS', platform: 'darwin', arch: 'arm64', packaged: true, version: metadata.version, executable, visibleShell: true, commandShortcutHint: true, nativeMenu: true,
+  const executable = path.resolve('fixture/Converge'), report = { status: 'PASS', platform: 'darwin', arch: 'arm64', packaged: true, version: metadata.version, executable, visibleShell: true, nativeKeyWindow: true, visibilityScope: 'Observed native show state and actual native key window after shell first paint', commandShortcutHint: true, nativeMenu: true,
     nativeEditingVerified: { shell: true, left: true, right: true }, didClose: true, embeddedViewsDisposed: true, closeCleanupCompleted: true, activateEventComplete: true, freshWorkspaceOnActivate: true,
     activationScope: 'Automated Electron activate event, not physical Dock input', providerScope: 'Empty isolated session; no authentication, provider navigation or live model task' };
   assert.equal(validateNativeSmoke(report, metadata.version, executable), true);
-  for (const field of ['packaged', 'embeddedViewsDisposed', 'freshWorkspaceOnActivate']) assert.throws(() => validateNativeSmoke({ ...report, [field]: false }, metadata.version, executable));
+  for (const field of ['packaged', 'nativeKeyWindow', 'embeddedViewsDisposed', 'freshWorkspaceOnActivate']) assert.throws(() => validateNativeSmoke({ ...report, [field]: false }, metadata.version, executable));
   assert.throws(() => validateNativeSmoke({ ...report, nativeEditingVerified: { shell: true, left: true, right: false } }, metadata.version, executable), /Native editing/);
 });

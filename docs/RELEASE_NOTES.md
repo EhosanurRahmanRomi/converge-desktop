@@ -19,6 +19,7 @@ The existing Converge workspace is now packaged for native ARM64 Macs, including
 - Close disposes the current workspace and its in-memory session. The app stays in the Dock and opens a fresh workspace on activation; **Command + Q** quits.
 - Added native ARM64 DMG and ZIP build and verification workflows. macOS 13 or newer is required by Electron 44.
 - Await the asynchronous clipboard write before reporting a successful copy.
+- Track native Mac show/hide and minimize/restore transitions so the window's animation visibility stays correct with the bundled runtime.
 
 ### Verification and installation
 

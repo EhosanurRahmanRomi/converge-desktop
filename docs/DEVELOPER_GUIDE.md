@@ -10,7 +10,7 @@ Earlier extension and API implementations are preserved for project history. The
 
 ## Local setup
 
-Use Windows for x64 builds or Apple Silicon macOS for ARM64 Mac builds. Node.js **22.12.0 or newer** and npm are required for development. The project pins **Electron 44.5.1** and **electron-builder 26.15.3** in its lockfile. Packaged applications include their runtime and do not require Node.js.
+Use Windows for x64 builds or Apple Silicon macOS for ARM64 Mac builds. Node.js **22.13.0 or newer** and npm are required for development. The project pins **Electron 44.5.1** and **electron-builder 26.15.3** in its lockfile. **pdfjs-dist 5.6.205** is a development dependency for the retained PDF-adapter tests; it is excluded from the packaged browser app. Packaged applications include their runtime and do not require Node.js.
 
 ```powershell
 git clone https://github.com/EhosanurRahmanRomi/converge-desktop.git

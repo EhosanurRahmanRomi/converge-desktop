@@ -10,11 +10,12 @@ const root = path.join(__dirname, '..');
 const prefix = 'CONVERGE_MACOS_NATIVE_SMOKE ';
 
 function validateNativeSmoke(report, version, executable) {
-  for (const [key, value] of Object.entries({ status: 'PASS', platform: 'darwin', arch: 'arm64', packaged: true, version, visibleShell: true,
+  for (const [key, value] of Object.entries({ status: 'PASS', platform: 'darwin', arch: 'arm64', packaged: true, version, visibleShell: true, nativeKeyWindow: true,
     commandShortcutHint: true, nativeMenu: true, didClose: true, embeddedViewsDisposed: true, closeCleanupCompleted: true,
     activateEventComplete: true, freshWorkspaceOnActivate: true })) assert.equal(report[key], value, `Native startup smoke failed its ${key} gate.`);
   assert.equal(path.resolve(report.executable), path.resolve(executable), 'The actual packaged executable did not report the startup check.');
   assert.deepEqual(report.nativeEditingVerified, { shell: true, left: true, right: true }, 'Native editing failed in a shell or embedded view.');
+  assert.match(report.visibilityScope, /actual native key window/);
   assert.match(report.activationScope, /not physical Dock input/);
   assert.match(report.providerScope, /no authentication, provider navigation or live model task/);
   return true;

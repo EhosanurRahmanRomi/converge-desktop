@@ -148,6 +148,29 @@ test('macOS keeps the same isolated frameless geometry and exposes platform with
   assert.equal(host.window.options.webPreferences.contextIsolation, true);
 });
 
+test('macOS decoration follows native visibility events even when Electron isVisible is inverted', async () => {
+  const host = await harness({ platform: 'darwin' });
+  // Reproduce the pinned macOS runtime's inverted occlusion query without
+  // changing Windows query-based visibility or either provider bridge.
+  host.window.isVisible = () => false;
+  assert.equal((await host.invoke('browser:bootstrap')).windowVisible, false);
+  host.window.emit('show');
+  assert.equal((await host.invoke('browser:bootstrap')).windowVisible, true);
+  for (const side of ['left', 'right']) assert.equal(host.sent.findLast(item => item.contents === host.desktop.views[side].webContents && item.channel === 'converge:page-effects').payload.paused, false);
+  host.window.emit('hide');
+  assert.equal((await host.invoke('browser:bootstrap')).windowVisible, false);
+  host.window.emit('show'); host.window.minimize();
+  assert.equal((await host.invoke('browser:bootstrap')).windowVisible, false);
+  host.window.restore();
+  assert.equal((await host.invoke('browser:bootstrap')).windowVisible, true);
+  await host.invoke('browser:effects-paused', true);
+  host.window.emit('hide'); host.window.emit('show');
+  for (const side of ['left', 'right']) assert.equal(host.sent.findLast(item => item.contents === host.desktop.views[side].webContents && item.channel === 'converge:page-effects').payload.paused, true);
+  host.window.close();
+  assert.equal(host.desktop.views.left.webContents.isDestroyed(), true);
+  assert.equal(host.desktop.views.right.webContents.isDestroyed(), true);
+});
+
 test('copy waits for Electron async clipboard completion and propagates native failure', async () => {
   let release;
   const writes = [];

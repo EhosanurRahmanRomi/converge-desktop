@@ -56,7 +56,13 @@ if (!process.versions.electron) {
     const isolated = code => win.webContents.executeJavaScriptInIsolatedWorld(999, [{ code }]);
     const settle = ms => new Promise(resolve => setTimeout(resolve, ms));
     try {
-      await win.loadURL(origin); await settle(250);
+      // This fixture checks both motion policies explicitly; do not inherit
+      // the hosted OS accessibility preference for its normal-motion phase.
+      win.webContents.debugger.attach('1.3');
+      await win.loadURL(origin);
+      await win.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
+      await settle(250);
+      assert.equal(await evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches"), false);
       assert.equal(await evaluate("document.querySelectorAll('#converge-page-galaxy').length"), 1);
       assert.equal(await evaluate("document.querySelector('#converge-page-galaxy').getAttribute('aria-hidden')"), 'true');
       assert.equal(await evaluate("getComputedStyle(document.querySelector('#converge-page-galaxy')).pointerEvents"), 'none');
@@ -98,7 +104,6 @@ if (!process.versions.electron) {
       assert.equal((await isolated('globalThis.ConvergePageAppearance.create().diagnostics()')).effectsSuppressed, true);
       await isolated("Object.defineProperty(document,'hidden',{configurable:true,get:()=>false});document.dispatchEvent(new Event('visibilitychange'))");
       assert.equal((await isolated('globalThis.ConvergePageAppearance.create().diagnostics()')).effectsSuppressed, false);
-      win.webContents.debugger.attach('1.3');
       await win.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
       await settle(60);
       assert.equal((await isolated('globalThis.ConvergePageAppearance.create().diagnostics()')).effectsSuppressed, true);

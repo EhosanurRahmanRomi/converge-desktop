@@ -182,7 +182,12 @@ async function createCookieApp(options = {}) {
   // The native pages deliberately keep their transport timers alive in the
   // background. Suspend only decoration when the host is hidden/minimized;
   // their document visibility can remain visible with background throttling off.
-  const windowVisible = () => !mainWindow.isDestroyed() && mainWindow.isVisible() && !mainWindow.isMinimized();
+  // Electron 44.5.1's macOS isVisible() inverts its native occlusion flag.
+  // Observe the native show/hide transitions instead; Windows retains its
+  // existing visibility query. Every workspace starts with show:false.
+  let macWindowShown = false;
+  const windowVisible = () => !mainWindow.isDestroyed() &&
+    (platform === 'darwin' ? macWindowShown : mainWindow.isVisible()) && !mainWindow.isMinimized();
   const windowState = () => ({ maximized: mainWindow.isMaximized(), minimized: mainWindow.isMinimized() });
   const publishWindowState = () => {
     if (!mainWindow.isDestroyed()) emit('converge:window-state', windowState());
@@ -197,7 +202,10 @@ async function createCookieApp(options = {}) {
       }
     }
   }
-  for (const event of ['show', 'hide', 'minimize', 'restore']) mainWindow.on(event, publishEffectsVisibility);
+  for (const event of ['show', 'hide', 'minimize', 'restore']) mainWindow.on(event, () => {
+    if (platform === 'darwin') macWindowShown = event === 'show' || event === 'restore';
+    publishEffectsVisibility();
+  });
   for (const event of ['maximize', 'unmaximize', 'minimize', 'restore']) mainWindow.on(event, publishWindowState);
   handle('browser:bootstrap', async () => {
     publishEffectsVisibility();
@@ -426,9 +434,22 @@ async function runNativeMacSmoke(lifecycle) {
   if (!app.isPackaged || platform !== 'darwin' || process.arch !== 'arm64') throw new Error('Native startup smoke requires the packaged Apple Silicon app.');
   const assert = require('node:assert/strict');
   const desktop = await lifecycle.ready;
+  const poll = async (operation, expected, label) => {
+    const began = Date.now();
+    while (Date.now() - began < 3000) {
+      if (await operation() === expected) return;
+      await new Promise(resolve => setTimeout(resolve, 25));
+    }
+    throw new Error(`Native check did not settle: ${label}`);
+  };
   const checkShell = async (owned) => {
     assert.ok(owned && !owned.mainWindow.isDestroyed());
-    assert.equal(owned.mainWindow.isVisible(), true);
+    // Do not trust Electron 44.5.1's inverted macOS isVisible(). Require
+    // both the observed show state and the actual native key window.
+    app.focus({ steal: true }); owned.mainWindow.show(); owned.mainWindow.focus();
+    await poll(() => owned.mainWindow.isFocused(), true, 'native key window');
+    const bootstrap = await owned.mainWindow.webContents.executeJavaScript('window.convergeBrowser.bootstrap()');
+    assert.equal(bootstrap.windowVisible, true, 'Native show state was not observed');
     assert.deepEqual(Object.keys(owned.views), SIDES);
     for (const side of SIDES) assert.ok(['', 'about:blank'].includes(owned.views[side].webContents.getURL()), 'Smoke must not navigate a provider page');
     return owned.mainWindow.webContents.executeJavaScript(`new Promise((resolve,reject)=>{const began=performance.now();const check=()=>{const version=document.getElementById('version')?.textContent;if(version===${JSON.stringify(`v${app.getVersion()}`)}){const ids=['windowMinimize','windowMaximize','windowClose','chooseCookies','leftSlot','rightSlot'];resolve({version,platformHint:document.getElementById('startShortcutModifier')?.textContent,controls:ids.every(id=>!!document.getElementById(id)),sessionImported:document.getElementById('sessionBadge')?.textContent==='Imported'});return;}if(performance.now()-began>5000){reject(Error('Native shell bootstrap did not settle'));return;}setTimeout(check,25);};check();})`);
@@ -441,14 +462,6 @@ async function runNativeMacSmoke(lifecycle) {
     await fs.mkdir(path.dirname(output), { recursive: true });
     await fs.writeFile(output, (await desktop.mainWindow.webContents.capturePage()).toPNG());
   }
-  const poll = async (operation, expected, label) => {
-    const began = Date.now();
-    while (Date.now() - began < 3000) {
-      if (await operation() === expected) return;
-      await new Promise(resolve => setTimeout(resolve, 25));
-    }
-    throw new Error(`Native editing did not settle: ${label}`);
-  };
   const previousClipboard = await clipboard.readText();
   const editing = {};
   try {
@@ -483,7 +496,8 @@ async function runNativeMacSmoke(lifecycle) {
   const restored = await checkShell(reopened);
   assert.equal(restored.sessionImported, false); assert.equal(restored.controls, true);
   const report = { status: 'PASS', platform, arch: process.arch, packaged: app.isPackaged,
-    version: app.getVersion(), executable: process.execPath, visibleShell: true, commandShortcutHint: true,
+    version: app.getVersion(), executable: process.execPath, visibleShell: true, nativeKeyWindow: true,
+    visibilityScope: 'Observed native show state and actual native key window after shell first paint', commandShortcutHint: true,
     nativeMenu: true, nativeEditingVerified: editing, didClose: true, embeddedViewsDisposed: true, closeCleanupCompleted: true,
     activateEventComplete: true, freshWorkspaceOnActivate: true,
     activationScope: 'Automated Electron activate event, not physical Dock input',

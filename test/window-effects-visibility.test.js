@@ -37,6 +37,13 @@ if (!process.versions.electron) {
       const shell = code => desktop.mainWindow.webContents.executeJavaScript(code);
       const scene = side => desktop.views[side].webContents.executeJavaScriptInIsolatedWorld(999, [{ code: 'globalThis.ConvergePageAppearance.create().diagnostics()' }]);
       const ribbons = () => shell('ConvergeStarRibbons.diagnostics()');
+      const showTestWindow = () => {
+        if (process.platform === 'darwin') {
+          // A native macOS visible-window phase must bring the app forward;
+          // showInactive can leave it occluded behind another GUI fixture.
+          app.focus({ steal: true }); desktop.mainWindow.show(); desktop.mainWindow.focus();
+        } else desktop.mainWindow.showInactive();
+      };
       const frames = async () => (await ribbons()).map(item => item.frames);
       const allPaused = async expected => {
         const items = await ribbons();
@@ -45,7 +52,11 @@ if (!process.versions.electron) {
       const waitFor = async condition => {
         const deadline = Date.now() + 5000;
         while (Date.now() < deadline) { if (await condition()) return; await settle(30); }
-        throw new Error('Host decoration condition did not settle.');
+        throw new Error('Host decoration condition did not settle: ' + JSON.stringify({
+          visible: desktop.mainWindow.isVisible(), minimized: desktop.mainWindow.isMinimized(),
+          renderer: await shell("({hidden:document.hidden,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches,bodyClass:document.body.className})"),
+          ribbons: await ribbons(),
+        }));
       };
       const settledFrames = async () => {
         // Native minimize can deliver a final viewport/ResizeObserver update
@@ -64,6 +75,15 @@ if (!process.versions.electron) {
       const cookie = JSON.stringify([{ domain: '.chatgpt.com', path: '/', secure: true, name: 'converge_visibility_fixture', value: 'local-test-only' }]);
       await shell(`window.convergeBrowser.importCookies(${JSON.stringify(cookie)})`);
       await desktop.openPages({ chatMode: 'normal' });
+      // Native visibility must be the only pause reason in this fixture.
+      // The app still honors the real OS preference in production; these
+      // loaded isolated contents emulate a known preference for this test.
+      for (const contents of [desktop.mainWindow.webContents, ...Object.values(desktop.views).map(view => view.webContents)]) {
+        contents.debugger.attach('1.3');
+        await contents.debugger.sendCommand('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
+      }
+      assert.equal(await shell("matchMedia('(prefers-reduced-motion: reduce)').matches"), false);
+      for (const side of ['left', 'right']) assert.equal(await desktop.views[side].webContents.executeJavaScript("matchMedia('(prefers-reduced-motion: reduce)').matches"), false);
       await waitFor(() => allPaused(true));
       assert.deepEqual((await ribbons()).map(item => item.band).sort(), ['bottom', 'top']);
       for (const side of ['left', 'right']) {
@@ -76,7 +96,8 @@ if (!process.versions.electron) {
       assert.deepEqual(await frames(), hiddenFrames);
       for (const side of ['left', 'right']) assert.equal((await desktop.sendToPage(side, { type: 'INSPECT', chatMode: 'normal' })).ok, true);
 
-      desktop.mainWindow.showInactive();
+      showTestWindow();
+      if (process.platform === 'darwin') await waitFor(() => desktop.mainWindow.isFocused());
       await waitFor(() => allPaused(false));
       assert.equal(await shell("document.body.classList.contains('document-hidden')"), false);
       const visibleFrames = await frames();
@@ -95,7 +116,7 @@ if (!process.versions.electron) {
       await waitFor(() => allPaused(false));
       await shell("document.getElementById('effectsButton').click()");
       await waitFor(() => allPaused(true));
-      desktop.mainWindow.hide(); desktop.mainWindow.showInactive();
+      desktop.mainWindow.hide(); showTestWindow();
       await settle(220);
       assert.equal((await scene('left')).paused, true);
       assert.equal((await scene('right')).paused, true);

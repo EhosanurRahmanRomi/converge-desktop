@@ -448,8 +448,17 @@ async function runNativeMacSmoke(lifecycle) {
     // both the observed show state and the actual native key window.
     app.focus({ steal: true }); owned.mainWindow.show(); owned.mainWindow.focus();
     await poll(() => owned.mainWindow.isFocused(), true, 'native key window');
-    const bootstrap = await owned.mainWindow.webContents.executeJavaScript('window.convergeBrowser.bootstrap()');
+    // AppKit's occlusion/show notification can follow its key-window
+    // notification when a new workspace reopens. Wait for both independent
+    // observations rather than requiring them in the same event-loop turn.
+    const readBootstrap = () => owned.mainWindow.webContents.executeJavaScript('window.convergeBrowser.bootstrap()');
+    await poll(async () => {
+      const observed = await readBootstrap();
+      return observed.windowVisible === true && owned.mainWindow.isFocused();
+    }, true, 'native show state and key window');
+    const bootstrap = await readBootstrap();
     assert.equal(bootstrap.windowVisible, true, 'Native show state was not observed');
+    assert.equal(owned.mainWindow.isFocused(), true, 'Native key window focus was lost');
     assert.deepEqual(Object.keys(owned.views), SIDES);
     for (const side of SIDES) assert.ok(['', 'about:blank'].includes(owned.views[side].webContents.getURL()), 'Smoke must not navigate a provider page');
     return owned.mainWindow.webContents.executeJavaScript(`new Promise((resolve,reject)=>{const began=performance.now();const check=()=>{const version=document.getElementById('version')?.textContent;if(version===${JSON.stringify(`v${app.getVersion()}`)}){const ids=['windowMinimize','windowMaximize','windowClose','chooseCookies','leftSlot','rightSlot'];resolve({version,platformHint:document.getElementById('startShortcutModifier')?.textContent,controls:ids.every(id=>!!document.getElementById(id)),sessionImported:document.getElementById('sessionBadge')?.textContent==='Imported'});return;}if(performance.now()-began>5000){reject(Error('Native shell bootstrap did not settle'));return;}setTimeout(check,25);};check();})`);

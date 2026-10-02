@@ -28,11 +28,13 @@ npm test
 npm run qa:desktop
 ```
 
-`npm test` uses Node's test runner. The recorded release suite passed **351 tests**. It covers coordinator behavior, content submission, candidate identity, source retention, media authorization, cookie handling, file limits, cancellation, mode checks, layout, animation preferences and window controls.
+On macOS, run the full suite with `npm test -- --test-concurrency=1`, as the native CI workflow does. The GUI fixtures share the WindowServer and focused editing; running them serially avoids one fixture occluding another.
 
-Public parser/test fixtures use synthetic content. A historical live-review excerpt was replaced for publication, with its parser assertions preserved and its test description updated. Runtime/build source remains byte-identical to the verified release; raw authenticated evidence stays private. Publication checks are separate from the original release gates.
+`npm test` uses Node's test runner. The Windows 1.6.5 suite passed **351 tests**; the native Mac 1.7.0 suite passed **377 tests**. The current suite covers coordinator behavior, content submission, candidate identity, source retention, media authorization, cookie handling, file limits, cancellation, mode checks, layout, animation preferences, window controls and Mac lifecycle/archive checks.
 
-`npm run qa:desktop` regenerates the bridge and launches the controlled desktop fixture. Fixture replies and sample content are not live ChatGPT verification. The 1.6.5 packaged release was separately checked against **24 workflows using the actual application archive**.
+Public parser/test fixtures use synthetic content. A historical live-review excerpt was replaced for publication, with its parser assertions preserved and its test description updated. Packaged runtime/source byte parity is checked separately for each release; raw authenticated evidence stays private. Publication checks are separate from the original release gates.
+
+`npm run qa:desktop` regenerates the bridge and launches the controlled desktop fixture. Fixture replies and sample content are not live ChatGPT verification. Both recorded releases passed **24 controlled workflows using their actual application archives**. The Mac run loads the production archive under a development Electron launcher carrying its package metadata; a separate startup check launches the actual `Converge.app` executable and verifies native editing, Close cleanup and fresh activation.
 
 Useful targeted commands:
 

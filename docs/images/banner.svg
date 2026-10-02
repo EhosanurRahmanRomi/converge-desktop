@@ -25,7 +25,7 @@
     <text x="58" y="207" fill="#85dde8" font-size="40" font-weight="650" letter-spacing="-1.5">Two perspectives.</text>
     <text x="60" y="251" fill="#adbcd0" font-size="17">Independent drafts. Useful challenges.</text>
     <text x="60" y="278" fill="#adbcd0" font-size="17">A shared result, with its actual files.</text>
-    <text x="59" y="322" fill="#738aa4" font-size="11" font-weight="600" letter-spacing="2">WINDOWS DESKTOP · AUTOMATIC REVIEW WORKSPACE</text>
+    <text x="59" y="322" fill="#738aa4" font-size="11" font-weight="600" letter-spacing="1.5">WINDOWS + macOS · DESKTOP REVIEW WORKSPACE</text>
     <path d="M592 161Q825 33 1058 161M592 210Q825 333 1058 210" stroke="url(#line)" stroke-opacity=".3" stroke-width="1" fill="none"/>
     <path d="M669 181h303" stroke="url(#line)" stroke-width="2" opacity=".22" filter="url(#glow)"/>
     <path d="M669 181h303" stroke="url(#line)" stroke-width="1" opacity=".6"/>

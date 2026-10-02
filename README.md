@@ -4,16 +4,20 @@
 
 A desktop workspace where two ChatGPT conversations draft independently, review each other's work, exchange the actual generated files, and check the same final candidate before stopping.
 
-**Windows: 1.6.5 · macOS: 1.7.0 ARM64 in validation · Source available for inspection**
+**Windows: 1.6.5 x64 · macOS: 1.7.0 ARM64 · Source available for inspection**
 
 [Windows release](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.6.5) · [Mac release](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.7.0) · [Mac guide](docs/MACOS_GUIDE.md) · [User guide](docs/USER_GUIDE.md) · [Developer guide](docs/DEVELOPER_GUIDE.md)
 
 | Platform | Release | Downloads | Verification |
 |---|---|---|---|
 | Windows x64 | **1.6.5** | [Installer](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.6.5/Converge-Setup-1.6.5-x64.exe) · [Portable](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.6.5/Converge-Portable-1.6.5-x64.exe) | [Recorded Windows evidence](docs/VERIFICATION.md) |
-| macOS Apple Silicon, including MacBook Air M4 | **1.7.0 — native validation pending** | [DMG](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.7.0/Converge-1.7.0-macOS-arm64.dmg) · [ZIP](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.7.0/Converge-1.7.0-macOS-arm64.zip) | [Mac evidence and pending gates](docs/MACOS_VERIFICATION.md) |
+| macOS 13+, Apple Silicon, including MacBook Air M4 | **1.7.0** | [DMG](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.7.0/Converge-1.7.0-macOS-arm64.dmg) · [ZIP](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.7.0/Converge-1.7.0-macOS-arm64.zip) | [Recorded Mac evidence](docs/MACOS_VERIFICATION.md) |
 
-The Mac build preserves the same workspace, animations, chat review and generated-file handoff. It adds Command shortcuts, native app/Edit menus, Mac file dialogs and Dock behavior. Mac downloads become available when the 1.7.0 release is published; native validation is currently in progress.
+The Mac build preserves the same workspace, animations, chat review and generated-file handoff. It adds Command shortcuts, native app/Edit menus, Mac file dialogs and Dock behavior. Its release gates passed on a native Apple Silicon Mac runner; the physical MacBook Air M4 and live authenticated Mac review have not been tested.
+
+![Actual Converge 1.7.0 Mac application at startup](docs/images/macos-native-startup.png)
+
+*Actual packaged Mac app on the native ARM64 runner with an empty session. The Reduced motion badge reflects that host's system preference.*
 
 ![Converge's two-chat workspace with the controls hidden](docs/images/desktop-working.png)
 
@@ -47,7 +51,22 @@ The Mac release uses an ad-hoc signature and has no Apple Developer ID signature
 
 *The controls panel is opaque for readability and slides away when a review starts.*
 
-## What was verified for 1.6.5
+## What was verified for macOS 1.7.0
+
+| Check | Recorded result |
+|---|---|
+| Automated suite on the native Mac runner | **377 / 377 passed** |
+| Controlled workflows from the packaged archive | **24 / 24 passed** |
+| Actual packaged Mac app | **v1.7.0 startup, focused native window and app menu passed** |
+| Native editing | **Select All, Copy and Paste passed in the shell and both embedded views** |
+| Workspace Close and reopen | **Real Close disposed the views; automated activate opened a fresh setup window** |
+| DMG and ZIP | **ARM64, ad-hoc signatures, source parity, permissions and framework links verified** |
+
+The controlled workflow gate loads the packaged archive under a development Electron launcher with matching package metadata. The native startup gate separately launches **Converge.app's own executable**. Attach/Save fixture selections exercise real IPC and file bytes; physical file-picker interaction and live account review were not performed.
+
+[Read the Mac evidence, artifact checksums and limits →](docs/MACOS_VERIFICATION.md)
+
+## What was verified for Windows 1.6.5
 
 | Check | Recorded result |
 |---|---|
@@ -70,10 +89,10 @@ Agreement is a review result, not a guarantee of correctness. Reviewers can shar
 | [User guide](docs/USER_GUIDE.md) | Setup, modes, files, review controls, results and troubleshooting |
 | [Mac guide](docs/MACOS_GUIDE.md) | Apple Silicon installation, Command shortcuts, Dock behavior and native file dialogs |
 | [Mac verification](docs/MACOS_VERIFICATION.md) | Native build gates, package identities and Mac-specific evidence |
-| [Developer guide](docs/DEVELOPER_GUIDE.md) | Local setup, tests, Windows build and source map |
+| [Developer guide](docs/DEVELOPER_GUIDE.md) | Local setup, tests, Windows and Apple Silicon Mac builds, and source map |
 | [Architecture](docs/ARCHITECTURE.md) | Session boundaries, review lifecycle and file identity |
 | [Verification](docs/VERIFICATION.md) | Recorded tests, live review, artifact hashes and scope |
-| [Release notes](docs/RELEASE_NOTES.md) | Changes in 1.6.5 |
+| [Release notes](docs/RELEASE_NOTES.md) | macOS 1.7.0 and Windows 1.6.5 changes |
 | [Artwork](docs/ARTWORK.md) | Current visual assets and provenance |
 | [Historical documentation](docs/history/README.md) | Earlier development records, kept separate from current claims |
 
@@ -88,6 +107,8 @@ npm run build:win -- --publish never
 ```
 
 The desktop runtime is Electron. The source also retains earlier extension/API experiments; these are not the current desktop connection path. See the [developer guide](docs/DEVELOPER_GUIDE.md) before changing the browser bridge or coordinator.
+
+Build the Mac DMG and ZIP with **npm run build:mac** on an Apple Silicon Mac. The build verifies its ad-hoc signatures and archive contents; see the [Mac build instructions](docs/DEVELOPER_GUIDE.md#build-apple-silicon-mac-artifacts).
 
 ## Session privacy and project status
 

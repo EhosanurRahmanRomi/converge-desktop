@@ -6,6 +6,8 @@
 
 Converge uses the same two-chat workspace, review engine, file handoff, controls drawer, result views and Stars/Ghost/Flowers artwork on Mac. Mac integration adds Command shortcuts, the system app and Edit menus, native file dialogs and normal Dock behavior.
 
+The release passed its native Mac build, startup and controlled review checks. The [verification record](MACOS_VERIFICATION.md) includes its exact scope and checksums. A physical MacBook Air M4 test and live authenticated Mac review have not been performed.
+
 ## Requirements
 
 - An Apple Silicon Mac. This ARM64 build targets the MacBook Air M4 and runs natively without Rosetta.

@@ -23,7 +23,9 @@ The existing Converge workspace is now packaged for native ARM64 Macs, including
 
 ### Verification and installation
 
-Native release validation is in progress. The [Mac verification record](MACOS_VERIFICATION.md) records the completed gates and exact artifact identities; the [Mac guide](MACOS_GUIDE.md) explains installation and shortcuts.
+The native ARM64 release passed **377/377 source tests**, **24/24 controlled packaged workflows**, and the actual packaged app startup, native Copy/Paste, Close cleanup and fresh activation checks. Both release archives passed architecture, signature, source parity, executable permission and framework-link verification after ZIP extraction and read-only DMG mounting.
+
+The [Mac verification record](MACOS_VERIFICATION.md) records the completed gates and exact artifact identities; the [Mac guide](MACOS_GUIDE.md) explains installation and shortcuts.
 
 This release uses an ad-hoc signature. It has no Apple Developer ID signature or notarization. Native runner checks do not establish a physical M4 test or live authenticated provider behavior.
 

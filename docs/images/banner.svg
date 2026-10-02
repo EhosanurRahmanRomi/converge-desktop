@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title description">
+  <title id="title">Converge — One task. Two perspectives.</title>
+  <desc id="description">A decorative galaxy illustration of two reviewers exchanging a candidate through draft, check and refine stages.</desc>
+  <defs>
+    <linearGradient id="space" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#08121e"/><stop offset=".55" stop-color="#141127"/><stop offset="1" stop-color="#090f1b"/></linearGradient>
+    <radialGradient id="nebula"><stop stop-color="#aa57cf" stop-opacity=".32"/><stop offset=".48" stop-color="#5e68c9" stop-opacity=".1"/><stop offset="1" stop-color="#3b41a2" stop-opacity="0"/></radialGradient>
+    <radialGradient id="cyan"><stop stop-color="#39d9e6" stop-opacity=".16"/><stop offset="1" stop-color="#39d9e6" stop-opacity="0"/></radialGradient>
+    <linearGradient id="line"><stop stop-color="#4adee7"/><stop offset=".5" stop-color="#7d88e3"/><stop offset="1" stop-color="#c08ae9"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#16293e"/><stop offset="1" stop-color="#101526"/></linearGradient>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="5"/></filter>
+  </defs>
+  <rect width="1200" height="360" rx="24" fill="url(#space)"/>
+  <ellipse cx="786" cy="195" rx="385" ry="244" fill="url(#nebula)"/>
+  <ellipse cx="174" cy="82" rx="273" ry="211" fill="url(#cyan)"/>
+  <g fill="#d7e8ff" opacity=".5">
+    <circle cx="52" cy="39" r="1.3"/><circle cx="136" cy="20" r=".9"/><circle cx="255" cy="29" r="1.2"/><circle cx="324" cy="77" r="1"/><circle cx="421" cy="41" r="1.5"/><circle cx="536" cy="29" r=".8"/><circle cx="610" cy="62" r="1.1"/><circle cx="714" cy="31" r="1.1"/><circle cx="831" cy="52" r="1.6"/><circle cx="945" cy="33" r=".7"/><circle cx="1094" cy="24" r="1.3"/><circle cx="1150" cy="77" r="1"/>
+    <circle cx="21" cy="150" r="1.1"/><circle cx="80" cy="233" r="1"/><circle cx="172" cy="329" r=".9"/><circle cx="273" cy="305" r="1.4"/><circle cx="385" cy="332" r="1.1"/><circle cx="493" cy="282" r=".8"/><circle cx="604" cy="319" r="1.2"/><circle cx="685" cy="298" r="1.4"/><circle cx="798" cy="329" r="1"/><circle cx="918" cy="306" r=".8"/><circle cx="1039" cy="331" r="1.3"/><circle cx="1168" cy="298" r="1.1"/><circle cx="1123" cy="222" r=".9"/>
+  </g>
+  <g fill="#bdceff" opacity=".85"><path d="m494 86 2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/><path d="m1045 70 1.5 4.5 4.5 1.5-4.5 1.5-1.5 4.5-1.5-4.5-4.5-1.5 4.5-1.5z"/><path d="m1146 169 1.5 4.5 4.5 1.5-4.5 1.5-1.5 4.5-1.5-4.5-4.5-1.5 4.5-1.5z"/></g>
+  <g font-family="Segoe UI,Arial,sans-serif">
+    <rect x="58" y="58" width="42" height="42" rx="12" fill="#182f40" stroke="#5bd1db" stroke-opacity=".6"/>
+    <path d="M68 73h22l-5-5m5 5-5 5M90 85H68l5 5m-5-5 5-5" stroke="#83e9ef" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="114" y="88" fill="#f0f5ff" font-size="34" font-weight="700" letter-spacing="-1">Converge<tspan fill="#62dce4">.</tspan></text>
+    <text x="58" y="158" fill="#edf4ff" font-size="40" font-weight="650" letter-spacing="-1.5">One task.</text>
+    <text x="58" y="207" fill="#85dde8" font-size="40" font-weight="650" letter-spacing="-1.5">Two perspectives.</text>
+    <text x="60" y="251" fill="#adbcd0" font-size="17">Independent drafts. Useful challenges.</text>
+    <text x="60" y="278" fill="#adbcd0" font-size="17">A shared result, with its actual files.</text>
+    <text x="59" y="322" fill="#738aa4" font-size="11" font-weight="600" letter-spacing="2">WINDOWS DESKTOP · AUTOMATIC REVIEW WORKSPACE</text>
+    <path d="M592 161Q825 33 1058 161M592 210Q825 333 1058 210" stroke="url(#line)" stroke-opacity=".3" stroke-width="1" fill="none"/>
+    <path d="M669 181h303" stroke="url(#line)" stroke-width="2" opacity=".22" filter="url(#glow)"/>
+    <path d="M669 181h303" stroke="url(#line)" stroke-width="1" opacity=".6"/>
+    <g transform="translate(562 116)">
+      <rect width="146" height="138" rx="19" fill="url(#glass)" stroke="#61c9d8" stroke-opacity=".55"/>
+      <circle cx="73" cy="43" r="22" fill="#1c3e50"/><text x="73" y="51" text-anchor="middle" fill="#a6f2f7" font-size="24" font-weight="600">A</text>
+      <text x="73" y="88" text-anchor="middle" fill="#e1edf8" font-size="16" font-weight="600">First reviewer</text>
+      <text x="73" y="113" text-anchor="middle" fill="#8da7bf" font-size="12">Draft · inspect · revise</text>
+    </g>
+    <g transform="translate(962 116)">
+      <rect width="146" height="138" rx="19" fill="url(#glass)" stroke="#bc8bdb" stroke-opacity=".55"/>
+      <circle cx="73" cy="43" r="22" fill="#35274b"/><text x="73" y="51" text-anchor="middle" fill="#e5c3ff" font-size="24" font-weight="600">B</text>
+      <text x="73" y="88" text-anchor="middle" fill="#e1edf8" font-size="16" font-weight="600">Second reviewer</text>
+      <text x="73" y="113" text-anchor="middle" fill="#aa9bbd" font-size="12">Check · challenge · refine</text>
+    </g>
+    <g transform="translate(770 136)">
+      <rect width="127" height="90" rx="16" fill="#111b2d" stroke="#66799a" stroke-opacity=".7"/>
+      <path d="M38 20h37l14 14v38H38zM75 20v14h14M49 45h27M49 53h27M49 61h18" fill="none" stroke="#a4cde3" stroke-width="1.5" stroke-linejoin="round"/>
+      <text x="63" y="122" text-anchor="middle" fill="#c7d6e9" font-size="13" font-weight="600">C1 → C2 → C3</text>
+      <text x="63" y="146" text-anchor="middle" fill="#8498b2" font-size="11">Exact candidate handoff</text>
+    </g>
+    <text x="835" y="73" text-anchor="middle" fill="#8da3be" font-size="11" font-weight="600" letter-spacing="2">DRAFT · CHECK · REFINE</text>
+  </g>
+</svg>

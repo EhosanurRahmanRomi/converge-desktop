@@ -1,0 +1,2 @@
+# Preserve the reviewed source and regression-fixture bytes on every platform.
+* -text

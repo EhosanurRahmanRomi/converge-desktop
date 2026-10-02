@@ -1,0 +1,27 @@
+# Dependencies and generated builds
+node_modules/
+.npm-cache/
+dist/
+# Private development and test evidence
+.live-test/
+.design/
+.packaging/
+.video-review/
+.publish/
+.publish-content/
+recording-review-*/
+deliverables/
+*.log
+smoke-*.png
+smoke-*.json
+desktop-cookie-*.png
+desktop-cookie-*.json
+# Local credentials and cookie exports
+.env
+.env.*
+!.env.example
+*cookie-export*.json
+chatgpt.com_json_*.json
+# Editor and OS files
+.DS_Store
+Thumbs.db

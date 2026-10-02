@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Converge for Chrome",
+  "short_name": "Converge",
+  "version": "0.4.0",
+  "description": "Two visible ChatGPT tabs with a controlled review loop.",
+  "minimum_chrome_version": "116",
+  "permissions": ["tabs", "storage", "sidePanel", "alarms"],
+  "background": { "service_worker": "background.js" },
+  "side_panel": { "default_path": "panel.html" },
+  "action": { "default_title": "Open Converge controls" },
+  "content_scripts": [{
+    "matches": ["https://chatgpt.com/*"],
+    "js": ["content.js"],
+    "run_at": "document_idle"
+  }],
+  "icons": {
+    "16": "assets/icon16.png",
+    "48": "assets/icon48.png",
+    "128": "assets/icon128.png"
+  }
+}

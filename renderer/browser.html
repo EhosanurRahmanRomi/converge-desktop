@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="color-scheme" content="dark">
+  <title>Converge · Automatic review workspace</title>
+  <link rel="stylesheet" href="browser.css">
+  <link rel="stylesheet" href="galaxy-scene.css">
+  <script defer src="galaxy-scene.js"></script>
+  <script defer src="star-ribbons.js"></script>
+  <script defer src="browser-app.js"></script>
+</head>
+<body class="galaxy-theme">
+  <div class="galaxy cinematic-galaxy" aria-hidden="true"><canvas id="stars"></canvas><div class="galaxy-vignette"></div></div>
+
+  <div class="app controls-overlay" id="app">
+    <header class="topbar">
+      <button class="icon-button sidebar-button" id="toggleSidebar" type="button" aria-label="Hide controls" aria-expanded="true" aria-controls="sidebar" title="Show or hide controls">☰</button>
+      <div class="brand"><span class="brand-symbol" aria-hidden="true">⇄</span><div><h1>Converge<span>.</span></h1><p>AUTOMATIC REVIEW WORKSPACE</p></div></div>
+      <div class="topbar-status"><span class="status-dot" id="statusDot"></span><span id="topStatus">Import your session to begin</span></div>
+      <button class="button stop topbar-stop" id="headerStop" type="button" hidden>■ Stop</button>
+      <button class="effects-button" id="effectsButton" type="button" aria-pressed="false" title="Pause decorative motion">✧ Pause effects</button>
+      <span class="version" id="version">DESKTOP</span>
+      <div class="window-drag-region" aria-hidden="true"></div>
+      <div class="window-controls" role="group" aria-label="Window controls">
+        <button id="windowMinimize" class="window-button" type="button" aria-label="Minimize window" title="Minimize"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/></svg></button>
+        <button id="windowMaximize" class="window-button" type="button" aria-label="Maximize window" title="Maximize"><svg class="maximize-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="3.5" width="9" height="9" rx=".7"/></svg><svg class="restore-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5h6.5V10M3.5 6h6.5v6.5H3.5z"/></svg></button>
+        <button id="windowClose" class="window-button window-close" type="button" aria-label="Close window" title="Close"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8m0-8-8 8"/></svg></button>
+      </div>
+    </header>
+
+    <aside class="sidebar" id="sidebar" aria-label="Workspace controls">
+      <div class="drawer-heading"><div><span class="drawer-eyebrow">WORKSPACE</span><strong>Review controls</strong></div><button class="icon-button" id="closeSidebar" type="button" aria-label="Close controls">×</button></div>
+      <div id="previewNotice" class="notice error" role="alert" hidden>This is a design preview. Open the Converge desktop app to import your session and run the exchange.</div>
+      <div class="sidebar-intro" id="sidebarIntro"><span class="eyebrow">INDEPENDENT THINKING. SHARED PROGRESS.</span><h2>One task.<br><em>Two perspectives.</em></h2><p>Connect your session, open a pair of chats, then let the reviewers improve your work together.</p></div>
+
+      <details class="control-card session-card" id="sessionDetails" open>
+        <summary><span class="section-index">01</span><span>Session</span><span class="session-badge" id="sessionBadge">Not connected</span></summary>
+        <div class="card-content">
+          <button class="cookie-file-button" id="chooseCookies" type="button" aria-describedby="cookieFileStatus"><span class="cookie-file-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M12 17v-6m-3 3 3-3 3 3"/></svg></span><span class="cookie-file-copy"><strong id="cookieFileLabel">Import JSON file</strong><small>Choose a cookie export from your PC</small></span><span class="cookie-file-arrow" aria-hidden="true">↗</span></button>
+          <input type="file" id="cookieFile" accept=".json,application/json" hidden>
+          <p class="cookie-file-status" id="cookieFileStatus" role="status" aria-live="polite">ChatGPT cookie export · .json</p>
+          <details class="cookie-paste-details" id="cookiePasteDetails"><summary>Or paste cookie JSON <span aria-hidden="true">⌄</span></summary><div class="cookie-paste-content"><label class="field-label" for="cookieInput">Cookie JSON</label><textarea id="cookieInput" class="cookie-input" rows="4" placeholder="Paste the ChatGPT cookie JSON array" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea><button class="button secondary full-width" id="importCookies" type="button">Import pasted JSON <span aria-hidden="true">↗</span></button></div></details>
+          <div class="cookie-actions"><button class="text-button danger-text" id="clearSession" type="button" hidden>Clear session</button></div>
+          <p class="helper" id="sessionHint">Your selected file connects the app to your ChatGPT session. Choose a chat type next.</p>
+          <p class="field-message" id="sessionError" role="alert" hidden></p>
+        </div>
+      </details>
+
+      <section class="control-card mode-card" aria-labelledby="modeHeading">
+        <div class="card-heading"><span class="section-index">02</span><h3 id="modeHeading">Chat workspace</h3><span class="mode-badge" id="openedMode" hidden></span></div>
+        <div class="card-content">
+          <fieldset class="mode-options" id="modeOptions">
+            <legend class="sr-only">Open both chats in</legend>
+            <label class="mode-option"><input id="modeTemporary" name="chatMode" type="radio" value="temporary"><span class="mode-option-copy"><strong>Temporary</strong><small>Two chats in Temporary mode.</small></span><span class="mode-option-symbol" aria-hidden="true">◷</span></label>
+            <label class="mode-option"><input id="modeNormal" name="chatMode" type="radio" value="normal" checked><span class="mode-option-copy"><strong>Normal</strong><small>Two regular ChatGPT chats.</small></span><span class="mode-option-symbol" aria-hidden="true">◌</span></label>
+            <label class="mode-option"><input id="modeWork" name="chatMode" type="radio" value="work"><span class="mode-option-copy"><strong>Work mode</strong><small>Two chats in ChatGPT Work.</small></span><span class="mode-option-symbol" aria-hidden="true">▣</span></label>
+          </fieldset>
+          <p class="helper" id="modeHint">Choose how both reviewers open their chats.</p>
+          <button class="button primary full-width" id="openPages" type="button">Open both chats <span aria-hidden="true">↗</span></button>
+          <button class="button secondary full-width reset-chats" id="resetChats" type="button" hidden>↻ Reset chats &amp; choose type</button>
+        </div>
+      </section>
+
+      <section class="control-card question-card" aria-labelledby="questionHeading">
+        <div class="card-heading"><span class="section-index">03</span><h3 id="questionHeading">Task brief</h3></div>
+        <div class="card-content">
+          <label class="field-label" id="questionLabel" for="question">Your task</label>
+          <textarea id="question" class="question-input" rows="5" maxlength="20000" placeholder="Describe what to solve, create or improve…" spellcheck="true"></textarea>
+          <div class="question-meta"><span><kbd>Ctrl</kbd> + <kbd>Enter</kbd> to start</span><span id="questionCount">0 / 20,000</span></div>
+          <label class="field-label" for="reviewMode">Review approach</label>
+          <select id="reviewMode" class="review-mode"><option value="auto">Auto · match the task</option><option value="improve">Improve · at least 4 rounds</option><option value="verify">Verify · 2 verification steps</option></select>
+          <p class="helper review-mode-hint" id="reviewModeHint">Creative and file tasks improve through at least 4 rounds. Fixed answers get 2 verification steps.</p>
+          <button class="button secondary full-width" id="attachFiles" type="button">＋ Attach files, images or code</button>
+          <p class="attachment-helper">PDF, images, documents and source code · Sent to both reviewers</p>
+          <p class="file-status" id="fileStatus" role="status">No source files attached</p>
+          <p class="review-summary" id="reviewSummary" role="status">File and image sharing is on · Up to 6 review rounds</p>
+
+          <div class="privacy-check" id="privacyCheck" hidden>
+            <strong>Confirm Temporary mode only if it cannot be verified</strong>
+            <label><input id="confirmLeft" type="checkbox"><span>Chat A is in Temporary mode</span></label>
+            <label><input id="confirmRight" type="checkbox"><span>Chat B is in Temporary mode</span></label>
+          </div>
+          <p class="readiness-hint" id="privacyHint" role="status">Import your session, choose a chat type and click OK.</p>
+          <div class="start-stop"><button class="button primary" id="start" type="button">Start automatic exchange <span aria-hidden="true">✦</span></button><button class="button stop" id="stop" type="button" hidden>■ Stop exchange</button></div>
+          <p class="field-message" id="actionError" role="alert" hidden></p>
+          <details class="settings-details" id="settingsDetails">
+            <summary>Preferences &amp; review rules <span aria-hidden="true">⌄</span></summary>
+            <div class="appearance-settings">
+              <p class="appearance-heading">Appearance</p>
+              <label class="animation-option" for="animationEnabled"><span class="animation-copy">Animations <small id="animationDescription">Glowing falling stars and reviewer movement</small></span><span class="animation-switch"><input id="animationEnabled" type="checkbox" role="switch" aria-describedby="animationDescription" checked><span class="animation-track" aria-hidden="true"></span></span></label>
+              <p class="animation-status" id="animationStatus" role="status">On · star fields and reviewer motion</p>
+              <label class="field-label animation-theme-label" for="animationTheme">Atmosphere</label>
+              <select id="animationTheme" class="review-mode animation-theme"><option value="stars">Glowing stars</option><option value="ghost">Ghost</option><option value="flowers">Flowers</option></select>
+              <p class="helper theme-helper">Choose the atmosphere for both animation bands.</p>
+            </div>
+            <label class="field-label" for="protocol">Review direction <span>Optional</span></label>
+            <textarea id="protocol" rows="3" maxlength="10000" placeholder="Example: check each calculation, cite evidence, and explain remaining uncertainty." spellcheck="true"></textarea>
+            <div class="round-control"><label for="maxRounds">Maximum review rounds</label><div class="stepper"><button id="roundMinus" type="button" aria-label="Decrease maximum rounds">−</button><input id="maxRounds" type="number" min="1" max="12" value="6"><button id="roundPlus" type="button" aria-label="Increase maximum rounds">+</button></div></div>
+            <label class="toggle-option"><input id="relayMedia" type="checkbox" checked><span>Share generated images and files <small>The actual output contents are attached to the other chat. Code files may arrive as readable .txt copies.</small></span></label>
+            <label class="toggle-option"><input id="requireFiles" type="checkbox"><span>Require a revised file <small>File-delivery tasks also require their output automatically. Describing a file cannot replace producing it.</small></span></label>
+            <p class="helper run-limits">Limits: 12 review rounds · 30 minutes per reply · 2 hours per run. Stop is always available.</p>
+          </details>
+        </div>
+      </section>
+
+      <div class="setup-actions"><button class="text-button" id="prepare" type="button">Check &amp; prepare pages</button></div>
+      <button class="diagnostics-button" id="diagnostics" type="button">Copy safe page diagnostics</button>
+      <div class="sidebar-footer"><span class="small-dot"></span>Agreement is a review result. Verify important answers.</div>
+    </aside>
+
+    <main class="workspace" aria-label="Two ChatGPT pages">
+      <section class="review-deck" id="reviewDeck" aria-label="Reviewer activity">
+        <canvas class="star-ribbon top-star-ribbon" id="topStarRibbon" aria-hidden="true"></canvas>
+        <div class="link-orbit" aria-hidden="true"><span></span></div><span class="bridge-label" id="bridgeLabel">TWO INDEPENDENT REVIEWERS</span>
+        <div class="reviewer left" id="reviewerLeft"><div class="reviewer-copy"><span class="reviewer-eyebrow">REVIEWER A</span><h2>First reviewer</h2><p id="leftActivity">Waiting for your session</p><div class="reviewer-signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="bot" id="botLeft" data-mood="curious" aria-hidden="true"><div class="bot-aura"></div><span class="bot-mood-bubble"><span class="mood-symbol">🤔</span></span><svg class="bot-character" viewBox="0 0 180 156" fill="none">
+    <defs>
+      <linearGradient id="apearl" x1="51" y1="18" x2="120" y2="88" gradientUnits="userSpaceOnUse"><stop stop-color="#fff"/><stop offset=".26" stop-color="#e9f1fb"/><stop offset=".54" stop-color="#b8c8e2"/><stop offset=".78" stop-color="#7286aa"/><stop offset="1" stop-color="#dae6f7"/></linearGradient>
+      <linearGradient id="atorso" x1="70" y1="71" x2="116" y2="117" gradientUnits="userSpaceOnUse"><stop stop-color="#f8fcff"/><stop offset=".4" stop-color="#cbd9f0"/><stop offset=".75" stop-color="#7184ad"/><stop offset="1" stop-color="#e6f0fc"/></linearGradient>
+      <linearGradient id="aglass" x1="70" y1="36" x2="110" y2="74" gradientUnits="userSpaceOnUse"><stop stop-color="#213958"/><stop offset=".46" stop-color="#071422"/><stop offset="1" stop-color="#010a15"/></linearGradient>
+      <linearGradient id="ashine" x1="60" y1="34" x2="122" y2="64" gradientUnits="userSpaceOnUse"><stop stop-color="#b2eaff" stop-opacity=".46"/><stop offset=".4" stop-color="#fff" stop-opacity=".14"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+      <linearGradient id="atable" x1="38" y1="126" x2="143" y2="137" gradientUnits="userSpaceOnUse"><stop stop-color="currentColor" stop-opacity=".5"/><stop offset=".5" stop-color="#dcfaff" stop-opacity=".65"/><stop offset="1" stop-color="currentColor" stop-opacity=".24"/></linearGradient>
+      <radialGradient id="alight"><stop stop-color="#fff"/><stop offset=".3" stop-color="currentColor"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></radialGradient>
+    </defs>
+    <ellipse class="bot-floor-glow" cx="90" cy="143" rx="56" ry="7" fill="currentColor" opacity=".12"/>
+    <ellipse class="bot-orbit" cx="90" cy="108" rx="72" ry="28" transform="rotate(-11 90 108)"/>
+    <g class="bot-float">
+      <g class="bot-left-arm bot-arm-upper"><circle cx="65" cy="84" r="8" fill="#293956" stroke="#c8d7eb" stroke-width="1.2"/><path d="m63 87-8 15" stroke="url(#apearl)" stroke-width="11" stroke-linecap="round"/><g class="bot-typing-left"><path d="m55 102 19 13" stroke="url(#apearl)" stroke-width="9" stroke-linecap="round"/><ellipse cx="74" cy="115" rx="8" ry="4" fill="#dce9fa" stroke="#90aaca"/><path d="m70 113 6 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></g></g>
+      <g class="bot-right-arm bot-arm-upper bot-hand"><circle cx="115" cy="84" r="8" fill="#293956" stroke="#c8d7eb" stroke-width="1.2"/><path d="m117 87 8 15" stroke="url(#apearl)" stroke-width="11" stroke-linecap="round"/><g class="bot-typing-right"><path d="m125 102-19 13" stroke="url(#apearl)" stroke-width="9" stroke-linecap="round"/><ellipse cx="106" cy="115" rx="8" ry="4" fill="#dce9fa" stroke="#90aaca"/><path d="m104 114 6-1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></g></g>
+      <g class="bot-body"><path d="M70 77c6-7 34-7 40 0l7 24c2 16-13 23-27 23s-29-7-27-23z" fill="url(#atorso)" stroke="#d7e7f9" stroke-width=".9"/><path d="M70 85c1-9 10-11 17-11" stroke="#fff" stroke-opacity=".75" stroke-width="2.1" stroke-linecap="round"/><path d="M65 105q25 16 50 0" stroke="#657da7" stroke-opacity=".65"/><path d="M78 86h24l-3 17H81z" fill="#132641" stroke="#c3d9fa" stroke-width=".8"/><path class="bot-body-glow" d="M84 91h12v5H84z" fill="currentColor"/><circle cx="90" cy="111" r="3" fill="currentColor"/><circle cx="90" cy="111" r="7" fill="url(#alight)" opacity=".5"/><path class="bot-check" d="m84 94 4 4 8-8"/><path class="bot-alert" d="M89 87h2v8h-2zm0 11h2v2h-2z"/></g>
+      <g class="bot-head">
+        <path d="M90 16V8" stroke="#bbd2eb" stroke-width="3" stroke-linecap="round"/><circle class="bot-beacon" cx="90" cy="7" r="3.4" fill="currentColor"/><circle class="bot-beacon-halo" cx="90" cy="7" r="9" fill="url(#alight)" opacity=".6"/>
+        <rect x="42" y="36" width="11" height="29" rx="5.5" fill="#7389ac" stroke="#d9e7fa"/><path d="M46 44v13" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+        <rect x="127" y="36" width="11" height="29" rx="5.5" fill="#7389ac" stroke="#d9e7fa"/><path d="M134 44v13" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+        <path d="M54 22c17-10 55-10 72 0 9 8 10 40 2 49-14 13-62 13-76 0-8-9-7-41 2-49z" fill="url(#apearl)" stroke="#e5f2ff" stroke-width="1.1"/>
+        <path d="M61 23c11-6 32-8 44-5" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+        <rect x="56" y="31" width="68" height="41" rx="18" fill="url(#aglass)" stroke="#253c5d" stroke-width="1.6"/>
+        <path d="M64 34c10-3 38-4 51 2l-21 26-36-9c-1-10 0-16 6-19" fill="url(#ashine)"/>
+        <g class="bot-gaze">
+          <g class="bot-expression expression-neutral"><g class="bot-eyes"><rect class="bot-eye" x="71" y="42" width="8" height="13" rx="4"/><rect class="bot-eye" x="101" y="42" width="8" height="13" rx="4"/><path d="M73 44v3m30-3v3" stroke="#fff" stroke-width="2.1" stroke-linecap="round" opacity=".75"/></g><path class="bot-smile" d="M83 61q7 5 14 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></g>
+          <g class="bot-expression expression-curious"><g class="bot-eyes"><rect class="bot-eye" x="71" y="40" width="9" height="15" rx="4.5"/><rect class="bot-eye" x="101" y="43" width="8" height="11" rx="4"/><path d="M70 35q5-4 10-1m22 4 7 1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></g><ellipse cx="90" cy="63" rx="3" ry="2.8" stroke="currentColor" stroke-width="1.5"/></g>
+          <g class="bot-expression expression-thoughtful"><g class="bot-eyes"><path d="M71 48q4-7 9-1m21 0q4-5 8 1" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="m69 39 10-2m22 3 9 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></g><path d="M86 63h9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></g>
+          <g class="bot-expression expression-focused"><g class="bot-eyes"><rect class="bot-eye" x="70" y="45" width="11" height="7" rx="3"/><rect class="bot-eye" x="100" y="45" width="11" height="7" rx="3"/><path d="m70 38 11 3m19 0 11-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></g><path d="M85 62q5 2 10 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></g>
+          <g class="bot-expression expression-sparkle"><g class="bot-eyes"><path class="bot-eye" d="m75 39 2.2 5 5.3 1.8-5.3 2.2-2.2 5.2-2.1-5.2-5.1-2.2 5.1-1.8zm30 0 2.2 5 5.3 1.8-5.3 2.2-2.2 5.2-2.1-5.2-5.1-2.2 5.1-1.8z"/></g><path d="M83 60q7 8 14 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></g>
+          <path class="bot-cheek" d="M65 58h7m36 0h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </g>
+        <path d="M78 77h24" stroke="#ebf6ff" stroke-width="2" stroke-linecap="round"/>
+      </g>
+    </g>
+    <g class="bot-workstation"><path d="m37 123 52-9 54 9-54 14z" fill="#102448" fill-opacity=".45" stroke="url(#atable)" stroke-width="1.2"/><path d="M37 123v4l52 15 54-15v-4" fill="#0c203e" fill-opacity=".7" stroke="currentColor" stroke-opacity=".2"/><path d="m63 124 26-5 29 5-29 8z" fill="#08213e" stroke="currentColor" stroke-opacity=".6" stroke-width=".7"/><g class="bot-keyboard" stroke="currentColor" stroke-width="1" opacity=".75"><path d="m71 124 20-4m-13 8 27-5m-19 7 26-5m-36-3 14 7m-4-9 14 6m-2-8 13 6"/></g><path d="M45 131v9m90-9v9" stroke="currentColor" stroke-opacity=".3"/>
+      <g class="bot-pc-screen"><path d="M56 79h68l-4 33H60z" fill="#081a34" stroke="#deefff" stroke-width="1.5"/><path d="M56 79h68l-1 5H57z" fill="#8ab4de" fill-opacity=".32"/><circle cx="90" cy="82" r="1" fill="currentColor"/><path d="M59 87h62l-2 23H61z" fill="currentColor" fill-opacity=".06"/><g class="bot-screen-code" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M65 91h7m4 0h12m4 0h15M67 96h11m4 0h5m4 0h18M66 101h6m4 0h14m5 0h9M65 106h17m5 0h24"/></g><path class="bot-screen-caret" d="M113 101v5" stroke="#fff" stroke-width="1.5"/><path d="M59 112h62l5 3H54z" fill="#b6d0ef" stroke="currentColor" stroke-width=".6"/></g>
+      <g class="bot-hologram"><path d="M25 61h23l9 39H34z" fill="currentColor" fill-opacity=".09" stroke="currentColor" stroke-width=".8" stroke-opacity=".8"/><path d="m31 68 15 .5m-13 5 15 .5m-13 5 11 .5m-10 5 15 .5m-13 5 8 .5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".65"/><path class="bot-scan" d="m29 69 20 .5" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="39" cy="95" r="1.7" fill="currentColor"/>
+      </g>
+      <g class="bot-thoughts"><circle class="thought-dot" cx="140" cy="23" r="2" fill="currentColor"/><circle class="thought-dot" cx="149" cy="18" r="3" fill="currentColor"/><circle class="thought-dot" cx="161" cy="14" r="4" fill="currentColor"/></g>
+    </g>
+  </svg></div></div>
+        <div class="reviewer right" id="reviewerRight"><div class="reviewer-copy"><span class="reviewer-eyebrow">REVIEWER B</span><h2>Second reviewer</h2><p id="rightActivity">Waiting for your session</p><div class="reviewer-signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="bot" id="botRight" data-mood="thoughtful" aria-hidden="true"><div class="bot-aura"></div><span class="bot-mood-bubble"><span class="mood-symbol">💭</span></span><svg class="bot-character" viewBox="0 0 180 156" fill="none">
+    <defs>
+      <linearGradient id="bpearl" x1="51" y1="18" x2="120" y2="88" gradientUnits="userSpaceOnUse"><stop stop-color="#fff"/><stop offset=".26" stop-color="#e9f1fb"/><stop offset=".54" stop-color="#b8c8e2"/><stop offset=".78" stop-color="#7286aa"/><stop offset="1" stop-color="#dae6f7"/></linearGradient>
+      <linearGradient id="btorso" x1="70" y1="71" x2="116" y2="117" gradientUnits="userSpaceOnUse"><stop stop-color="#f8fcff"/><stop offset=".4" stop-color="#cbd9f0"/><stop offset=".75" stop-color="#7184ad"/><stop offset="1" stop-color="#e6f0fc"/></linearGradient>
+      <linearGradient id="bglass" x1="70" y1="36" x2="110" y2="74" gradientUnits="userSpaceOnUse"><stop stop-color="#213958"/><stop offset=".46" stop-color="#071422"/><stop offset="1" stop-color="#010a15"/></linearGradient>
+      <linearGradient id="bshine" x1="60" y1="34" x2="122" y2="64" gradientUnits="userSpaceOnUse"><stop stop-color="#b2eaff" stop-opacity=".46"/><stop offset=".4" stop-color="#fff" stop-opacity=".14"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+      <linearGradient id="btable" x1="38" y1="126" x2="143" y2="137" gradientUnits="userSpaceOnUse"><stop stop-color="currentColor" stop-opacity=".5"/><stop offset=".5" stop-color="#dcfaff" stop-opacity=".65"/><stop offset="1" stop-color="currentColor" stop-opacity=".24"/></linearGradient>
+      <radialGradient id="blight"><stop stop-color="#fff"/><stop offset=".3" stop-color="currentColor"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></radialGradient>
+    </defs>
+    <ellipse class="bot-floor-glow" cx="90" cy="143" rx="56" ry="7" fill="currentColor" opacity=".12"/>
+    <ellipse class="bot-orbit" cx="90" cy="108" rx="72" ry="28" transform="rotate(-11 90 108)"/>
+    <g class="bot-float">
+      <g class="bot-left-arm bot-arm-upper"><circle cx="65" cy="84" r="8" fill="#293956" stroke="#c8d7eb" stroke-width="1.2"/><path d="m63 87-8 15" stroke="url(#bpearl)" stroke-width="11" stroke-linecap="round"/><g class="bot-typing-left"><path d="m55 102 19 13" stroke="url(#bpearl)" stroke-width="9" stroke-linecap="round"/><ellipse cx="74" cy="115" rx="8" ry="4" fill="#dce9fa" stroke="#90aaca"/><path d="m70 113 6 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></g></g>
+      <g class="bot-right-arm bot-arm-upper bot-hand"><circle cx="115" cy="84" r="8" fill="#293956" stroke="#c8d7eb" stroke-width="1.2"/><path d="m117 87 8 15" stroke="url(#bpearl)" stroke-width="11" stroke-linecap="round"/><g class="bot-typing-right"><path d="m125 102-19 13" stroke="url(#bpearl)" stroke-width="9" stroke-linecap="round"/><ellipse cx="106" cy="115" rx="8" ry="4" fill="#dce9fa" stroke="#90aaca"/><path d="m104 114 6-1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></g></g>
+      <g class="bot-body"><path d="M70 77c6-7 34-7 40 0l7 24c2 16-13 23-27 23s-29-7-27-23z" fill="url(#btorso)" stroke="#d7e7f9" stroke-width=".9"/><path d="M70 85c1-9 10-11 17-11" stroke="#fff" stroke-opacity=".75" stroke-width="2.1" stroke-linecap="round"/><path d="M65 105q25 16 50 0" stroke="#657da7" stroke-opacity=".65"/><path d="M78 86h24l-3 17H81z" fill="#132641" stroke="#c3d9fa" stroke-width=".8"/><path class="bot-body-glow" d="M84 91h12v5H84z" fill="currentColor"/><circle cx="90" cy="111" r="3" fill="currentColor"/><circle cx="90" cy="111" r="7" fill="url(#blight)" opacity=".5"/><path class="bot-check" d="m84 94 4 4 8-8"/><path class="bot-alert" d="M89 87h2v8h-2zm0 11h2v2h-2z"/></g>
+      <g class="bot-head">
+        <path d="M90 16V8" stroke="#bbd2eb" stroke-width="3" stroke-linecap="round"/><circle class="bot-beacon" cx="90" cy="7" r="3.4" fill="currentColor"/><circle class="bot-beacon-halo" cx="90" cy="7" r="9" fill="url(#blight)" opacity=".6"/>
+        <rect x="42" y="36" width="11" height="29" rx="5.5" fill="#7389ac" stroke="#d9e7fa"/><path d="M46 44v13" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+        <rect x="127" y="36" width="11" height="29" rx="5.5" fill="#7389ac" stroke="#d9e7fa"/><path d="M134 44v13" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+        <path d="M54 22c17-10 55-10 72 0 9 8 10 40 2 49-14 13-62 13-76 0-8-9-7-41 2-49z" fill="url(#bpearl)" stroke="#e5f2ff" stroke-width="1.1"/>
+        <path d="M61 23c11-6 32-8 44-5" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+        <rect x="56" y="31" width="68" height="41" rx="18" fill="url(#bglass)" stroke="#253c5d" stroke-width="1.6"/>
+        <path d="M64 34c10-3 38-4 51 2l-21 26-36-9c-1-10 0-16 6-19" fill="url(#bshine)"/>
+        <g class="bot-gaze">
+          <g class="bot-expression expression-neutral"><g class="bot-eyes"><rect class="bot-eye" x="71" y="42" width="8" height="13" rx="4"/><rect class="bot-eye" x="101" y="42" width="8" height="13" rx="4"/><path d="M73 44v3m30-3v3" stroke="#fff" stroke-width="2.1" stroke-linecap="round" opacity=".75"/></g><path class="bot-smile" d="M83 61q7 5 14 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></g>
+          <g class="bot-expression expression-curious"><g class="bot-eyes"><rect class="bot-eye" x="71" y="40" width="9" height="15" rx="4.5"/><rect class="bot-eye" x="101" y="43" width="8" height="11" rx="4"/><path d="M70 35q5-4 10-1m22 4 7 1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></g><ellipse cx="90" cy="63" rx="3" ry="2.8" stroke="currentColor" stroke-width="1.5"/></g>
+          <g class="bot-expression expression-thoughtful"><g class="bot-eyes"><path d="M71 48q4-7 9-1m21 0q4-5 8 1" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="m69 39 10-2m22 3 9 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></g><path d="M86 63h9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></g>
+          <g class="bot-expression expression-focused"><g class="bot-eyes"><rect class="bot-eye" x="70" y="45" width="11" height="7" rx="3"/><rect class="bot-eye" x="100" y="45" width="11" height="7" rx="3"/><path d="m70 38 11 3m19 0 11-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></g><path d="M85 62q5 2 10 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></g>
+          <g class="bot-expression expression-sparkle"><g class="bot-eyes"><path class="bot-eye" d="m75 39 2.2 5 5.3 1.8-5.3 2.2-2.2 5.2-2.1-5.2-5.1-2.2 5.1-1.8zm30 0 2.2 5 5.3 1.8-5.3 2.2-2.2 5.2-2.1-5.2-5.1-2.2 5.1-1.8z"/></g><path d="M83 60q7 8 14 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></g>
+          <path class="bot-cheek" d="M65 58h7m36 0h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </g>
+        <path d="M78 77h24" stroke="#ebf6ff" stroke-width="2" stroke-linecap="round"/>
+      </g>
+    </g>
+    <g class="bot-workstation"><path d="m37 123 52-9 54 9-54 14z" fill="#102448" fill-opacity=".45" stroke="url(#btable)" stroke-width="1.2"/><path d="M37 123v4l52 15 54-15v-4" fill="#0c203e" fill-opacity=".7" stroke="currentColor" stroke-opacity=".2"/><path d="m63 124 26-5 29 5-29 8z" fill="#08213e" stroke="currentColor" stroke-opacity=".6" stroke-width=".7"/><g class="bot-keyboard" stroke="currentColor" stroke-width="1" opacity=".75"><path d="m71 124 20-4m-13 8 27-5m-19 7 26-5m-36-3 14 7m-4-9 14 6m-2-8 13 6"/></g><path d="M45 131v9m90-9v9" stroke="currentColor" stroke-opacity=".3"/>
+      <g class="bot-pc-screen"><path d="M56 79h68l-4 33H60z" fill="#081a34" stroke="#deefff" stroke-width="1.5"/><path d="M56 79h68l-1 5H57z" fill="#8ab4de" fill-opacity=".32"/><circle cx="90" cy="82" r="1" fill="currentColor"/><path d="M59 87h62l-2 23H61z" fill="currentColor" fill-opacity=".06"/><g class="bot-screen-code" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M65 91h7m4 0h12m4 0h15M67 96h11m4 0h5m4 0h18M66 101h6m4 0h14m5 0h9M65 106h17m5 0h24"/></g><path class="bot-screen-caret" d="M113 101v5" stroke="#fff" stroke-width="1.5"/><path d="M59 112h62l5 3H54z" fill="#b6d0ef" stroke="currentColor" stroke-width=".6"/></g>
+      <g class="bot-hologram"><path d="M25 61h23l9 39H34z" fill="currentColor" fill-opacity=".09" stroke="currentColor" stroke-width=".8" stroke-opacity=".8"/><path d="m31 68 15 .5m-13 5 15 .5m-13 5 11 .5m-10 5 15 .5m-13 5 8 .5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".65"/><path class="bot-scan" d="m29 69 20 .5" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="39" cy="95" r="1.7" fill="currentColor"/>
+      </g>
+      <g class="bot-thoughts"><circle class="thought-dot" cx="140" cy="23" r="2" fill="currentColor"/><circle class="thought-dot" cx="149" cy="18" r="3" fill="currentColor"/><circle class="thought-dot" cx="161" cy="14" r="4" fill="currentColor"/></g>
+    </g>
+  </svg></div></div>
+        <div class="handoff-document" id="handoffDocument" aria-hidden="true"><svg viewBox="0 0 36 44"><path d="M9 5h17l6 7v30H9z" fill="#334b87" stroke="#c1d5ff" stroke-width="1"/><path d="M4 2h18l8 8v29H4z" fill="#eff9ff" stroke="#fff" stroke-width="1.2"/><path d="M22 2v9h8" fill="#c5d5ef" stroke="#9cb9da" stroke-width=".8"/><path d="M9 17h15M9 22h15M9 27h11" stroke="#4d7098" stroke-width="1.5" stroke-linecap="round"/><circle cx="21" cy="33" r="3.2" fill="#29b9cc"/><path d="m19.4 33 1.1 1.1 2-2.2" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/></svg></div>
+      </section>
+      <div class="chat-grid" id="chatGrid">
+        <section class="chat-pane left-pane" aria-labelledby="leftTitle">
+          <header class="chat-toolbar"><span class="chat-letter">A</span><div><h3 id="leftTitle">First reviewer</h3><p id="leftMode">Not opened</p></div><div class="chat-tools"><button class="icon-button" id="reloadLeft" type="button" aria-label="Reload chat A" title="Reload chat A">↻</button><button class="icon-button" id="expandLeft" type="button" aria-label="Expand chat A" title="Expand chat A">⛶</button></div></header>
+          <div class="page-detail" id="leftDetail" role="status">Waiting for your imported session.</div>
+          <div class="web-slot" id="leftSlot"><div class="empty-page"><span class="empty-monogram">A</span><h4>An independent first answer</h4><p>This chat develops its own answer, then checks the other reviewer’s challenges.</p><span class="empty-line"></span></div></div>
+        </section>
+        <section class="chat-pane right-pane" aria-labelledby="rightTitle">
+          <header class="chat-toolbar"><span class="chat-letter chat-letter-b">B</span><div><h3 id="rightTitle">Second reviewer</h3><p id="rightMode">Not opened</p></div><div class="chat-tools"><button class="icon-button" id="reloadRight" type="button" aria-label="Reload chat B" title="Reload chat B">↻</button><button class="icon-button" id="expandRight" type="button" aria-label="Expand chat B" title="Expand chat B">⛶</button></div></header>
+          <div class="page-detail" id="rightDetail" role="status">Waiting for your imported session.</div>
+          <div class="web-slot" id="rightSlot"><div class="empty-page"><span class="empty-monogram empty-monogram-b">B</span><h4>A critical second perspective</h4><p>This chat finds errors, checks evidence and proposes a complete improved answer.</p><span class="empty-line"></span></div></div>
+        </section>
+      </div>
+
+      <section class="result-drawer" id="resultDrawer" aria-label="Exchange results">
+        <header class="result-header"><canvas class="star-ribbon bottom-star-ribbon" id="bottomStarRibbon" aria-hidden="true"></canvas><button class="result-toggle" id="toggleResults" type="button" aria-expanded="false" aria-controls="resultContent"><span class="result-symbol" aria-hidden="true">⇄</span><span class="bottom-stage" id="bottomStage">Import your session to begin</span><span class="round-badge compact-round" id="bottomRound">ROUND —</span><span class="bottom-files" id="bottomFiles">No output files yet</span><span class="drawer-chevron" aria-hidden="true">⌃</span></button><button class="button secondary compact-save" id="saveFilesCompact" type="button" disabled>↓ Save</button><button class="text-button split-button" id="restoreSplit" type="button" hidden>Restore split</button></header>
+        <div class="result-content" id="resultContent" hidden>
+          <section class="run-strip" aria-labelledby="statusTitle"><div class="run-icon" id="runIcon" aria-hidden="true">⇄</div><div class="run-copy"><h2 id="statusTitle">Your workspace is ready to connect</h2><p id="statusDetail">Import your Chrome cookies, choose a chat type, then open both chats.</p></div><span class="round-badge" id="roundBadge">ROUND —</span></section>
+          <div class="result-answer-heading"><strong id="resultLabel">Current candidate</strong><span class="result-count" id="resultCount">No answer yet</span></div>
+          <div class="result-tabs" role="tablist" aria-label="Result sections"><button id="answerTab" type="button" role="tab" aria-selected="true" aria-controls="answerPanel">Current answer</button><button id="activityTab" type="button" role="tab" aria-selected="false" aria-controls="activityPanel">Full exchange <span id="activityCount">0</span></button><button id="issuesTab" type="button" role="tab" aria-selected="false" aria-controls="issuesPanel">Remaining issues <span id="issueCount">0</span></button><div class="result-actions"><button class="text-button" id="viewOutput" type="button" hidden>View original outputs</button><button class="text-button" id="copyAnswer" type="button" disabled>Copy</button><button class="text-button" id="exportAnswer" type="button" disabled>Export .md</button></div></div>
+          <div class="result-panel" id="answerPanel" role="tabpanel" aria-labelledby="answerTab"><section id="improvementCard" class="improvement-card" aria-label="Candidate changes" hidden><div class="improvement-heading"><strong id="improvementSummary">No revisions yet</strong><span id="candidateVersion"></span></div><p id="improvementDetail"></p><ol id="improvementTrail"></ol><details id="originalAnswerDetails"><summary>Compare with the first draft</summary><p id="originalAnswer" class="answer"></p></details></section><p id="answer" class="answer empty-answer">The current candidate will appear here as the reviewers work.</p><div class="output-card" id="outputCard" hidden><div class="output-copy"><strong id="outputHeading">Files from the current answer</strong><p class="output-summary" id="answerOutputs"></p><p class="file-save-status" id="fileSaveStatus" role="status" hidden></p></div><button class="button primary" id="saveFiles" type="button" disabled>↓ Save current files</button></div></div>
+          <div class="result-panel" id="activityPanel" role="tabpanel" aria-labelledby="activityTab" hidden><div class="transcript" id="transcript"><p class="empty-answer">The complete drafts, reviews and challenges will appear here.</p></div></div>
+          <div class="result-panel" id="issuesPanel" role="tabpanel" aria-labelledby="issuesTab" hidden><div id="issues"><p class="empty-answer">No unresolved issues reported yet.</p></div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

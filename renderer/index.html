@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'" />
+    <meta name="theme-color" content="#0b1016" />
+    <title>Converge — Answer Studio</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell" id="appShell">
+      <aside class="sidebar" id="sidebar" aria-label="Workspace controls">
+        <div class="sidebar-top">
+          <div class="brand-lockup">
+            <div class="brand-mark" aria-hidden="true"><span></span><span></span></div>
+            <div><div class="brand-name">converge<span class="brand-dot">.</span></div><div class="brand-subtitle">ANSWER STUDIO</div></div>
+          </div>
+          <button type="button" class="icon-button sidebar-close" id="closeSidebar" aria-label="Close controls">×</button>
+        </div>
+
+        <div class="sidebar-scroll">
+          <div id="autoSidebarContent">
+            <div class="sidebar-intro">
+              <div class="eyebrow">AUTOMATIC DEBATE</div>
+              <h1>Two independent minds. <em>One refined</em> answer.</h1>
+              <p>Converge passes each critique and revision between the analysts, then stops on substantive agreement or your round limit.</p>
+            </div>
+
+            <section class="settings-section" aria-labelledby="autoConnectionHeading">
+              <div class="section-heading"><span class="section-index">01</span><h2 id="autoConnectionHeading">Automatic connection</h2><span class="connection-dot" id="apiDot" aria-hidden="true"></span></div>
+              <div class="connection-card">
+                <div class="connection-status" id="apiStatus">Checking automatic access…</div>
+                <div class="provider-options" role="radiogroup" aria-label="Automatic mode provider"><label class="provider-option"><input id="autoProviderCodex" type="radio" name="autoProvider" value="codex" checked /><span class="provider-copy"><strong>Use Codex account</strong><small id="codexProviderStatus">Checking local sign-in…</small></span><span class="provider-symbol" aria-hidden="true">✦</span></label><label class="provider-option"><input id="autoProviderApi" type="radio" name="autoProvider" value="api" /><span class="provider-copy"><strong>Use an API key</strong><small>Direct API access</small></span><span class="provider-symbol" aria-hidden="true">↗</span></label></div>
+                <div class="auth-divider"><span>API KEY · OPTIONAL</span></div>
+                <label class="field-label" for="autoApiKey">OpenAI API key</label>
+                <div class="input-with-action"><input id="autoApiKey" type="password" placeholder="sk-…" autocomplete="off" spellcheck="false" aria-describedby="apiHelp" /><button type="button" class="input-action" id="toggleAutoKey" aria-label="Show API key">Show</button></div>
+                <div class="session-actions"><button type="button" class="small-primary" id="saveAutoKey">Use key <span aria-hidden="true">↗</span></button><button type="button" class="secondary-button" id="clearAutoKey">Remove key</button></div>
+                <p class="field-hint" id="apiHelp">Codex uses your signed-in local Codex CLI. The API key route may incur API charges. Imported browser cookies work only in Manual pages.</p>
+              </div>
+            </section>
+
+            <section class="settings-section" aria-labelledby="autoAnalystsHeading">
+              <div class="section-heading"><span class="section-index">02</span><h2 id="autoAnalystsHeading">The analysts</h2></div>
+              <div class="analyst-setting analyst-setting-left"><div class="analyst-setting-title"><span class="analyst-glyph">A</span><strong>Analyst A</strong><span>Independent view</span></div><label class="field-label" for="autoLeftModel">Model ID</label><input id="autoLeftModel" class="plain-input" type="text" list="autoModelSuggestions" value="gpt-5.6-sol" spellcheck="false" autocomplete="off" /><label class="field-label" for="autoLeftEffort">Reasoning effort</label><select id="autoLeftEffort" class="plain-input"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="xhigh">Extra high</option><option value="max" selected>Max</option><option value="ultra">Ultra · Codex</option></select></div>
+              <div class="analyst-setting analyst-setting-right"><div class="analyst-setting-title"><span class="analyst-glyph">B</span><strong>Analyst B</strong><span>Independent view</span></div><label class="field-label" for="autoRightModel">Model ID</label><input id="autoRightModel" class="plain-input" type="text" list="autoModelSuggestions" value="gpt-5.6-sol" spellcheck="false" autocomplete="off" /><label class="field-label" for="autoRightEffort">Reasoning effort</label><select id="autoRightEffort" class="plain-input"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="xhigh">Extra high</option><option value="max" selected>Max</option><option value="ultra">Ultra · Codex</option></select></div>
+              <datalist id="autoModelSuggestions"><option value="gpt-5.6-sol"></option><option value="gpt-6-astra"></option><option value="gpt-5.6-terra"></option><option value="gpt-5.6-luna"></option><option value="gpt-6-sol"></option></datalist>
+            </section>
+
+            <section class="settings-section" aria-labelledby="autoLimitsHeading">
+              <div class="section-heading"><span class="section-index">03</span><h2 id="autoLimitsHeading">Session limits</h2></div>
+              <div class="limit-row"><div><label class="field-label limit-label" for="autoMaxRounds">Maximum rounds</label><p>Both analysts get a turn in each round.</p></div><div class="stepper"><button type="button" id="autoRoundMinus" aria-label="Decrease maximum rounds">−</button><input id="autoMaxRounds" type="number" min="1" max="20" value="6" inputmode="numeric" /><button type="button" id="autoRoundPlus" aria-label="Increase maximum rounds">+</button></div></div>
+              <div class="method-note"><span class="method-icon" aria-hidden="true">◎</span><p>The exchange stops on agreement, your Stop command, or the round limit. Agreement is not proof of correctness.</p></div>
+            </section>
+
+            <section class="settings-section protocol-section" aria-labelledby="autoProtocolHeading">
+              <div class="section-heading"><span class="section-index">04</span><h2 id="autoProtocolHeading">Additional direction</h2></div>
+              <p class="section-description">Optional instructions for the automatic reviewers. The built-in verification protocol always applies.</p>
+              <textarea id="autoPrompt" rows="5" placeholder="Example: Check every calculation and cite primary sources when possible…" aria-label="Additional debate instructions"></textarea>
+            </section>
+          </div>
+
+          <div id="manualSidebarContent" hidden>
+          <div class="sidebar-intro">
+            <div class="eyebrow">BROWSER AUTOMATIC · YOUR SESSION</div>
+            <h1>Two live chats. <em>One stronger</em> answer.</h1>
+            <p>Converge opens two ChatGPT pages and relays completed text answers between them while you watch and control the run.</p>
+          </div>
+
+          <section class="settings-section" aria-labelledby="sessionHeading">
+            <div class="section-heading"><span class="section-index">01</span><h2 id="sessionHeading">Browser session</h2><span class="connection-dot" id="connectionDot" aria-hidden="true"></span></div>
+            <div class="connection-card">
+              <div class="connection-status" id="connectionStatus">Checking local session…</div>
+              <label class="field-label" for="cookieInput">ChatGPT cookie export or Cookie header</label>
+              <div class="secret-wrap"><textarea id="cookieInput" class="secret-input" rows="3" placeholder="Paste session cookies here" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="cookieHelp"></textarea><button type="button" class="input-action secret-toggle" id="toggleCookie" aria-label="Show cookie text">Show</button></div>
+              <div class="session-actions"><button type="button" class="small-primary" id="importCookies">Import session <span aria-hidden="true">↗</span></button><button type="button" class="secondary-button" id="clearSession">Clear session</button></div>
+              <p class="field-hint" id="cookieHelp">Cookies are sensitive session credentials. Import stores them only in this app session and clears this field. Imported cookies alone do not prove that either page is signed in.</p>
+            </div>
+            <button type="button" class="open-pages-button" id="openPages">Open both ChatGPT pages <span aria-hidden="true">↗</span></button>
+          </section>
+
+          <section class="settings-section protocol-section" aria-labelledby="protocolHeading">
+            <div class="section-heading"><span class="section-index">02</span><h2 id="protocolHeading">Starter protocol</h2></div>
+            <p class="section-description">The automatic relay uses this review direction with your question. Edit it for your task; you do not need to paste it into either page.</p>
+            <textarea id="debatePrompt" rows="9" aria-label="Editable debate starter prompt"></textarea>
+            <button type="button" class="secondary-button copy-protocol" id="copyProtocol" hidden><span aria-hidden="true">⧉</span> Copy starter protocol</button>
+          </section>
+
+          <section class="settings-section" aria-labelledby="workflowHeading">
+            <div class="section-heading"><span class="section-index">03</span><h2 id="workflowHeading">Before you start</h2></div>
+            <ol class="workflow-list">
+              <li><span>01</span><p>Import the browser session and open both pages. Confirm that each page is signed in.</p></li>
+              <li><span>02</span><p>Switch <strong>each</strong> page to Temporary Chat, check personalization, and tick the confirmation below each page.</p></li>
+              <li><span>03</span><p>Enter one question and press <strong>Start automatic debate</strong>. The app sends and relays text; press Stop at any time.</p></li>
+            </ol>
+            <div class="method-note"><span class="method-icon" aria-hidden="true">◎</span><p>The app cannot guarantee Temporary Chat or unpersonalized settings from cookie import. Verify them visually. Agreement does not prove correctness.</p></div>
+          </section>
+
+          <section class="settings-section notes-section" aria-labelledby="notesHeading" hidden>
+            <div class="section-heading"><span class="section-index">04</span><h2 id="notesHeading">My final notes</h2></div>
+            <textarea id="sessionNotes" rows="5" placeholder="Write a conclusion or unresolved questions here. This stays local to this window until you export it." aria-label="Session notes"></textarea>
+            <button type="button" class="secondary-button copy-protocol" id="exportNotes"><span aria-hidden="true">↓</span> Export notes</button>
+          </section>
+          </div>
+        </div>
+        <div class="sidebar-bottom"><span class="sidebar-bottom-dot"></span><span id="footerModeText">Browser relay. You keep control.</span><span id="versionLabel">v—</span></div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div class="topbar-left"><button type="button" class="icon-button menu-button" id="openSidebar" aria-label="Toggle controls" aria-expanded="true" aria-controls="sidebar"><span class="menu-lines"></span></button><span class="topbar-breadcrumb">CONVERGE <span>/</span> ANSWER STUDIO</span></div>
+          <div class="mode-switch" role="group" aria-label="Workspace mode"><button type="button" id="modeAuto" class="is-active" aria-pressed="true">✦ Automatic</button><button type="button" id="modeManual" aria-pressed="false">◫ Manual pages</button></div>
+          <div class="topbar-right"><div class="status-pill" id="statusPill"><span class="status-pulse"></span><span id="statusText">Checking browser session</span></div><button type="button" class="topbar-button focus-button" id="focusMode" aria-pressed="false" title="Give both pages more room" hidden><span class="focus-icon" aria-hidden="true">⛶</span><span id="focusModeLabel">Focus pages</span></button><button type="button" class="topbar-button" id="newChats" disabled hidden>New chats <span aria-hidden="true">↗</span></button></div>
+        </header>
+
+        <div class="workspace-body auto-workspace" id="autoWorkspace">
+          <div class="session-heading"><div><div class="eyebrow accent-eyebrow"><span class="star">✳</span> TWO PERSPECTIVES · ONE STRONGER ANSWER</div><h2>Let the ideas <em>meet.</em></h2><p>Each analyst critiques the other and revises until they agree or reach your limit.</p></div><div class="session-meta"><span class="meta-key">ROUND</span><strong id="autoRoundDisplay">— / 6</strong><span class="meta-divider"></span><span class="meta-key">TOKENS</span><strong id="autoUsageDisplay">—</strong></div></div>
+          <div class="stage-banner" id="autoStageBanner" role="status" aria-live="polite"><div class="stage-symbol" aria-hidden="true">✦</div><div class="stage-copy"><strong id="autoStageTitle">Checking your Codex account</strong><span id="autoStageDetail">Automatic debate can run through your signed-in Codex CLI or an API key.</span></div><div class="stage-progress" aria-hidden="true"><span></span><span></span><span></span></div></div>
+          <div class="debate-grid">
+            <section class="debate-panel panel-left" aria-labelledby="autoLeftHeading"><div class="panel-header"><div class="panel-identity"><div class="avatar">A<span class="avatar-spark">✦</span></div><div><div class="panel-overline">LEFT CHANNEL · ANALYST A</div><h3 id="autoLeftHeading">Independent answer</h3></div></div><div class="panel-count" id="autoLeftCount">0 notes</div></div><div class="panel-messages" id="autoLeftMessages" role="log" aria-live="polite" aria-relevant="additions"><div class="empty-panel"><div class="empty-illustration"><span>A</span><i></i><span>B</span></div><strong>A fresh perspective starts here.</strong><p>Analyst A forms an independent answer, then challenges and refines it.</p></div></div><div class="panel-footer"><span class="panel-footer-line"></span><span>ANALYST A</span></div></section>
+            <div class="panel-divider" aria-hidden="true"><div class="divider-diamond">↔</div></div>
+            <section class="debate-panel panel-right" aria-labelledby="autoRightHeading"><div class="panel-header"><div class="panel-identity"><div class="avatar">B<span class="avatar-spark">✦</span></div><div><div class="panel-overline">RIGHT CHANNEL · ANALYST B</div><h3 id="autoRightHeading">Independent answer</h3></div></div><div class="panel-count" id="autoRightCount">0 notes</div></div><div class="panel-messages" id="autoRightMessages" role="log" aria-live="polite" aria-relevant="additions"><div class="empty-panel"><div class="empty-illustration"><span>A</span><i></i><span>B</span></div><strong>A second point of view.</strong><p>Analyst B starts independently, then tests the evolving answer.</p></div></div><div class="panel-footer"><span class="panel-footer-line"></span><span>ANALYST B</span></div></section>
+          </div>
+          <div class="candidate-bar"><div class="candidate-icon">◇</div><div><div class="candidate-label">EVOLVING CANDIDATE</div><p id="autoCandidateText">The answer taking shape will appear here as the exchange progresses.</p></div><button type="button" class="candidate-action" id="autoOpenResult" disabled aria-label="View answer">↗</button></div>
+          <section class="composer" aria-labelledby="autoComposerHeading"><div class="composer-label-row"><label id="autoComposerHeading" for="autoQuestion">YOUR QUESTION</label><span>Ctrl + Enter to start</span></div><textarea id="autoQuestion" rows="3" placeholder="What do you want both analysts to solve or examine?" aria-label="Your question"></textarea><div class="attachment-list" id="autoAttachments" aria-live="polite"></div><div class="composer-toolbar"><div class="composer-tools"><button type="button" class="attach-button" id="autoAttach"><span aria-hidden="true">＋</span> Add files</button><button type="button" class="text-button" id="autoClearAttachments" hidden>Clear files</button><span class="composer-tip">Files and images are sent to both analysts</span></div><div class="run-actions"><button type="button" class="stop-button" id="autoStop" hidden>■ Stop run</button><button type="button" class="start-button" id="autoStart">Start debate <span aria-hidden="true">↗</span></button></div></div></section>
+        </div>
+
+        <div class="workspace-body live-workspace" id="manualWorkspace" hidden>
+          <div class="session-heading">
+            <div><div class="eyebrow accent-eyebrow"><span class="star">✳</span> TWO LIVE CHATGPT PAGES · AUTOMATIC RELAY</div><h2>Watch the answers <em>converge.</em></h2><p>Each page answers, challenges, and revises; you can stop the exchange at any time.</p></div>
+            <div class="mode-tag"><span class="mode-light"></span> BROWSER AUTOMATIC</div>
+          </div>
+
+          <div class="stage-banner" id="stageBanner" role="status" aria-live="polite"><div class="stage-symbol" aria-hidden="true">✦</div><div class="stage-copy"><strong id="stageTitle">Connect your browser session</strong><span id="stageDetail">Import your session cookies, then open both pages.</span></div><div class="stage-progress" aria-hidden="true"><span></span><span></span><span></span></div></div>
+
+          <div class="live-grid" id="liveGrid">
+            <section class="page-panel panel-left" aria-labelledby="leftPanelHeading">
+              <div class="panel-header"><div class="panel-identity"><div class="avatar">A<span class="avatar-spark">✦</span></div><div><div class="panel-overline">LEFT PAGE · CHATGPT</div><h3 id="leftPanelHeading">Analyst A</h3></div></div><div class="page-header-actions"><div class="page-state" id="leftPageState">Waiting</div><button type="button" class="icon-button page-reload" id="reloadLeft" title="Reload left page" aria-label="Reload left page" disabled>↻</button></div></div>
+              <div class="web-slot" id="leftWebSlot" aria-label="Left ChatGPT browser page"><div class="web-placeholder"><div class="empty-illustration"><span>A</span><i></i><span>B</span></div><strong>Your first page will open here.</strong><p>Import a browser session, then open the two pages.</p></div></div>
+              <div class="page-footer"><label class="temporary-check"><input type="checkbox" id="confirmLeftTemporary" /><span>I selected Temporary Chat and checked personalization in A</span></label><button type="button" class="page-paste" id="pasteLeft" disabled hidden>Paste clipboard into A <span>↙</span></button></div>
+            </section>
+            <div class="panel-divider" aria-hidden="true"><div class="divider-diamond">↔</div></div>
+            <section class="page-panel panel-right" aria-labelledby="rightPanelHeading">
+              <div class="panel-header"><div class="panel-identity"><div class="avatar">B<span class="avatar-spark">✦</span></div><div><div class="panel-overline">RIGHT PAGE · CHATGPT</div><h3 id="rightPanelHeading">Analyst B</h3></div></div><div class="page-header-actions"><div class="page-state" id="rightPageState">Waiting</div><button type="button" class="icon-button page-reload" id="reloadRight" title="Reload right page" aria-label="Reload right page" disabled>↻</button></div></div>
+              <div class="web-slot" id="rightWebSlot" aria-label="Right ChatGPT browser page"><div class="web-placeholder"><div class="empty-illustration"><span>A</span><i></i><span>B</span></div><strong>Your second page will open here.</strong><p>Each page can be set to Temporary Chat by you.</p></div></div>
+              <div class="page-footer"><label class="temporary-check"><input type="checkbox" id="confirmRightTemporary" /><span>I selected Temporary Chat and checked personalization in B</span></label><button type="button" class="page-paste" id="pasteRight" disabled hidden>Paste clipboard into B <span>↘</span></button></div>
+            </section>
+          </div>
+
+          <div class="bridge-bar"><div class="bridge-symbol">⇄</div><div><div class="bridge-label" id="cookieRelayLabel">AUTOMATIC RELAY</div><p id="cookieRelayStatus">Waiting for two signed-in pages and your Temporary Chat confirmations.</p></div><button type="button" class="secondary-button" id="cookieShowResult" hidden>View answer</button><button type="button" class="secondary-button" id="inspectClipboard" hidden>View clipboard</button></div>
+
+          <section class="composer" aria-labelledby="composerHeading"><div class="composer-label-row"><label id="composerHeading" for="questionInput">YOUR QUESTION</label><span>Ctrl + Enter to start</span></div><textarea id="questionInput" rows="3" placeholder="What should both live ChatGPT pages solve or examine?" aria-label="Your question"></textarea><div class="composer-toolbar"><div class="composer-tools"><label class="cookie-rounds" for="cookieMaxRounds">Round limit <input id="cookieMaxRounds" type="number" min="1" max="20" value="6" inputmode="numeric" /></label><span class="composer-tip">Text relay · Stop at any time</span></div><div class="run-actions"><button type="button" class="stop-button" id="cookieStop" hidden>■ Stop run</button><button type="button" class="start-button" id="cookieStart" disabled>Start automatic debate <span aria-hidden="true">↗</span></button><button type="button" class="start-button" id="copyQuestion" hidden>⧉ Copy question</button></div></div></section>
+        </div>
+      </main>
+
+      <div class="drawer-scrim" id="autoResultScrim" hidden></div>
+      <aside class="result-drawer" id="autoResultDrawer" aria-label="Automatic debate result" aria-hidden="true"><div class="drawer-header"><div><div class="eyebrow accent-eyebrow">THE SYNTHESIS</div><h2>Final answer<span>.</span></h2></div><button type="button" class="icon-button drawer-close" id="autoCloseResult" aria-label="Close result">×</button></div><div class="drawer-scroll"><div class="result-status-card" id="autoResultStatusCard"><span class="result-status-symbol" id="autoResultSymbol">◇</span><div><strong id="autoResultStatus">Waiting for a result</strong><p id="autoResultExplanation">The result will appear when a run finishes.</p></div></div><div class="result-content rich-text" id="autoResultContent"><p class="result-placeholder">No answer yet. Start a debate to build one.</p></div><div class="result-issues" id="autoResultIssues" hidden><h3>Open questions</h3><ul id="autoIssuesList"></ul></div></div><div class="drawer-footer"><div class="drawer-usage" id="autoDrawerUsage">—</div><div class="drawer-actions"><button type="button" class="secondary-button" id="autoCopyAnswer" disabled>⧉ Copy answer</button><button type="button" class="small-primary" id="autoExportAnswer" disabled>Export .md ↗</button></div></div></aside>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      <div class="clipboard-modal" id="clipboardModal" hidden><div class="clipboard-card" role="dialog" aria-modal="true" aria-labelledby="clipboardTitle"><div class="clipboard-head"><div><div class="eyebrow accent-eyebrow">CURRENT CLIPBOARD</div><h2 id="clipboardTitle">Review before pasting</h2></div><button type="button" class="icon-button" id="closeClipboard" aria-label="Close clipboard preview">×</button></div><pre id="clipboardText"></pre><div class="clipboard-foot"><span>Only text currently on your clipboard is shown here.</span><button type="button" class="secondary-button" id="refreshClipboard">Refresh</button></div></div></div>
+    </div>
+  </body>
+</html>

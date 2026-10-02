@@ -1,0 +1,78 @@
+{
+  "name": "converge-desktop",
+  "version": "1.6.5",
+  "private": true,
+  "description": "Two embedded ChatGPT pages with an automatic review exchange",
+  "main": "desktop-main.js",
+  "author": "Converge",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "node scripts/build-page-preload.js && electron .",
+    "test": "node --test",
+    "qa:desktop": "node scripts/build-page-preload.js && electron scripts/qa-desktop-cookie.js",
+    "build:win": "node scripts/build-page-preload.js && electron-builder --win nsis portable --x64"
+  },
+  "devDependencies": {
+    "electron": "44.5.1",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "app.converge.desktop",
+    "productName": "Converge",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "desktop-main.js",
+      "desktop-preload.js",
+      "src/browser/cookies.js",
+      "src/browser/files.js",
+      "src/browser/downloads.js",
+      "src/browser/desktop-coordinator.js",
+      "src/browser/page-preload.js",
+      "chrome-extension/background.js",
+      "renderer/browser.html",
+      "renderer/browser-app.js",
+      "renderer/browser.css",
+      "renderer/galaxy-scene.js",
+      "renderer/galaxy-scene.css",
+      "renderer/star-ribbons.js",
+      "renderer/ghost-v2.png",
+      "renderer/flower-blossom-v1.png",
+      "assets/icon.ico",
+      "assets/icon.png",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "licenses/Apache-2.0.txt",
+        "to": "licenses/Apache-2.0.txt"
+      },
+      {
+        "from": "THIRD_PARTY_NOTICES.md",
+        "to": "THIRD_PARTY_NOTICES.md"
+      }
+    ],
+    "asar": true,
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "signExecutable": false,
+      "forceCodeSigning": false
+    },
+    "nsis": {
+      "artifactName": "Converge-Setup-${version}-${arch}.${ext}",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "portable": {
+      "artifactName": "Converge-Portable-${version}-${arch}.${ext}"
+    }
+  },
+  "dependencies": {}
+}

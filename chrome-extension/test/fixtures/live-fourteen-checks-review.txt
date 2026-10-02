@@ -1,0 +1,52 @@
+{
+  "fixtureNote": "Synthetic public parser regression fixture. Replaces private live-review-derived prose while preserving fourteen checks, uncertain status, native citation quoting and unavailable external evidence. No live conversation or trading source is included.",
+  "candidateId": "C1",
+  "verdict": "uncertain",
+  "issues": [
+    {
+      "severity": "major",
+      "problem": "Example external validation is unavailable.",
+      "evidence": "The synthetic fixture includes no external execution report. :chatgpt-content-reference{index="0"}",
+      "correction": "Provide genuine external evidence before counting this example requirement as completed."
+    }
+  ],
+  "improvements": [],
+  "revisedAnswer": "",
+  "resolvedIssueIds": [
+    "I13",
+    "I14",
+    "I18",
+    "I19"
+  ],
+  "uncertainties": [
+    "External execution was not performed for this synthetic test fixture."
+  ],
+  "checks": [
+    "Synthetic check 1: the example source has two references, without any private source text. :chatgpt-content-reference{index="1"} :chatgpt-content-reference{index="2"}",
+    "Synthetic check 2: the example document retains its declared field and evidence marker. :chatgpt-content-reference{index="3"}",
+    "Synthetic check 3: the example document retains its declared field and evidence marker. :chatgpt-content-reference{index="4"}",
+    "Synthetic check 4: the example document retains its declared field and evidence marker. :chatgpt-content-reference{index="5"}",
+    "Synthetic check 5: the example document retains its declared field and evidence marker. :chatgpt-content-reference{index="6"}",
+    "Synthetic check 6: the example document retains its declared field and evidence marker. :chatgpt-content-reference{index="7"}",
+    "Synthetic check 7: the example document retains its declared field and evidence marker. :chatgpt-content-reference{index="8"}",
+    "Synthetic check 8: the example document retains its declared field and evidence marker. :chatgpt-content-reference{index="9"}",
+    "Synthetic check 9: the parser preserves the tenth reference token exactly. :chatgpt-content-reference{index="10"}",
+    "Synthetic check 10: the example document retains its declared field and evidence marker. :chatgpt-content-reference{index="11"}",
+    "Synthetic check 11: the example document retains its declared field and evidence marker. :chatgpt-content-reference{index="12"}",
+    "Synthetic check 12: the example document retains its declared field and evidence marker. :chatgpt-content-reference{index="13"}",
+    "Synthetic check 13: the example document retains its declared field and evidence marker. :chatgpt-content-reference{index="14"}",
+    "Synthetic check 14: external execution is unavailable; this fixture does not claim it occurred."
+  ],
+  "taskEvidence": [
+    {
+      "requirementId": "mt5-backtest",
+      "status": "unavailable",
+      "evidence": "Synthetic placeholder requirement; no external execution is claimed."
+    },
+    {
+      "requirementId": "mt5-compile",
+      "status": "not_completed",
+      "evidence": "Synthetic placeholder requirement; no external execution is claimed."
+    }
+  ]
+}

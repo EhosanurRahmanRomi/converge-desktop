@@ -1,6 +1,7 @@
 'use strict';
 
-const { app, BrowserWindow, WebContentsView, ipcMain, session, dialog, clipboard, shell, screen } = require('electron');
+const { app, BrowserWindow, WebContentsView, ipcMain, session, dialog, clipboard, shell, screen, Menu } = require('electron');
+const { platform } = require('node:process');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { randomUUID } = require('node:crypto');
@@ -13,7 +14,7 @@ const SIDES = ['left', 'right'];
 async function createCookieApp(options = {}) {
   const qaOrigin = options.qaOrigin && /^http:\/\/127\.0\.0\.1:\d+$/.test(options.qaOrigin) ? options.qaOrigin : null;
   // Dialog hooks exist only for an isolated localhost QA app. Production uses
-  // native Windows dialogs and never accepts a renderer-supplied output path.
+  // native OS dialogs and never accepts a renderer-supplied output path.
   const fileDialogs = qaOrigin && options.dialogs ? options.dialogs : dialog;
   const browserSession = session.fromPartition(`converge-cookie-${randomUUID()}`, { cache: false });
   browserSession.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
@@ -25,7 +26,7 @@ async function createCookieApp(options = {}) {
     title: 'Converge — Browser Studio',
     width: Math.min(1600, workArea.width), height: Math.min(980, workArea.height),
     minWidth: Math.min(1100, workArea.width), minHeight: Math.min(640, workArea.height),
-    show: false, backgroundColor: '#0a1118', icon: path.join(__dirname, 'assets/icon.ico'),
+    show: false, backgroundColor: '#0a1118', icon: path.join(__dirname, platform === 'darwin' ? 'assets/icon.png' : 'assets/icon.ico'),
     frame: false, autoHideMenuBar: true,
     webPreferences: { preload: path.join(__dirname, 'desktop-preload.js'), sandbox: true,
       contextIsolation: true, nodeIntegration: false, webviewTag: false },
@@ -41,6 +42,7 @@ async function createCookieApp(options = {}) {
   let opening = false;
   let fileOperation = false;
   let effectsPaused = false;
+  let closedCleanup = Promise.resolve();
   const emit = (channel, data) => { if (!mainWindow.isDestroyed()) mainWindow.webContents.send(channel, data); };
   const pageSide = (event) => SIDES.find((side) => views[side]?.webContents === event.sender);
   const permitted = (url) => {
@@ -199,7 +201,7 @@ async function createCookieApp(options = {}) {
   for (const event of ['maximize', 'unmaximize', 'minimize', 'restore']) mainWindow.on(event, publishWindowState);
   handle('browser:bootstrap', async () => {
     publishEffectsVisibility();
-    return { version: app.getVersion(), hasSession, windowVisible: windowVisible(), windowState: windowState(), state: await coordinator.getState() };
+    return { version: app.getVersion(), platform, hasSession, windowVisible: windowVisible(), windowState: windowState(), state: await coordinator.getState() };
   });
   handle('browser:window-action', (action) => {
     if (!['minimize', 'toggle-maximize', 'close'].includes(action)) throw new Error('Unknown window action.');
@@ -358,7 +360,7 @@ async function createCookieApp(options = {}) {
     views[side].webContents.reload(); return { ok: true };
   });
   handle('browser:expand', (side) => { if (side && !SIDES.includes(side)) throw new Error('Unknown chat.'); if (side) views[side].webContents.focus(); return { ok: true }; });
-  handle('browser:copy', (text) => { if (typeof text !== 'string' || text.length > 200_000) throw new Error('Invalid answer text.'); clipboard.writeText(text); return { ok: true }; });
+  handle('browser:copy', async (text) => { if (typeof text !== 'string' || text.length > 200_000) throw new Error('Invalid answer text.'); await clipboard.writeText(text); return { ok: true }; });
   handle('browser:save', async (payload) => {
     // The bounded revision record includes the original answer and reported
     // changes as well as the current answer.
@@ -404,26 +406,106 @@ async function createCookieApp(options = {}) {
   ipcMain.handle('converge:download-cancel', downloadRequest((side, payload) => downloads.cancel(side, payload?.token)));
   mainWindow.on('closed', () => {
     closing = true; coordinator.dispose();
-    downloads.dispose().catch(() => {});
+    const downloadCleanup = downloads.dispose().catch(() => {});
     for (const side of SIDES) { rejectPending(side, 'The app closed.'); if (!views[side].webContents.isDestroyed()) views[side].webContents.close(); }
     for (const channel of channels) ipcMain.removeHandler(channel);
     ipcMain.removeHandler('converge:page-event'); ipcMain.removeListener('converge:page-ready', pageReady); ipcMain.removeListener('converge:page-response', pageResponse);
     for (const channel of ['converge:download-begin', 'converge:download-read', 'converge:download-cancel']) ipcMain.removeHandler(channel);
+    // Closing a window on macOS leaves the application in the Dock. Do not
+    // retain that closed workspace's imported cookies in a live partition.
+    hasSession = false;
+    closedCleanup = Promise.all([downloadCleanup, Promise.resolve(browserSession.clearData?.()).catch(() => {})]);
   });
   await mainWindow.loadFile(path.join(__dirname, 'renderer/browser.html'));
   await firstPaint;
   if (options.show !== false && !mainWindow.isDestroyed()) mainWindow.show();
-  return { mainWindow, views, coordinator, browserSession, openPages, sendToPage };
+  return { mainWindow, views, coordinator, browserSession, openPages, sendToPage, whenClosed: () => closedCleanup };
+}
+
+async function runNativeMacSmoke(lifecycle) {
+  if (!app.isPackaged || platform !== 'darwin' || process.arch !== 'arm64') throw new Error('Native startup smoke requires the packaged Apple Silicon app.');
+  const assert = require('node:assert/strict');
+  const desktop = await lifecycle.ready;
+  const checkShell = async (owned) => {
+    assert.ok(owned && !owned.mainWindow.isDestroyed());
+    assert.equal(owned.mainWindow.isVisible(), true);
+    assert.deepEqual(Object.keys(owned.views), SIDES);
+    for (const side of SIDES) assert.ok(['', 'about:blank'].includes(owned.views[side].webContents.getURL()), 'Smoke must not navigate a provider page');
+    return owned.mainWindow.webContents.executeJavaScript(`new Promise((resolve,reject)=>{const began=performance.now();const check=()=>{const version=document.getElementById('version')?.textContent;if(version===${JSON.stringify(`v${app.getVersion()}`)}){const ids=['windowMinimize','windowMaximize','windowClose','chooseCookies','leftSlot','rightSlot'];resolve({version,platformHint:document.getElementById('startShortcutModifier')?.textContent,controls:ids.every(id=>!!document.getElementById(id)),sessionImported:document.getElementById('sessionBadge')?.textContent==='Imported'});return;}if(performance.now()-began>5000){reject(Error('Native shell bootstrap did not settle'));return;}setTimeout(check,25);};check();})`);
+  };
+  const initial = await checkShell(desktop);
+  assert.equal(initial.controls, true); assert.equal(initial.sessionImported, false); assert.equal(initial.platformHint, 'Command');
+  assert.ok(Menu.getApplicationMenu(), 'The native application menu is missing');
+  if (process.env.CONVERGE_MACOS_SMOKE_SCREENSHOT) {
+    const output = path.resolve(process.env.CONVERGE_MACOS_SMOKE_SCREENSHOT);
+    await fs.mkdir(path.dirname(output), { recursive: true });
+    await fs.writeFile(output, (await desktop.mainWindow.webContents.capturePage()).toPNG());
+  }
+  const poll = async (operation, expected, label) => {
+    const began = Date.now();
+    while (Date.now() - began < 3000) {
+      if (await operation() === expected) return;
+      await new Promise(resolve => setTimeout(resolve, 25));
+    }
+    throw new Error(`Native editing did not settle: ${label}`);
+  };
+  const previousClipboard = await clipboard.readText();
+  const editing = {};
+  try {
+    for (const side of ['shell', ...SIDES]) {
+      const contents = side === 'shell' ? desktop.mainWindow.webContents : desktop.views[side].webContents;
+      if (side !== 'shell') {
+        await contents.loadURL('about:blank');
+        desktop.views[side].setVisible(true);
+        await contents.executeJavaScript("document.body.innerHTML='<textarea id=question></textarea>'");
+      }
+      const copyText = `CONVERGE_NATIVE_COPY_${side}`, pasteText = `CONVERGE_NATIVE_PASTE_${side}`;
+      await contents.executeJavaScript(`document.getElementById('question').value=${JSON.stringify(copyText)};document.getElementById('question').focus()`);
+      app.focus({ steal: true }); desktop.mainWindow.focus(); contents.focus();
+      Menu.sendActionToFirstResponder('selectAll:');
+      Menu.sendActionToFirstResponder('copy:');
+      await poll(() => clipboard.readText(), copyText, `${side} copy`);
+      await clipboard.writeText(pasteText);
+      Menu.sendActionToFirstResponder('paste:');
+      await poll(() => contents.executeJavaScript("document.getElementById('question').value"), pasteText, `${side} paste`);
+      editing[side] = true;
+    }
+  } finally { await clipboard.writeText(previousClipboard); }
+  const firstClosed = new Promise(resolve => desktop.mainWindow.once('closed', resolve));
+  // Exercise the real shell button and guarded preload/IPC close path.
+  await desktop.mainWindow.webContents.executeJavaScript("document.getElementById('windowClose').click()").catch(() => {});
+  await firstClosed; await desktop.whenClosed();
+  assert.ok(SIDES.every(side => desktop.views[side].webContents.isDestroyed()), 'Closed workspace retained a provider renderer');
+  assert.equal(lifecycle.getCurrent(), null);
+  app.emit('activate');
+  const reopened = await lifecycle.showWindow();
+  assert.notEqual(reopened, desktop);
+  const restored = await checkShell(reopened);
+  assert.equal(restored.sessionImported, false); assert.equal(restored.controls, true);
+  const report = { status: 'PASS', platform, arch: process.arch, packaged: app.isPackaged,
+    version: app.getVersion(), executable: process.execPath, visibleShell: true, commandShortcutHint: true,
+    nativeMenu: true, nativeEditingVerified: editing, didClose: true, embeddedViewsDisposed: true, closeCleanupCompleted: true,
+    activateEventComplete: true, freshWorkspaceOnActivate: true,
+    activationScope: 'Automated Electron activate event, not physical Dock input',
+    providerScope: 'Empty isolated session; no authentication, provider navigation or live model task',
+  };
+  const secondClosed = new Promise(resolve => reopened.mainWindow.once('closed', resolve));
+  reopened.mainWindow.close(); await secondClosed; await reopened.whenClosed();
+  process.stdout.write(`CONVERGE_MACOS_NATIVE_SMOKE ${JSON.stringify(report)}\n`);
+  app.quit();
 }
 
 module.exports = { createCookieApp };
 if (require.main === module) {
+  const { installDesktopLifecycle } = require('./src/platform/desktop-lifecycle');
+  const nativeSmoke = platform === 'darwin' && process.argv.includes('--converge-native-startup-smoke');
+  if (nativeSmoke) app.setPath('userData', path.join(app.getPath('temp'), `converge-native-smoke-${process.pid}-${randomUUID()}`));
   if (!app.requestSingleInstanceLock()) app.quit();
   else {
-    app.whenReady().then(async () => {
-      app.setAppUserModelId('app.converge.browser-studio');
-      await createCookieApp();
-    }).catch((error) => { dialog.showErrorBox('Converge could not start', error.message); app.quit(); });
-    app.on('window-all-closed', () => app.quit());
+    const lifecycle = installDesktopLifecycle({ app, Menu, platform, createApp: createCookieApp,
+      onError(error) { if (nativeSmoke) { process.stderr.write(`${error.stack || error.message}\n`); app.exit(1); }
+        else { dialog.showErrorBox('Converge could not start', error.message); app.quit(); } },
+    });
+    if (nativeSmoke) runNativeMacSmoke(lifecycle).catch(error => { process.stderr.write(`${error.stack || error.message}\n`); app.exit(1); });
   }
 }

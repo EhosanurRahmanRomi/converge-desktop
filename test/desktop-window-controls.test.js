@@ -9,9 +9,9 @@ const vm = require('node:vm');
 
 // Exercise the real host and preload without opening a window or touching a
 // Chrome profile. The fake surfaces record observable native calls and events.
-async function harness() {
+async function harness(options = {}) {
   const handlers = new Map(), sent = [], actions = [], deferred = [];
-  let coordinatorDisposed = false, downloadsDisposed = false;
+  let coordinatorDisposed = false, downloadsDisposed = false, sessionCleared = false;
   class Contents extends EventEmitter {
     constructor() { super(); this.mainFrame = { url: 'https://chatgpt.com/' }; this.destroyed = false; }
     getURL() { return this.mainFrame.url; }
@@ -42,6 +42,7 @@ async function harness() {
   const browserSession = new EventEmitter();
   browserSession.setPermissionRequestHandler = () => {};
   browserSession.setPermissionCheckHandler = () => {};
+  browserSession.clearData = async () => { sessionCleared = true; };
   const module = { exports: {} }, hostPath = path.join(__dirname, '..', 'desktop-main.js');
   vm.runInNewContext(fs.readFileSync(hostPath, 'utf8'), {
     module, __dirname: path.dirname(hostPath), URL, setTimeout, clearTimeout,
@@ -49,7 +50,8 @@ async function harness() {
     require(name) {
       if (name === 'electron') return { app: { getVersion: () => 'fixture' }, BrowserWindow: Window, WebContentsView: View, ipcMain,
         screen: { getPrimaryDisplay: () => ({ workAreaSize: { width: 1366, height: 728 } }) },
-        session: { fromPartition: () => browserSession }, dialog: {}, clipboard: {}, shell: {} };
+        session: { fromPartition: () => browserSession }, dialog: {}, clipboard: options.clipboard || {}, shell: {} };
+      if (name === 'node:process') return { platform: options.platform || 'win32' };
       if (name === './src/browser/cookies') return { parseCookies() {} };
       if (name === './src/browser/files') return { MIME: {}, validateExport() {}, validateTextSource() {} };
       if (name === './src/browser/downloads') return { createDownloadBroker: () => ({ dispose: async () => { downloadsDisposed = true; } }) };
@@ -63,6 +65,7 @@ async function harness() {
   return { desktop, window, owner, handlers, actions, sent, deferred,
     invoke(channel, payload, event = owner) { return handlers.get(channel)(event, payload); },
     cleanup: () => ({ coordinatorDisposed, downloadsDisposed }),
+    sessionCleared: () => sessionCleared,
   };
 }
 const plain = value => JSON.parse(JSON.stringify(value));
@@ -131,6 +134,35 @@ test('Close acknowledges before owner teardown and follows existing page and IPC
   assert.equal(host.desktop.views.left.webContents.isDestroyed(), true);
   assert.equal(host.desktop.views.right.webContents.isDestroyed(), true);
   assert.deepEqual(host.cleanup(), { coordinatorDisposed: true, downloadsDisposed: true });
+  assert.equal(host.sessionCleared(), true);
+});
+
+test('macOS keeps the same isolated frameless geometry and exposes platform without native ICO icon', async () => {
+  const host = await harness({ platform: 'darwin' });
+  assert.equal((await host.invoke('browser:bootstrap')).platform, 'darwin');
+  assert.match(host.window.options.icon, /icon\.png$/);
+  assert.equal(host.window.options.frame, false);
+  assert.equal(host.window.options.width, 1366);
+  assert.equal(host.window.options.height, 728);
+  assert.equal(host.window.options.webPreferences.sandbox, true);
+  assert.equal(host.window.options.webPreferences.contextIsolation, true);
+});
+
+test('copy waits for Electron async clipboard completion and propagates native failure', async () => {
+  let release;
+  const writes = [];
+  const host = await harness({ clipboard: { writeText: text => {
+    writes.push(text); return new Promise(resolve => { release = resolve; });
+  } } });
+  let settled = false;
+  const operation = host.invoke('browser:copy', 'reviewed result').then(value => { settled = true; return value; });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(settled, false);
+  assert.deepEqual(writes, ['reviewed result']);
+  release(); assert.equal((await operation).ok, true);
+  const failure = await harness({ clipboard: { writeText: async () => { throw Error('Native clipboard unavailable'); } } });
+  await assert.rejects(failure.invoke('browser:copy', 'result'), /Native clipboard unavailable/);
+  await assert.rejects(failure.invoke('browser:copy', 'x'.repeat(200001)), /Invalid answer text/);
 });
 
 test('preload exposes a bounded window-action channel and removable state subscription', async () => {

@@ -778,7 +778,7 @@
   ui.cookieInput.addEventListener('input', updateControls);
   ui.question.addEventListener('input', updateControls);
   ui.question.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); startExchange(); }
+    if (!event.isComposing && !event.repeat && event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); startExchange(); }
   });
   ui.chooseCookies.addEventListener('click', () => ui.cookieFile.click());
   ui.cookieFile.addEventListener('change', async () => {
@@ -976,6 +976,8 @@
   });
   render(state);
   api.bootstrap().then((result) => {
+    const shortcutModifier = document.getElementById('startShortcutModifier');
+    if (shortcutModifier) shortcutModifier.textContent = result?.platform === 'darwin' ? 'Command' : 'Ctrl';
     renderWindowState(result?.windowState);
     galaxyEffects.setWindowVisible(result?.windowVisible);
     hasSession = Boolean(result?.hasSession);

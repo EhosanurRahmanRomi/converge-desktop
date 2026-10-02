@@ -2,15 +2,22 @@
 
 ![Converge — One task. Two perspectives.](docs/images/banner.svg)
 
-A Windows desktop workspace where two ChatGPT conversations draft independently, review each other's work, exchange the actual generated files, and check the same final candidate before stopping.
+A desktop workspace where two ChatGPT conversations draft independently, review each other's work, exchange the actual generated files, and check the same final candidate before stopping.
 
-**Current release: 1.6.5 · Windows x64 · Source available for inspection**
+**Windows: 1.6.5 · macOS: 1.7.0 ARM64 in validation · Source available for inspection**
 
-[Download the Windows release](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.6.5) · [User guide](docs/USER_GUIDE.md) · [Developer guide](docs/DEVELOPER_GUIDE.md) · [Verification](docs/VERIFICATION.md)
+[Windows release](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.6.5) · [Mac release](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.7.0) · [Mac guide](docs/MACOS_GUIDE.md) · [User guide](docs/USER_GUIDE.md) · [Developer guide](docs/DEVELOPER_GUIDE.md)
+
+| Platform | Release | Downloads | Verification |
+|---|---|---|---|
+| Windows x64 | **1.6.5** | [Installer](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.6.5/Converge-Setup-1.6.5-x64.exe) · [Portable](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.6.5/Converge-Portable-1.6.5-x64.exe) | [Recorded Windows evidence](docs/VERIFICATION.md) |
+| macOS Apple Silicon, including MacBook Air M4 | **1.7.0 — native validation pending** | [DMG](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.7.0/Converge-1.7.0-macOS-arm64.dmg) · [ZIP](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.7.0/Converge-1.7.0-macOS-arm64.zip) | [Mac evidence and pending gates](docs/MACOS_VERIFICATION.md) |
+
+The Mac build preserves the same workspace, animations, chat review and generated-file handoff. It adds Command shortcuts, native app/Edit menus, Mac file dialogs and Dock behavior. Mac downloads become available when the 1.7.0 release is published; native validation is currently in progress.
 
 ![Converge's two-chat workspace with the controls hidden](docs/images/desktop-working.png)
 
-*Interface preview using controlled fixture activity. These images show the layout; they are not screenshots of the authenticated verification run.*
+*Windows 1.6.5 interface preview using controlled fixture activity. These images show the shared layout; they are not Mac screenshots or screenshots of the authenticated verification run.*
 
 ## What it does
 
@@ -26,13 +33,15 @@ Converge uses an imported ChatGPT browser session. The current desktop flow does
 
 ## Start a review
 
-1. Download the [installer](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.6.5/Converge-Setup-1.6.5-x64.exe) or [portable app](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.6.5/Converge-Portable-1.6.5-x64.exe).
+1. On Windows, download the [installer](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.6.5/Converge-Setup-1.6.5-x64.exe) or [portable app](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.6.5/Converge-Portable-1.6.5-x64.exe). On an Apple Silicon Mac, use the [1.7.0 DMG](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.7.0/Converge-1.7.0-macOS-arm64.dmg) and follow the [Mac installation guide](docs/MACOS_GUIDE.md).
 2. Open **Import JSON file** and choose your current ChatGPT cookie export. Import begins immediately; pasting JSON is an optional alternative.
 3. Choose a chat type and press **Open both chats**. Select the desired model in each page.
 4. Enter a task, attach any source files, and press **Start automatic exchange**.
 5. Watch the progress band, open the result drawer to inspect revisions/findings, and use **Save final files** when the result is accepted.
 
 The Windows executables are unsigned. Installation and portable-wrapper startup were not exercised in the recorded 1.6.5 verification; the actual unpacked built application was visibly launched and closed.
+
+The Mac release uses an ad-hoc signature and has no Apple Developer ID signature or notarization. See the [Mac guide](docs/MACOS_GUIDE.md) for first-launch instructions and the [Mac verification record](docs/MACOS_VERIFICATION.md) for its own test scope.
 
 ![The slide-out controls and task brief](docs/images/desktop-controls.png)
 
@@ -59,6 +68,8 @@ Agreement is a review result, not a guarantee of correctness. Reviewers can shar
 | Document | Contents |
 |---|---|
 | [User guide](docs/USER_GUIDE.md) | Setup, modes, files, review controls, results and troubleshooting |
+| [Mac guide](docs/MACOS_GUIDE.md) | Apple Silicon installation, Command shortcuts, Dock behavior and native file dialogs |
+| [Mac verification](docs/MACOS_VERIFICATION.md) | Native build gates, package identities and Mac-specific evidence |
 | [Developer guide](docs/DEVELOPER_GUIDE.md) | Local setup, tests, Windows build and source map |
 | [Architecture](docs/ARCHITECTURE.md) | Session boundaries, review lifecycle and file identity |
 | [Verification](docs/VERIFICATION.md) | Recorded tests, live review, artifact hashes and scope |
@@ -81,5 +92,7 @@ The desktop runtime is Electron. The source also retains earlier extension/API e
 ## Session privacy and project status
 
 Treat cookie exports as account credentials. Never upload them to this repository, attach them to an issue, or paste them into a model conversation. The app reads the file you select, displays only its filename, clears the import input, and keeps its imported session in memory. Closing the app loses its session and exchange state. Generated files are saved only when you choose to save them; provider-side storage depends on the selected ChatGPT mode.
+
+On Mac, closing the window clears that workspace and its imported session. The app remains available in the Dock; opening it again creates a fresh setup window. Use **Command + Q** to quit, or minimize to keep the current review running.
 
 Converge is an independent project and is not an official OpenAI or ChatGPT application. Its own source remains **UNLICENSED**, as declared in `package.json`; public visibility does not grant reuse rights. Third-party notices are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

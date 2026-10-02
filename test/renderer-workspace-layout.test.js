@@ -37,7 +37,7 @@ if (!process.versions.electron) {
     Element.prototype.animate=function(frames,options){if(this.id==='handoffDocument')fixture.paperAnimations.push({frames,options});return originalAnimate.call(this,frames,options)};
     fixture.finish=()=>{fixture.state={...fixture.state,status:'agreed',phase:'done',round:4,answer:'Reviewed result',candidate:{id:'C1',text:'Reviewed result',media:{side:'right',files:[{name:'improved.pdf',mimeType:'application/pdf',base64:'JVBERg=='}]}},pages:{left:{...ready},right:{...ready}}};fixture.listener(fixture.state)};
     window.convergeBrowser={
-      bootstrap:async()=>({hasSession:true,version:'fixture',state:fixture.state}),setBounds:async value=>{fixture.bounds.push(value);return{ok:true}},
+      bootstrap:async()=>({hasSession:true,version:'fixture',platform:new URLSearchParams(location.search).get('platform')||'win32',state:fixture.state}),setBounds:async value=>{fixture.bounds.push(value);return{ok:true}},
       onState:fn=>{fixture.listener=fn},onPage:()=>{},
       start:async payload=>{fixture.starts.push({...payload});fixture.state={...fixture.state,status:'running',phase:'review',stage:'Round 2: B checks improvements',round:2,maxRounds:payload.maxRounds,minReviewRounds:payload.reviewMode==='verify'?1:4,reviewMode:payload.reviewMode,question:payload.question,runId:'run-'+fixture.starts.length,requireFiles:payload.requireFiles,relayMedia:payload.relayMedia,attachments:{status:'none',names:[]}};fixture.listener(fixture.state);return{ok:true,state:fixture.state}},
       saveFiles:async()=>{fixture.saves++;return{ok:true,names:['improved.pdf'],saved:1}},expand:async()=>({ok:true}),copy:async()=>({ok:true}),saveText:async()=>({ok:true}),
@@ -283,6 +283,18 @@ if (!process.versions.electron) {
       await start('Check the fixed numerical result');
       assert.equal(await evaluate('fixture.starts.at(-1).reviewMode'), 'verify');
       assert.match(await evaluate("document.getElementById('reviewSummary').textContent"), /2 verification steps/);
+      await evaluate('fixture.finish()'); await settle();
+
+      // The actual renderer uses the host platform for its hint and keeps
+      // Command+Enter scoped to the task field, including IME/repeat guards.
+      assert.equal(await evaluate("document.getElementById('startShortcutModifier').textContent"), 'Ctrl');
+      await win.loadURL(`http://127.0.0.1:${server.address().port}/?platform=darwin`);
+      await waitForUi("document.getElementById('version').textContent==='vfixture'");
+      assert.equal(await evaluate("document.getElementById('startShortcutModifier').textContent"), 'Command');
+      await evaluate("document.getElementById('question').value='Verify a fixed result';document.getElementById('question').dispatchEvent(new Event('input',{bubbles:true}));document.getElementById('question').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',metaKey:true,isComposing:true,bubbles:true}));document.getElementById('question').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',metaKey:true,repeat:true,bubbles:true}))");
+      assert.equal(await evaluate('fixture.starts.length'), 0, 'IME completion or repeat submitted a task');
+      await evaluate("document.getElementById('question').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',metaKey:true,bubbles:true}))"); await settle();
+      assert.equal(await evaluate('fixture.starts.length'), 1, 'Command+Enter did not start the actual renderer task');
       await evaluate('fixture.finish()'); await settle();
 
       win.setSize(900, 650); await settle();

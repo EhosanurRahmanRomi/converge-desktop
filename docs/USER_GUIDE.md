@@ -4,7 +4,7 @@
 
 ## 1. Open Converge
 
-Choose the Windows x64 installer or portable application from the [1.6.5 release](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.6.5).
+Choose the Windows x64 installer or portable application from the [1.6.5 release](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.6.5). For a MacBook Air M4 or another Apple Silicon Mac, use the ARM64 Mac build and follow the [Mac guide](MACOS_GUIDE.md).
 
 - **Installer:** follow the setup wizard and open Converge from its shortcut.
 - **Portable:** open the portable executable without running an installation wizard.

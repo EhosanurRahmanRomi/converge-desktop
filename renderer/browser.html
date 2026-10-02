@@ -69,7 +69,7 @@
         <div class="card-content">
           <label class="field-label" id="questionLabel" for="question">Your task</label>
           <textarea id="question" class="question-input" rows="5" maxlength="20000" placeholder="Describe what to solve, create or improve…" spellcheck="true"></textarea>
-          <div class="question-meta"><span><kbd>Ctrl</kbd> + <kbd>Enter</kbd> to start</span><span id="questionCount">0 / 20,000</span></div>
+          <div class="question-meta"><span><kbd id="startShortcutModifier">Ctrl</kbd> + <kbd>Enter</kbd> to start</span><span id="questionCount">0 / 20,000</span></div>
           <label class="field-label" for="reviewMode">Review approach</label>
           <select id="reviewMode" class="review-mode"><option value="auto">Auto · match the task</option><option value="improve">Improve · at least 4 rounds</option><option value="verify">Verify · 2 verification steps</option></select>
           <p class="helper review-mode-hint" id="reviewModeHint">Creative and file tasks improve through at least 4 rounds. Fixed answers get 2 verification steps.</p>

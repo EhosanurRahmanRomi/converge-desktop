@@ -4,13 +4,13 @@
 
 ## Current implementation
 
-Converge 1.6.5 is an **Electron desktop application**. Its production entry point is `desktop-main.js`; `renderer/browser.html` is the application shell. Two embedded pages connect through an imported ChatGPT browser session. The current flow does not use the API implementation retained under `src/core`.
+Converge is an **Electron desktop application**. Version 1.7.0 adds Apple Silicon macOS support; the separately recorded Windows release is 1.6.5. Its production entry point is `desktop-main.js`; `renderer/browser.html` is the application shell. Two embedded pages connect through an imported ChatGPT browser session. The current flow does not use the API implementation retained under `src/core`.
 
 Earlier extension and API implementations are preserved for project history. The desktop coordinator reuses the review engine in `chrome-extension/background.js`, and the page-preload build derives its bridge from `chrome-extension/content.js`. Editing those shared files can therefore change the desktop application even when you are not building the extension.
 
 ## Local setup
 
-Use Windows for the recorded desktop workflow and x64 release build, with Node.js and npm available. The project pins **Electron 44.5.1** and **electron-builder 26.15.3** in its lockfile.
+Use Windows for x64 builds or Apple Silicon macOS for ARM64 Mac builds. Node.js **22.12.0 or newer** and npm are required for development. The project pins **Electron 44.5.1** and **electron-builder 26.15.3** in its lockfile. Packaged applications include their runtime and do not require Node.js.
 
 ```powershell
 git clone https://github.com/EhosanurRahmanRomi/converge-desktop.git
@@ -55,6 +55,8 @@ The recorded live run used GPT 5.6 High through the frozen source launcher. The 
 
 ## Build Windows artifacts
 
+The command below builds the current source version. The existing public Windows installers remain 1.6.5; the 1.7.0 release adds Mac artifacts without relabeling or replacing those Windows installers.
+
 ```powershell
 npm run build:win -- --publish never
 ```
@@ -63,14 +65,30 @@ The build produces:
 
 ```text
 dist/
-  Converge-Setup-1.6.5-x64.exe
-  Converge-Portable-1.6.5-x64.exe
+  Converge-Setup-1.7.0-x64.exe
+  Converge-Portable-1.7.0-x64.exe
   win-unpacked/
     Converge.exe
     resources/app.asar
 ```
 
 NSIS is configured as a wizard installation with a selectable installation directory and desktop/Start Menu shortcuts. The portable target is also x64. Both wrappers are unsigned in this release; code-signing is disabled in the current build configuration.
+
+## Build Apple Silicon Mac artifacts
+
+On an Apple Silicon Mac running macOS 13 or newer:
+
+```sh
+npm ci
+npm run build:mac
+npm run verify:mac
+```
+
+Outputs are `dist/Converge-1.7.0-macOS-arm64.dmg` and `dist/Converge-1.7.0-macOS-arm64.zip`, containing the same `Converge.app`. The build uses native ARM64 Electron and ad-hoc signing. It does not include Developer ID signing or Apple notarization. Native signing, bundle verification and DMG creation run on macOS; the Mac build command does not substitute a Windows-generated unsigned bundle.
+
+The repository's Mac workflow builds on a native Apple Silicon runner with publishing disabled, verifies the packaged runtime and runs the controlled desktop tests. See [Mac installation](MACOS_GUIDE.md) and [Mac verification](MACOS_VERIFICATION.md) for the exact evidence and remaining hardware checks.
+
+The shell, reviewer bridge, review engine, file transfer and animation assets are shared. `src/platform/desktop-lifecycle.js` handles menu roles and window lifecycle; the renderer chooses the Command shortcut on macOS. Keep platform adaptation separate from the shared review and file logic.
 
 Before publishing a new release:
 
@@ -89,6 +107,7 @@ Do not publish `node_modules`, local cookie files, personal recordings, live acc
 |---|---|
 | `desktop-main.js` | Native window, isolated browser session, page views, guarded IPC, upload/download brokers and Save dialogs |
 | `desktop-preload.js` | Narrow bridge between the shell and main process |
+| `src/platform/desktop-lifecycle.js` | Platform application menu, single-window ownership, Dock activation and quit behavior |
 | `renderer/browser.html` | Window controls, setup/task drawer, reviewer stage and results/files UI |
 | `renderer/browser-app.js` | Shell state, readiness, direct JSON import, task controls, window actions and result rendering |
 | `renderer/browser.css` | Desktop/compact layout, drawer typography and custom chrome |

@@ -2,6 +2,30 @@
 
 [← Project](../README.md) · [Verification](VERIFICATION.md)
 
+## 1.7.0 — macOS Apple Silicon
+
+The existing Converge workspace is now packaged for native ARM64 Macs, including the MacBook Air M4. The Windows 1.6.5 downloads remain available separately.
+
+### Same workspace and review system
+
+- Retained the two embedded chats, slide-out controls, compact progress/results band, bot animation and Stars, Ghost and Flowers effects.
+- Retained the shared review engine, four-round improvement, two-step fixed-answer verification, same-chat follow-ups, Reset, Stop and generated-file handoff.
+- Converted the existing application icon to native Mac icon sizes without changing its artwork.
+
+### Mac integration
+
+- Added native application, File, Edit and Window menus with focused copy/paste in the shell and embedded chats.
+- Show **Command + Enter** in the task field; prevent repeated or composing-key events from starting a review.
+- Close disposes the current workspace and its in-memory session. The app stays in the Dock and opens a fresh workspace on activation; **Command + Q** quits.
+- Added native ARM64 DMG and ZIP build and verification workflows. macOS 13 or newer is required by Electron 44.
+- Await the asynchronous clipboard write before reporting a successful copy.
+
+### Verification and installation
+
+Native release validation is in progress. The [Mac verification record](MACOS_VERIFICATION.md) records the completed gates and exact artifact identities; the [Mac guide](MACOS_GUIDE.md) explains installation and shortcuts.
+
+This release uses an ad-hoc signature. It has no Apple Developer ID signature or notarization. Native runner checks do not establish a physical M4 test or live authenticated provider behavior.
+
 ## 1.6.5 — 2 October 2026
 
 ### Window and workspace
@@ -43,4 +67,4 @@ The Windows wrappers are unsigned. Fresh installer installation and portable-wra
 
 ## Earlier development
 
-Earlier desktop and extension records are preserved under [history](history/README.md). They document their respective implementations and may include superseded UI or connection behavior. Read the current user/developer guides for 1.6.5.
+Earlier desktop and extension records are preserved under [history](history/README.md). They document their respective implementations and may include superseded UI or connection behavior. Read the current user/developer guides and the platform-specific verification records.

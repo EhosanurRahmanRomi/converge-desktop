@@ -63,7 +63,26 @@ if (!process.versions.electron) {
     const typeInstruction = text => evaluate(`document.getElementById('bossMessageInput').value=${JSON.stringify(text)};document.getElementById('bossMessageInput').dispatchEvent(new Event('input',{bubbles:true}))`);
     const send = () => evaluate("document.getElementById('sendBossMessage').click()");
     const reload = () => new Promise(resolve => { win.webContents.once('did-finish-load', resolve); win.webContents.reload(); });
-    const geometry = () => evaluate(`(()=>{const rect=id=>{const b=document.getElementById(id).getBoundingClientRect();return{x:b.x,y:b.y,width:b.width,height:b.height,right:b.right,bottom:b.bottom}};return{left:rect('leftSlot'),right:rect('rightSlot'),boss:rect('bossSlot'),drawer:rect('bossDrawer'),native:bossFixture.bounds.at(-1)}})()`);
+    // Font metrics and the drawer entrance can change its slot after the first
+    // paint. ResizeObserver then schedules native bounds on a later frame.
+    // Require exact measured agreement, rather than assuming 330 ms is enough
+    // on every WindowServer host. A persistent mismatch still fails this gate.
+    const geometry = () => evaluate(`new Promise((resolve,reject)=>{
+      const began=performance.now();let fontsReady=false,previous='',stable=0,last;
+      document.fonts.ready.then(()=>{fontsReady=true});
+      const rect=id=>{const b=document.getElementById(id).getBoundingClientRect();return{x:b.x,y:b.y,width:b.width,height:b.height,right:b.right,bottom:b.bottom}};
+      const check=()=>{
+        last={left:rect('leftSlot'),right:rect('rightSlot'),boss:rect('bossSlot'),drawer:rect('bossDrawer'),native:bossFixture.bounds.at(-1)};
+        const drawer=document.getElementById('bossDrawer');
+        const animated=drawer.getAnimations().some(animation=>animation.playState==='running');
+        const matches=last.native&&['x','y','width','height'].every(key=>last.native.boss[key]===Math.round(last.boss[key]));
+        const signature=JSON.stringify(last);
+        stable=fontsReady&&!animated&&matches?(signature===previous?stable+1:1):0;previous=signature;
+        if(stable>=2)return resolve(last);
+        if(performance.now()-began>4000)return reject(Error('Boss native bounds did not settle to the measured slot: '+JSON.stringify(last)));
+        setTimeout(check,20);
+      };check();
+    })`);
     try {
       win.webContents.debugger.attach('1.3');
       await win.loadURL(`http://127.0.0.1:${server.address().port}/`);

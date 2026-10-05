@@ -1,6 +1,6 @@
 # Windows 1.8.1 verification
 
-This audit and Windows build were completed on 5 October 2026. These results belong to 1.8.1; the [earlier 1.8.0 record](WINDOWS_1_8_VERIFICATION.md) remains historical evidence.
+This audit and final Windows rebuild were completed on 5 October 2026. These results belong to 1.8.1; the [earlier 1.8.0 record](WINDOWS_1_8_VERIFICATION.md) remains historical evidence. The final rebuild incorporates the separate Mac startup verification function; Windows coordination, transport and UI logic remain the same as the live-tested source.
 
 ## Results
 
@@ -50,14 +50,14 @@ After saving, the files' imports and code were inspected independently on this W
 
 | Artifact | SHA-256 |
 |---|---|
-| Windows installer | `1f9801dcc2c63f513044bbe06822f2a886db2ddc2d436310a4c3f3f379452676` |
-| Windows portable | `8291fd2b33a256381630fc1924f06c468b911be81276261d57dc6338bc3d17ab` |
-| Tested packaged archive | `28970f5093816d4045f73f5fb42332e0ccee78a6ab3c9f112cfd951886a17099` |
+| Windows installer | `bf57f4a82c0178902a77522def99799e40e366fbd9382d773085d7a05aea9d57` |
+| Windows portable | `1075eee5a08b17bf9b61f6099db06a550fbd4e0f27d060f91b0e92eb21d26f28` |
+| Tested packaged archive | `b5db09b9307d21a7ce891583914d0f65328fe69687d2356dcf0a9b7a109354ee` |
 
 ## Limits
 
 - The live team used production source under the matching development Electron runtime. Packaged transport was tested separately, and the real portable wrapper was opened and closed. Installer installation and upgrade were not exercised.
-- No new macOS binary, actual MT5 backtest or quantitative GPU benchmark was performed. The MT5 regression uses controlled evidence fixtures and makes no profitability claim.
+- Mac verification is documented separately. No actual MT5 backtest or quantitative GPU benchmark was performed. The MT5 regression uses controlled evidence fixtures and makes no profitability claim.
 - The app stages up to 15 attachments, but a provider may impose a lower cumulative limit. That live 15-file provider limit was not exercised; rejection stops visibly.
 - All five chat backgrounds remain still; decorative motion can be disabled and pauses when hidden/minimized. No remote theme assets are fetched.
 - Agreement is a finite review result. Missing data, unavailable tools, account limits and provider page changes can still prevent completion.

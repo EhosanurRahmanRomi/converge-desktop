@@ -1,0 +1,478 @@
+{
+  "version": "1.8.1",
+  "recordedDate": "2026-10-05",
+  "checkedAt": "2026-10-05T17:30:10.107Z",
+  "nativeRun": {
+    "conclusion": "success",
+    "headSha": "3e1449046fc1b86a1a3f2960e6b94e61027f05cf",
+    "startedAt": "2026-10-05T17:26:34Z",
+    "status": "completed",
+    "updatedAt": "2026-10-05T17:38:10Z",
+    "url": "https://github.com/EhosanurRahmanRomi/converge-desktop/actions/runs/37348451621"
+  },
+  "platform": "darwin",
+  "architecture": "arm64",
+  "hostMacOS": "15.7.9",
+  "sourceTests": {
+    "passed": 425,
+    "total": 425,
+    "failed": 0,
+    "skipped": 0,
+    "concurrency": 1,
+    "durationSeconds": 114.343962875
+  },
+  "package": {
+    "version": "1.8.1",
+    "minimumSystemVersion": "13.0",
+    "signature": {
+      "verified": true,
+      "type": "ad-hoc",
+      "notarized": false
+    },
+    "binaries": [
+      {
+        "file": "Contents/Frameworks/Converge Helper (GPU).app/Contents/MacOS/Converge Helper (GPU)",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ]
+      },
+      {
+        "file": "Contents/Frameworks/Converge Helper (Plugin).app/Contents/MacOS/Converge Helper (Plugin)",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ]
+      },
+      {
+        "file": "Contents/Frameworks/Converge Helper (Renderer).app/Contents/MacOS/Converge Helper (Renderer)",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ]
+      },
+      {
+        "file": "Contents/Frameworks/Converge Helper.app/Contents/MacOS/Converge Helper",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ]
+      },
+      {
+        "file": "Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ]
+      },
+      {
+        "file": "Contents/Frameworks/Electron Framework.framework/Versions/A/Helpers/chrome_crashpad_handler",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ]
+      },
+      {
+        "file": "Contents/Frameworks/Electron Framework.framework/Versions/A/Libraries/libffmpeg.dylib",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ]
+      },
+      {
+        "file": "Contents/Frameworks/Electron Framework.framework/Versions/A/Libraries/libvk_swiftshader.dylib",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ]
+      },
+      {
+        "file": "Contents/Frameworks/Mantle.framework/Versions/A/Mantle",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ]
+      },
+      {
+        "file": "Contents/Frameworks/ReactiveObjC.framework/Versions/A/ReactiveObjC",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ]
+      },
+      {
+        "file": "Contents/Frameworks/Squirrel.framework/Versions/A/Resources/ShipIt",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ]
+      },
+      {
+        "file": "Contents/Frameworks/Squirrel.framework/Versions/A/Squirrel",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ]
+      },
+      {
+        "file": "Contents/MacOS/Converge",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ]
+      }
+    ],
+    "symlinks": [
+      {
+        "file": "Contents/Frameworks/Electron Framework.framework/Electron Framework",
+        "target": "Versions/Current/Electron Framework"
+      },
+      {
+        "file": "Contents/Frameworks/Electron Framework.framework/Helpers",
+        "target": "Versions/Current/Helpers"
+      },
+      {
+        "file": "Contents/Frameworks/Electron Framework.framework/Libraries",
+        "target": "Versions/Current/Libraries"
+      },
+      {
+        "file": "Contents/Frameworks/Electron Framework.framework/Resources",
+        "target": "Versions/Current/Resources"
+      },
+      {
+        "file": "Contents/Frameworks/Electron Framework.framework/Versions/Current",
+        "target": "A"
+      },
+      {
+        "file": "Contents/Frameworks/Mantle.framework/Mantle",
+        "target": "Versions/Current/Mantle"
+      },
+      {
+        "file": "Contents/Frameworks/Mantle.framework/Resources",
+        "target": "Versions/Current/Resources"
+      },
+      {
+        "file": "Contents/Frameworks/Mantle.framework/Versions/Current",
+        "target": "A"
+      },
+      {
+        "file": "Contents/Frameworks/ReactiveObjC.framework/ReactiveObjC",
+        "target": "Versions/Current/ReactiveObjC"
+      },
+      {
+        "file": "Contents/Frameworks/ReactiveObjC.framework/Resources",
+        "target": "Versions/Current/Resources"
+      },
+      {
+        "file": "Contents/Frameworks/ReactiveObjC.framework/Versions/Current",
+        "target": "A"
+      },
+      {
+        "file": "Contents/Frameworks/Squirrel.framework/Resources",
+        "target": "Versions/Current/Resources"
+      },
+      {
+        "file": "Contents/Frameworks/Squirrel.framework/Squirrel",
+        "target": "Versions/Current/Squirrel"
+      },
+      {
+        "file": "Contents/Frameworks/Squirrel.framework/Versions/Current",
+        "target": "A"
+      }
+    ],
+    "runtimeFiles": [
+      {
+        "file": "desktop-main.js",
+        "bytes": 35998,
+        "sha256": "9082c4b0ff3be1861e4527fe12e30b79e133bfdd94db8f127f2768fb376e240d"
+      },
+      {
+        "file": "desktop-preload.js",
+        "bytes": 1525,
+        "sha256": "a0f944255b77eab3768259dbfd194a42693ca8e65cdf53bee9837fc5f70408f2"
+      },
+      {
+        "file": "src/platform/desktop-lifecycle.js",
+        "bytes": 2964,
+        "sha256": "7cb906dc488ebcb2d2190bb4b6060f16bb01d31c4a93f74c2d6cfe8d8f5cc28f"
+      },
+      {
+        "file": "src/browser/cookies.js",
+        "bytes": 7368,
+        "sha256": "20f79d39b92dfc16876a13251247940b515f929e599f7a1d089dbc8bbc7a30d7"
+      },
+      {
+        "file": "src/browser/files.js",
+        "bytes": 8186,
+        "sha256": "111745b7191971c0a7037a2b78a97caed3673361666dff1c05edfef6f3f7bd45"
+      },
+      {
+        "file": "src/browser/downloads.js",
+        "bytes": 9534,
+        "sha256": "e86acd7ad627380631ea7b690a177c800540c6d855667887030c289168f88e3e"
+      },
+      {
+        "file": "src/browser/desktop-coordinator.js",
+        "bytes": 8285,
+        "sha256": "64efad8eadc5680e90ab978f0442a972d2688df404fcf4199eb72b0f041b9025"
+      },
+      {
+        "file": "src/browser/boss-coordinator.js",
+        "bytes": 57506,
+        "sha256": "b7261c237d47bd3a15d4076447a10238f29e59f137cccae49f2e43a9e4cde0f0"
+      },
+      {
+        "file": "src/browser/page-preload.js",
+        "bytes": 228437,
+        "sha256": "362d481556993b69f1f3a15d12a28aa6f13951f93acaf31cc7fe13bf9f86bdaf"
+      },
+      {
+        "file": "chrome-extension/background.js",
+        "bytes": 139873,
+        "sha256": "3a009d6d9b2502f3c828113f2cd475ee5bb0b5b415cd4f5817d65c0888d303c5"
+      },
+      {
+        "file": "renderer/browser.html",
+        "bytes": 44377,
+        "sha256": "4f7b09f0b3100f3f38dd9f98cec1367bc1ab0f090afa80c5ca270d053846b1ed"
+      },
+      {
+        "file": "renderer/browser-app.js",
+        "bytes": 83309,
+        "sha256": "b69e6ddf815bbc6671a3b942be1a96e29d287a34655e3299b59fcab3e237ad63"
+      },
+      {
+        "file": "renderer/browser.css",
+        "bytes": 145866,
+        "sha256": "de7827a9e2e8aacd41f83a7c75cf6e845eb87052da6faf62654c4d7ff1974f77"
+      },
+      {
+        "file": "renderer/galaxy-scene.js",
+        "bytes": 26502,
+        "sha256": "ef5b85ca303f167c72a08a1f4d47a3da670fc1f99cb6914da7742034c4dc0720"
+      },
+      {
+        "file": "renderer/galaxy-scene.css",
+        "bytes": 647,
+        "sha256": "a2e168477702cd25cb11cccdfadbe68ebbfce6a0182766d9a13adcbf2845c55e"
+      },
+      {
+        "file": "renderer/star-ribbons.js",
+        "bytes": 26763,
+        "sha256": "c9724874cb9f58975eff08ac4af2bc75c9ea42b9ed38d630850e3c06888cde7d"
+      },
+      {
+        "file": "renderer/ghost-v2.png",
+        "bytes": 715076,
+        "sha256": "3416c160be60ad2aaebe23855db0654a7a73ac54dad6fc6ccbb853e073ba754d"
+      },
+      {
+        "file": "renderer/flower-blossom-v1.png",
+        "bytes": 1974791,
+        "sha256": "a644defaa480c166064921a22af8383f3f5e9b47f6f5af42feaa176849deb5d8"
+      },
+      {
+        "file": "assets/icon.ico",
+        "bytes": 90882,
+        "sha256": "ebc7920f6f2f66e120091b3155de80a6a59ace972f3a153e8cf62ffb7a78c88d"
+      },
+      {
+        "file": "assets/icon.png",
+        "bytes": 52551,
+        "sha256": "416e36aeb88fffd164fc99afb95304bdaaeb4de2bf995de6ce4cb8586528874d"
+      },
+      {
+        "file": "assets/icon.icns",
+        "bytes": 844841,
+        "sha256": "182f854e1ba9203d10d574207eeed0a00932d9e0862c6a013a53865dfd99c1ee"
+      }
+    ],
+    "asarSha256": "b5db09b9307d21a7ce891583914d0f65328fe69687d2356dcf0a9b7a109354ee",
+    "archiveRoundTrips": {
+      "zip": {
+        "signatureVerified": true,
+        "sourceBytesMatched": true,
+        "permissionsAndSymlinksVerified": true
+      },
+      "dmg": {
+        "imageVerified": true,
+        "signatureVerified": true,
+        "sourceBytesMatched": true,
+        "applicationsShortcutVerified": true
+      }
+    },
+    "artifacts": [
+      {
+        "name": "Converge-1.8.1-macOS-arm64.zip",
+        "bytes": 132246619,
+        "sha256": "d4f14533308bcab8c66ce69b703dc2a0ece17be052e06d1d32a32bead8d8c058"
+      },
+      {
+        "name": "Converge-1.8.1-macOS-arm64.dmg",
+        "bytes": 132968917,
+        "sha256": "421dd32dbb8532d34071fa7d06fef1f5d91218c61d3cb6e1a038dd759c0f6909"
+      }
+    ],
+    "downloadedArtifactsRehashed": true,
+    "windowsRuntimeHashesMatch": true
+  },
+  "nativeStartup": {
+    "status": "PASS",
+    "platform": "darwin",
+    "arch": "arm64",
+    "packaged": true,
+    "version": "1.8.1",
+    "visibleShell": true,
+    "nativeKeyWindow": true,
+    "visibilityScope": "Observed native show state and actual native key window after shell first paint",
+    "commandShortcutHint": true,
+    "nativeMenu": true,
+    "nativeEditingVerified": {
+      "shell": true,
+      "left": true,
+      "right": true,
+      "boss": true,
+      "bossInstruction": true
+    },
+    "bossDrawerVerified": true,
+    "didClose": true,
+    "embeddedViewsDisposed": true,
+    "closeCleanupCompleted": true,
+    "activateEventComplete": true,
+    "freshWorkspaceOnActivate": true,
+    "activationScope": "Automated Electron activate event, not physical Dock input",
+    "providerScope": "Empty isolated session; no authentication, provider navigation or live model task",
+    "passed": true,
+    "checkedAt": "2026-10-05T17:30:22.524Z"
+  },
+  "bossFixture": {
+    "passed": true,
+    "localFixturesOnly": true,
+    "stages": [
+      "Production macOS shell creates three sandboxed isolated native chat views and keeps its browser session in memory.",
+      "Import and Normal OK open exactly three distinct chats with the boss coordinator active.",
+      "A mixed text, valid PDF and PNG source selection reaches all three native file inputs; Reset clears the staged previews and retains the session.",
+      "One native file picker uploads the original source to the boss and both workers.",
+      "The boss writes distinct worker instructions, receives both results and exact generated files every cycle, then both workers verify one final candidate after four improvement cycles.",
+      "The real boss composer accepts an instruction during worker generation, delivers it in the next boss context, and completes the run with no queued message left behind.",
+      "Native Save downloads the actual accepted file and matches the coordinator SHA-256, with the requested corrected values.",
+      "The settings selector applies Horror, Alien, Night, Cyberpunk and Anime backgrounds to all three real chat views.",
+      "Robot, Explorer and Spirit character choices apply without changing the active chat run or its accepted files.",
+      "Clicking the center boss opens and closes its sliding native chat panel while preserving the worker workspace.",
+      "A follow-up reuses all three conversations; a new instruction while the boss generates is queued safely.",
+      "Stop cancels active boss generation and prevents queued instructions from restarting the stopped run.",
+      "Stop also cancels both workers during their concurrent generation, retaining each completed conversation.",
+      "Reset clears all three chats without clearing the imported session; Work mode is verified on the fresh boss and worker pages.",
+      "Temporary mode is also verified on all three new chats through its visible page controls.",
+      "Unreadable boss control output receives one format repair, then stops safely without dispatching an invented worker task or clearing the session."
+    ],
+    "workCycles": 4,
+    "finalCandidateId": "C4",
+    "savedFileSha256": "41124dfe7b5162c7b244b70b82b71091d98fbe49101de22ca0a526bff8395ea7",
+    "packageVersion": "1.8.1",
+    "launcherVersion": "1.8.1",
+    "bootstrapVersion": "1.8.1",
+    "archiveSha256": "b5db09b9307d21a7ce891583914d0f65328fe69687d2356dcf0a9b7a109354ee",
+    "runtimeFilesCompared": [
+      "desktop-main.js",
+      "desktop-preload.js",
+      "src/platform/desktop-lifecycle.js",
+      "src/browser/cookies.js",
+      "src/browser/files.js",
+      "src/browser/downloads.js",
+      "src/browser/desktop-coordinator.js",
+      "src/browser/boss-coordinator.js",
+      "src/browser/page-preload.js",
+      "chrome-extension/background.js",
+      "renderer/browser.html",
+      "renderer/browser-app.js",
+      "renderer/browser.css",
+      "renderer/galaxy-scene.js",
+      "renderer/galaxy-scene.css",
+      "renderer/star-ribbons.js",
+      "renderer/ghost-v2.png",
+      "renderer/flower-blossom-v1.png",
+      "assets/icon.ico",
+      "assets/icon.png",
+      "assets/icon.icns"
+    ],
+    "capturedImages": [
+      "chat-background-horror.png",
+      "chat-background-alien.png",
+      "chat-background-night.png",
+      "chat-background-cyberpunk.png",
+      "chat-background-anime.png",
+      "team-characters-astronaut.png",
+      "team-characters-spirit.png",
+      "team-characters-robot.png",
+      "workers-and-boss-character.png",
+      "sliding-boss-chat.png",
+      "native-boss-chat.png"
+    ],
+    "captureWarnings": [],
+    "themes": [
+      {
+        "theme": "horror",
+        "screenshotSha256": "27bbebb968039147af0faff14fd5172017bf3441dc808cb9f6c46de8668c3421"
+      },
+      {
+        "theme": "alien",
+        "screenshotSha256": "489fb141ef9c2ad27c5227092e09be988d900a3d696d59dbe38ad4443612623c"
+      },
+      {
+        "theme": "night",
+        "screenshotSha256": "c13dff85a321c6294fa5a654a4d36ecb0ebe5056ada3187b13526c9a576f371f"
+      },
+      {
+        "theme": "cyberpunk",
+        "screenshotSha256": "9d9ee1e95c34a8e13d367a4cef9719d00274471c68cfdc352e21780bfa320105"
+      },
+      {
+        "theme": "anime",
+        "screenshotSha256": "dcd8caf75f806cacc0c5a746739e354f6341ab2ad5cabe83a0b55be1ddcfc65f"
+      }
+    ]
+  },
+  "legacyFixture": {
+    "passed": true,
+    "localFixturesOnly": true,
+    "stages": [
+      "Actual desktop app starts with sandboxed isolated pages and an in-memory browser session.",
+      "Import clears its field and retains the in-memory cookie while waiting for the selected chat type and OK.",
+      "Normal OK opens both sandboxed pages with visibly off Temporary and Personalized state; no privacy gate blocks the mode.",
+      "A reload hydrates the Ask ChatGPT rich editor and refreshes its ready status instead of reporting a signed-out session.",
+      "Expand B hides A and enlarges only B inside the shell; Restore split returns both native page bounds.",
+      "Start completes ten real IPC sends across four full improvement rounds: independent drafts, challenge, corrected image/file transfer and eight fresh reviews before exact dual acceptance.",
+      "A second improvement command completes four fresh rounds in the same two chats with new request identities and all previous page turns intact.",
+      "Auto recognizes simple arithmetic and finishes after two independently submitted verification responses, while retaining the same pair.",
+      "Native Attach reads a real source PDF into both chats; generated PDF revisions are relayed for exact-file review and final accepted bytes save as a valid PDF.",
+      "Stop during PDF review preserves the completed candidate; explicit Save current files writes its exact bytes and no late review is sent.",
+      "Native Attach accepts an original .txt EA source on both isolated pages without executing its code.",
+      "Live-shaped inline .mq5 Download spans are detected, changed bytes become C2, and eight fresh reviews receive complete original and verified current-candidate JSON source readbacks plus one byte-identical .mq5.txt candidate alias across four rounds.",
+      "Host Save preserves the generated .mq5 extension and exactly matches the revised file SHA-256 checked by both reviewers.",
+      "A next arithmetic command reuses the same EA chats, clears source/file/code/evidence requirements and finishes two independent verification steps.",
+      "Missing requested six-month native MT5 report keeps the task unfinished even when reviewers accept the source; no live trading or tester execution is performed.",
+      "Reset retains cookies and mode selection; Temporary OK automatically toggles both pages and runs with their Personalized default.",
+      "Work OK activates a unique visible Work control and requires observed selected state before exchanging prompts.",
+      "A malformed model reply stops with an explanation while preserving cookies, the two chat histories, and next-command availability.",
+      "Native page bounds remain inside the shell; compositor screenshots captured when available, with unsupported captures reported.",
+      "Stop during an unfinished generated-file export aborts its fetch and prevents a late review from being submitted.",
+      "Header Stop remains accessible with the sidebar hidden and cancels both native page generations.",
+      "An unavailable Work control blocks Start with a page explanation instead of guessing a URL or silently running Normal mode.",
+      "A source file confirmed on only one page shows a partial attachment error and blocks Start while retaining the session.",
+      "Clear session removes the imported cookie, resets local run state and unloads both pages."
+    ],
+    "archiveSha256": "b5db09b9307d21a7ce891583914d0f65328fe69687d2356dcf0a9b7a109354ee",
+    "captureWarnings": []
+  },
+  "limits": [
+    "No physical MacBook Air M4 test or live authenticated Mac task.",
+    "File selection and Save use offline dialog hooks in workflow fixtures.",
+    "No fresh Finder installation or quarantined first launch exercised.",
+    "No Developer ID signing or Apple notarization.",
+    "No quantitative GPU, battery or thermal measurements.",
+    "Native activation is an automated Electron event, not a physical Dock click.",
+    "Startup image captures initial paint before the version badge settles; native report checks rendered version.",
+    "Fixture CSP warnings and host sandbox XPC notices are not production-provider failures."
+  ]
+}

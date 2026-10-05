@@ -1,10 +1,10 @@
-# Windows boss workspace
+# Boss workspace
 
-Converge 1.8.1 uses three conversations: a boss and two workers. You give the boss a task; it chooses separate instructions for the workers, reads their results, and directs the next round of work.
+Converge 1.8.1 on Windows and Apple Silicon Mac uses three conversations: a boss and two workers. You give the boss a task; it chooses separate instructions for the workers, reads their results, and directs the next round of work. See the [Mac guide](MACOS_GUIDE.md) for installation and Command shortcuts.
 
 ## Connect and start
 
-1. Open the Windows application and import a current ChatGPT cookie JSON file in **Connect your session**.
+1. Open Converge and import a current ChatGPT cookie JSON file in **Connect your session**.
 2. Choose **Normal**, **Temporary**, or **Work mode** and open the workspace. Work requires your account to expose that chat mode.
 3. Select the model you want in each of the three ChatGPT pages. Click the middle boss character to reveal its page. The app does not upgrade or change the model you select.
 4. Attach any source documents, images or code using the controls drawer. Source files are provided to all three conversations.

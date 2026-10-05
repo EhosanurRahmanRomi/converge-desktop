@@ -2,7 +2,7 @@
 
 [← Project](../README.md) · [Verification](VERIFICATION.md)
 
-## 1.8.1 — Windows logic audit and new chat themes
+## 1.8.1 — Boss workspace for Windows and Apple Silicon Mac
 
 - Added Cyberpunk and Anime backgrounds to all three native chat pages and empty panes, retaining Night sky, Black horror and Alien.
 - Rechecked boss planning, worker dispatch, requested artifacts, actual file relay and final acceptance. Corrected the argument order in native MT5 evidence checks and inferred required outputs from the initial task.
@@ -10,8 +10,10 @@
 - Tightened upload and download validation so malformed text, noncanonical base64 and incorrect archive MIME types fail visibly.
 - Retained exact candidate identities, queued instruction revisions, finite round limits and immediate Stop.
 - Fixed the attachment-test program's broken-output-pipe dialog, and kept its evidence write alive until completion. This is verification-tool cleanup; it does not mask app errors.
+- Built the full boss-and-two-workers application natively for Apple Silicon, including MacBook Air M4, with the same themes, character styles, file handoff and controls.
+- Verified native Mac editing on the shell, both worker pages, the boss page and its instruction box; checked Close cleanup and fresh activation. Corrected the drawer-layout test's timing without loosening its geometry checks.
 
-This is a locally built Windows update. See the [current verification](WINDOWS_1_8_1_VERIFICATION.md) for its tested scope. Historical 1.8.0 evidence remains separate.
+See the [Windows verification](WINDOWS_1_8_1_VERIFICATION.md) and [Mac verification](MACOS_1_8_1_VERIFICATION.md) for the recorded checks and remaining limits. Historical release evidence remains separate.
 
 ## 1.8.0 — Windows boss workspace
 

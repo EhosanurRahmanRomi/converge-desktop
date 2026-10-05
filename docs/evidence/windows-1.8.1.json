@@ -7,7 +7,9 @@
     "total": 425,
     "failed": 0,
     "skipped": 0,
-    "concurrency": 1
+    "concurrency": 1,
+    "testedCommit": "fe6552cec9a0d8e24f6f2fb6e03c6b0de68f3e94",
+    "laterGeometrySettlementRegression": "Targeted Chromium test passed; no runtime changes"
   },
   "package": {
     "passed": true,
@@ -15,7 +17,7 @@
     "runtimeFiles": [
       {
         "file": "desktop-main.js",
-        "sha256": "1673ff495fd11aa6914561c7241a84deb5a805df77da185120afe89217253145"
+        "sha256": "9082c4b0ff3be1861e4527fe12e30b79e133bfdd94db8f127f2768fb376e240d"
       },
       {
         "file": "desktop-preload.js",
@@ -101,16 +103,16 @@
     "artifacts": [
       {
         "file": "Converge-Setup-1.8.1-x64.exe",
-        "bytes": 114924377,
-        "sha256": "1f9801dcc2c63f513044bbe06822f2a886db2ddc2d436310a4c3f3f379452676"
+        "bytes": 114924577,
+        "sha256": "bf57f4a82c0178902a77522def99799e40e366fbd9382d773085d7a05aea9d57"
       },
       {
         "file": "Converge-Portable-1.8.1-x64.exe",
-        "bytes": 114627437,
-        "sha256": "8291fd2b33a256381630fc1924f06c468b911be81276261d57dc6338bc3d17ab"
+        "bytes": 114627556,
+        "sha256": "1075eee5a08b17bf9b61f6099db06a550fbd4e0f27d060f91b0e92eb21d26f28"
       }
     ],
-    "asarSha256": "28970f5093816d4045f73f5fb42332e0ccee78a6ab3c9f112cfd951886a17099"
+    "asarSha256": "b5db09b9307d21a7ce891583914d0f65328fe69687d2356dcf0a9b7a109354ee"
   },
   "packagedFixture": {
     "passed": true,
@@ -429,7 +431,9 @@
       "runtimeSeconds": 7.319,
       "compileExitCode": 0
     },
-    "limitations": "Production source under matching development Electron. Package flow and real portable startup checked separately."
+    "testedLogicCommit": "f974bfd49032741d7fd6cbbed184f6f72195c3ef",
+    "laterRuntimeChange": "Only the separately activated native macOS startup verification function changed; Windows coordinator, transport and UI logic are unchanged.",
+    "limitations": "Production source under matching development Electron. Final package flow and real portable startup checked separately."
   },
   "reportedError": {
     "script": "scripts/qa-attachment-dom.js",
@@ -441,7 +445,7 @@
   },
   "limitations": [
     "Installer installation and upgrade not exercised.",
-    "No new macOS binary built.",
+    "macOS verification is recorded separately.",
     "No actual MT5 test or profitability proof; native evidence uses controlled regression fixtures.",
     "Provider cumulative 15-attachment limit not exercised live.",
     "No quantitative GPU benchmark.",

@@ -2,7 +2,7 @@
 
 [← Project](../README.md) · [Architecture](ARCHITECTURE.md)
 
-The current 1.6.5 artwork and animation engine retain the 1.6.4 **Glowing stars**, **Ghost** and **Flowers** themes. The earlier comet theme is excluded from the current menu and Windows package. Saved comet preferences migrate to Glowing stars.
+The current 1.8.1 app on Windows and Mac retains **Glowing stars**, **Ghost** and **Flowers** decoration. The earlier comet theme is excluded; saved comet preferences migrate to Glowing stars. Five chat backgrounds and three team character styles are independently selectable.
 
 ## Current assets
 
@@ -11,7 +11,8 @@ The current 1.6.5 artwork and animation engine retain the 1.6.4 **Glowing stars*
 | Glowing stars | Original code-drawn, cached sprites with gold/pink/cyan/lilac glow, falling drift and slow spin | `renderer/star-ribbons.js` |
 | Ghost | Original generated transparent PNG; motion and spectral lights supplied by code | `renderer/ghost-v2.png`, 1272 × 1236, 715,076 bytes |
 | Flowers | Original generated transparent blossom; petals/motion supplied by code | `renderer/flower-blossom-v1.png`, 1278 × 1230, 1,974,791 bytes |
-| Reviewer robots | SVG/CSS workstations with decorative typing, expressions and document handoff | Desktop renderer HTML/CSS and state updates |
+| Boss and worker characters | Original SVG/CSS robots, explorers and spirits with decorative work, expressions and document handoff | Desktop renderer HTML/CSS and state updates |
+| Chat backgrounds | Still Night sky, Black horror, Alien, Cyberpunk city and Anime twilight; local code/SVG art | `src/browser/page-appearance.js` and renderer CSS; generated into the page preload |
 
 ```text
 ghost-v2.png
@@ -43,4 +44,4 @@ The retained Flowers asset is a front-facing pink five-petal blossom with delica
 - Hidden/minimized state and reduced motion suspend decoration appropriately.
 - Cosmetic mood changes do not indicate measured confidence or answer quality.
 
-The interface screenshots use controlled fixture state. They show the design, not proof of a live provider exchange. No new GPU reduction was measured for the retained 1.6.5 animation engine.
+The interface previews use controlled fixture state; native startup screenshots show an empty session. They show the design, not a live provider exchange. No quantitative GPU reduction was measured for 1.8.1.

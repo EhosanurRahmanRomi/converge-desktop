@@ -1,5 +1,7 @@
 # Architecture
 
+For the current three-chat application, read the [boss architecture](BOSS_ARCHITECTURE.md). This document describes the retained earlier two-reviewer transport design.
+
 [← Project](../README.md) · [Developer guide](DEVELOPER_GUIDE.md)
 
 Converge separates the desktop shell, native host, shared review coordinator and visible provider pages. The app has its own browser session; it does not automate or modify a user's Chrome profile.

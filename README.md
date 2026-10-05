@@ -1,38 +1,33 @@
 # Converge
 
-![Converge project banner from the two-reviewer release](docs/images/banner.svg)
+![Converge boss and two worker workspace](docs/images/windows-boss-team.png)
 
 A desktop workspace where a **boss chat directs two worker chats**: it plans their tasks, reviews their results, requests improvements and checks the final candidate. The two workers remain visible; click the middle boss character to open its sliding chat panel and guide the team.
 
-**Current Windows development build: 1.8.1 x64 · Published Windows: 1.6.5 x64 · Published macOS: 1.7.0 ARM64**
+**Converge 1.8.1 · Windows x64 · Native macOS ARM64 · MacBook Air M4**
 
-Windows **1.8.1 has been built locally**. Its installer and portable executable are not yet published as a GitHub release. The download links below still point to the previous two-reviewer versions. The published Mac 1.7.0 app does not contain the new boss workflow.
+The same boss-and-two-workers workspace is available on both platforms, including file handoff, queued instructions, five chat backgrounds, three character styles and decorative animation controls.
 
-[Boss workspace guide](docs/BOSS_WORKSPACE.md) · [Boss architecture](docs/BOSS_ARCHITECTURE.md) · [Windows 1.8 verification](docs/WINDOWS_1_8_1_VERIFICATION.md)
+[Download 1.8.1](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.8.1) · [Boss workspace guide](docs/BOSS_WORKSPACE.md) · [Mac installation](docs/MACOS_GUIDE.md) · [Boss architecture](docs/BOSS_ARCHITECTURE.md)
 
-![Windows 1.8 boss and two worker characters](docs/images/windows-boss-team.png)
-
-*New Windows 1.8 shell captured during controlled local verification. Embedded chat content is captured separately; this is not an authenticated conversation screenshot.*
-
-[Windows release](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.6.5) · [Mac release](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.7.0) · [Mac guide](docs/MACOS_GUIDE.md) · [User guide](docs/USER_GUIDE.md) · [Developer guide](docs/DEVELOPER_GUIDE.md)
+*Windows boss shell captured during controlled local verification. Embedded chat content is captured separately; this is not an authenticated conversation screenshot.*
 
 | Platform | Release | Downloads | Verification |
 |---|---|---|---|
-| Windows x64 | **1.8.1 · local build** | Installer and portable built locally; no public release link yet | [Current Windows verification](docs/WINDOWS_1_8_1_VERIFICATION.md) |
-| Windows x64 | **1.6.5 · published** | [Installer](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.6.5/Converge-Setup-1.6.5-x64.exe) · [Portable](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.6.5/Converge-Portable-1.6.5-x64.exe) | [Recorded Windows evidence](docs/VERIFICATION.md) |
-| macOS 13+, Apple Silicon, including MacBook Air M4 | **1.7.0** | [DMG](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.7.0/Converge-1.7.0-macOS-arm64.dmg) · [ZIP](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.7.0/Converge-1.7.0-macOS-arm64.zip) | [Recorded Mac evidence](docs/MACOS_VERIFICATION.md) |
+| Windows x64 | **1.8.1** | [Installer](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.8.1/Converge-Setup-1.8.1-x64.exe) · [Portable](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.8.1/Converge-Portable-1.8.1-x64.exe) | [Windows evidence](docs/WINDOWS_1_8_1_VERIFICATION.md) |
+| macOS 13+, Apple Silicon, including MacBook Air M4 | **1.8.1** | [DMG](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.8.1/Converge-1.8.1-macOS-arm64.dmg) · [ZIP](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.8.1/Converge-1.8.1-macOS-arm64.zip) | [Mac evidence](docs/MACOS_1_8_1_VERIFICATION.md) |
 
-The published Mac 1.7.0 build preserves the earlier two-reviewer workspace, animations and generated-file handoff. It adds Command shortcuts, native app/Edit menus, Mac file dialogs and Dock behavior. Its release gates passed on a native Apple Silicon Mac runner; the physical MacBook Air M4 and live authenticated Mac review have not been tested.
+Mac 1.8.1 runs natively on Apple Silicon and includes Command shortcuts, native app/Edit menus, Mac file dialogs and Dock behavior. Its source suite, actual packaged startup and both packaged workflow gates passed on a native Mac runner. Physical MacBook Air M4 and live authenticated Mac use have not been tested.
 
-![Actual Converge 1.7.0 Mac application at startup](docs/images/macos-native-startup.png)
+![Actual Converge 1.8.1 Mac application at startup](docs/images/macos-1.8.1-native-startup.png)
 
-*Actual packaged Mac app on the native ARM64 runner with an empty session. The Reduced motion badge reflects that host's system preference.*
+*Actual packaged 1.8.1 Mac app with an empty session on the native ARM64 runner. This first-paint image shows the artwork; the separate native report verifies the rendered version and controls. Reduced motion reflects the host preference.*
 
 ![Converge's two-chat workspace with the controls hidden](docs/images/desktop-working.png)
 
 *Windows 1.6.5 interface preview using controlled fixture activity. These images show the shared layout; they are not Mac screenshots or screenshots of the authenticated verification run.*
 
-## Windows 1.8 boss workspace
+## Boss workspace on Windows and Mac
 
 - **A boss and two workers.** Give the boss your task. It writes the substantive worker instructions, receives both workers’ replies and chooses the next useful checks or improvements. Each of the three pages uses the model you select in its own menu.
 - **A sliding boss conversation.** Click the middle character to open the actual boss chat. Its instruction box starts a task, queues additional ideas during work and resumes the same task when the boss requests missing information.
@@ -44,25 +39,25 @@ The published Mac 1.7.0 build preserves the earlier two-reviewer workspace, anim
 
 Converge uses an imported ChatGPT browser session. The current desktop flow does not require an API key. It uses its own in-memory session and does not modify or log out your Chrome profile.
 
-## Start the Windows 1.8 team
+## Start the team
 
-1. Open the locally supplied Windows **1.8.1** installer or portable app. The currently published [Windows 1.6.5 release](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.6.5) has the earlier two-reviewer flow. On an Apple Silicon Mac, use the [1.7.0 DMG](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.7.0/Converge-1.7.0-macOS-arm64.dmg) and follow its [Mac guide](docs/MACOS_GUIDE.md).
+1. Download the Windows installer/portable or Apple Silicon DMG/ZIP from [release 1.8.1](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.8.1). Mac users should follow the [installation guide](docs/MACOS_GUIDE.md).
 2. Open **Import JSON file** and choose your current ChatGPT cookie export. Import begins immediately; pasting JSON is an optional alternative.
 3. Choose a chat type and press **Open the team**. Select the desired model in each worker page, then click the boss character to select its model.
 4. Attach source files before starting. Give your task through **Instruction to the boss**, or use **Brief the boss** in the controls drawer. Send team instructions through these app controls; typing directly into an embedded page does not start the coordinated workflow.
 5. Add instructions to the boss while the team works. Watch the progress band, inspect its review and limitations in the result drawer, and use **Save final files** when the checked result is accepted.
 
-See the [boss workspace guide](docs/BOSS_WORKSPACE.md) for queuing, blocked tasks, appearance settings and file handling. The [Windows 1.8 verification record](docs/WINDOWS_1_8_1_VERIFICATION.md) documents this build’s own test scope; the historical results below belong to their stated versions.
+See the [boss workspace guide](docs/BOSS_WORKSPACE.md) for queuing, blocked tasks, appearance settings and files. The [Windows](docs/WINDOWS_1_8_1_VERIFICATION.md) and [Mac](docs/MACOS_1_8_1_VERIFICATION.md) records document this release’s tests; historical results below belong to their stated versions.
 
 The Windows executables are unsigned. The actual 1.8.1 portable executable was opened and closed successfully. Installer installation and upgrade were not exercised.
 
-The Mac release uses an ad-hoc signature and has no Apple Developer ID signature or notarization. See the [Mac guide](docs/MACOS_GUIDE.md) for first-launch instructions and the [Mac verification record](docs/MACOS_VERIFICATION.md) for its own test scope.
+The Mac release uses an ad-hoc signature and has no Apple Developer ID signature or notarization. See the [Mac guide](docs/MACOS_GUIDE.md) for first-launch instructions and the [Mac verification record](docs/MACOS_1_8_1_VERIFICATION.md) for its test scope.
 
 ![The slide-out controls and task brief](docs/images/desktop-controls.png)
 
 *Windows 1.6.5 controls preview. The panel is opaque for readability and slides away when a review starts; this image does not show the 1.8 boss controls.*
 
-## New chat themes in Windows 1.8.1
+## New chat themes in 1.8.1
 
 ![Cyberpunk city chat background](docs/images/chat-theme-cyberpunk.png)
 
@@ -82,6 +77,18 @@ The Mac release uses an ad-hoc signature and has no Apple Developer ID signature
 | Saved Python implementation and tests | Hashes matched C4; **28 / 28 tests passed** independently |
 
 [Read the current evidence and limits →](docs/WINDOWS_1_8_1_VERIFICATION.md)
+
+## What was verified for Mac 1.8.1
+
+| Check | Recorded result |
+|---|---|
+| Full suite on native Apple Silicon | **425 / 425 passed** |
+| Packaged boss and worker workflows | **16 / 16 passed**, complete captures |
+| Preserved file-format and transport workflows | **24 / 24 passed** |
+| Actual packaged app | Native startup, boss drawer, editing on **five surfaces**, Close and fresh activation passed |
+| ARM64 DMG and ZIP | Ad-hoc signatures, bundle permissions, framework links and **21 runtime files** verified |
+
+[Read the native Mac evidence and limits →](docs/MACOS_1_8_1_VERIFICATION.md)
 
 ## What was verified for macOS 1.7.0
 
@@ -118,12 +125,13 @@ Agreement is a review result, not a guarantee of correctness. The boss and worke
 
 | Document | Contents |
 |---|---|
-| [Boss workspace guide](docs/BOSS_WORKSPACE.md) | Current Windows 1.8 team setup, boss instructions, queues, files and appearance |
+| [Boss workspace guide](docs/BOSS_WORKSPACE.md) | Current team setup on both platforms, boss instructions, queues, files and appearance |
 | [Boss architecture](docs/BOSS_ARCHITECTURE.md) | Three-page orchestration, boss decisions, worker results and final-candidate checks |
-| [Windows 1.8 verification](docs/WINDOWS_1_8_1_VERIFICATION.md) | Current build evidence, artifacts and testing limits |
+| [Windows 1.8.1 verification](docs/WINDOWS_1_8_1_VERIFICATION.md) | Windows build evidence, artifacts and testing limits |
 | [Earlier user guide](docs/USER_GUIDE.md) | Published two-reviewer setup, modes, files, results and troubleshooting |
 | [Mac guide](docs/MACOS_GUIDE.md) | Apple Silicon installation, Command shortcuts, Dock behavior and native file dialogs |
-| [Mac verification](docs/MACOS_VERIFICATION.md) | Native build gates, package identities and Mac-specific evidence |
+| [Mac 1.8.1 verification](docs/MACOS_1_8_1_VERIFICATION.md) | Current native build gates, package identities and Mac evidence |
+| [Earlier Mac verification](docs/MACOS_VERIFICATION.md) | Historical 1.7.0 release evidence |
 | [Developer guide](docs/DEVELOPER_GUIDE.md) | Local setup, tests, Windows and Apple Silicon Mac builds, and source map |
 | [Architecture](docs/ARCHITECTURE.md) | Session boundaries, review lifecycle and file identity |
 | [Verification](docs/VERIFICATION.md) | Recorded tests, live review, artifact hashes and scope |
@@ -144,7 +152,7 @@ npm run build:win -- --publish never
 
 The desktop runtime is Electron. **qa:boss** exercises the current three-chat workflow with controlled local pages; **qa:desktop** retains the earlier two-reviewer regression gate. The source also retains earlier extension/API experiments; these are not the current desktop connection path. See the [boss architecture](docs/BOSS_ARCHITECTURE.md) and [developer guide](docs/DEVELOPER_GUIDE.md) before changing the browser bridge or coordinator.
 
-The published Mac 1.7.0 DMG and ZIP were built and verified on Apple Silicon. Building a new Mac package from the current boss source requires its own native verification; the historical Mac evidence does not certify the 1.8 workflow. See the [Mac build instructions](docs/DEVELOPER_GUIDE.md#build-apple-silicon-mac-artifacts).
+The 1.8.1 DMG and ZIP were built and verified on native Apple Silicon. The release includes a full source ZIP, manuals and checksums; the repository contains the complete tracked source, tests and assets. See the [Mac build instructions](docs/DEVELOPER_GUIDE.md#build-apple-silicon-mac-artifacts) to build from source.
 
 ## Session privacy and project status
 

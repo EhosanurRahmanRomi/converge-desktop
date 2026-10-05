@@ -1,6 +1,6 @@
 # User guide
 
-**Windows 1.8 boss workspace:** follow the [three-chat guide](BOSS_WORKSPACE.md). The sections below describe the previous two-reviewer releases, including macOS 1.7.
+**Current Windows and Mac 1.8.1 boss workspace:** follow the [three-chat guide](BOSS_WORKSPACE.md) and [Mac setup](MACOS_GUIDE.md). The sections below describe the previous two-reviewer releases, including macOS 1.7.
 
 [← Project](../README.md) · [Verification](VERIFICATION.md)
 

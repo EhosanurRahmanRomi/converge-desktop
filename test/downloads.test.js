@@ -25,6 +25,20 @@ class DownloadItem extends EventEmitter {
 
 const payload = { runId: 'run-1', requestId: 'request-1', id: 'media-1', name: 'reviewed.pdf', mimeType: 'application/pdf' };
 
+test('boss downloads cannot be read or canceled by either worker', async (t) => {
+  const { broker, browserSession } = await harness(t);
+  const started = await broker.begin('boss', payload);
+  assert.equal(started.ok, true);
+  assert.equal((await broker.cancel('left', started.token)).ok, false);
+  assert.equal((await broker.read('right', started.token)).ok, false);
+  const item = new DownloadItem();
+  browserSession.emit('will-download', {}, item, { side: 'boss' });
+  const reading = broker.read('boss', started.token);
+  const bytes = Buffer.from('%PDF-1.4\nboss approved\n%%EOF');
+  await item.complete(bytes);
+  assert.deepEqual(Buffer.from((await reading).base64, 'base64'), bytes);
+});
+
 async function harness(t, authorize = () => true) {
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'converge-broker-test-'));
   const browserSession = new EventEmitter();

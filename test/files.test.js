@@ -17,6 +17,16 @@ test('preserves exact PDF bytes when saving the reviewed candidate', () => {
   assert.deepEqual(file.bytes, source);
 });
 
+test('a boss-owned final file retains the same strict byte verification as worker files', () => {
+  const digest = createHash('sha256').update(source).digest('hex');
+  const verified = { ...descriptor, contentSha256: digest, byteLength: source.length };
+  const boss = { ...media, side: 'boss', files: [verified] };
+  const response = { ok: true, files: [{ ...verified, base64: source.toString('base64') }] };
+  assert.deepEqual(validateExport(boss, response)[0].bytes, source);
+  assert.throws(() => validateExport({ ...boss, side: 'other' }, response), /no supported/);
+  assert.throws(() => validateExport(boss, { ok: true, files: [{ ...verified, base64: Buffer.from('%PDF-substituted').toString('base64') }] }), /contents changed/);
+});
+
 test('rejects stale, changed, missing and reordered candidate downloads', () => {
   for (const key of ['id', 'name', 'mimeType', 'fingerprint']) {
     const response = exported();

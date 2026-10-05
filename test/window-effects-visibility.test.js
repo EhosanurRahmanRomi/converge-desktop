@@ -33,7 +33,7 @@ if (!process.versions.electron) {
     let desktop;
     const fixture = await createFixtureServer();
     try {
-      desktop = await createCookieApp({ qaOrigin: fixture.origin, show: false });
+      desktop = await createCookieApp({ qaOrigin: fixture.origin, show: false, legacyCoordinator: true });
       const shell = code => desktop.mainWindow.webContents.executeJavaScript(code);
       const scene = side => desktop.views[side].webContents.executeJavaScriptInIsolatedWorld(999, [{ code: 'globalThis.ConvergePageAppearance.create().diagnostics()' }]);
       const ribbons = () => shell('ConvergeStarRibbons.diagnostics()');

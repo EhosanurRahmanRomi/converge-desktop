@@ -4,9 +4,9 @@
 
 ## Current implementation
 
-Converge is an **Electron desktop application**. Version 1.7.0 adds Apple Silicon macOS support; the separately recorded Windows release is 1.6.5. Its production entry point is `desktop-main.js`; `renderer/browser.html` is the application shell. Two embedded pages connect through an imported ChatGPT browser session. The current flow does not use the API implementation retained under `src/core`.
+Converge is an **Electron desktop application**. The Windows 1.8 source uses a boss and two workers; macOS 1.7 remains the previously verified two-reviewer release. Its production entry point is `desktop-main.js`; `renderer/browser.html` is the application shell. Three embedded pages connect through an imported ChatGPT browser session. The current flow does not use the API implementation retained under `src/core`.
 
-Earlier extension and API implementations are preserved for project history. The desktop coordinator reuses the review engine in `chrome-extension/background.js`, and the page-preload build derives its bridge from `chrome-extension/content.js`. Editing those shared files can therefore change the desktop application even when you are not building the extension.
+`src/browser/boss-coordinator.js` owns the current planning workflow. The earlier two-reviewer coordinator, extension and API implementations are preserved for project history and regression checks. Shared validation helpers remain in `chrome-extension/background.js`, and the page-preload build derives its bridge from `chrome-extension/content.js`. Editing those shared files can therefore change the desktop application even when you are not building the extension.
 
 ## Local setup
 
@@ -25,8 +25,11 @@ npm start
 
 ```powershell
 npm test
+npm run qa:boss
 npm run qa:desktop
 ```
+
+`qa:boss` exercises the production three-page shell and sandboxed bridge with a local model fixture, including file upload/download, hash verification, queued instructions, sliding boss bounds, Stop, Reset and follow-up tasks. `qa:desktop` runs the preserved two-reviewer transport regression with its explicit legacy coordinator option. These local fixtures do not establish live provider availability or answer quality.
 
 On macOS, run the full suite with `npm test -- --test-concurrency=1`, as the native CI workflow does. The GUI fixtures share the WindowServer and focused editing; running them serially avoids one fixture occluding another.
 

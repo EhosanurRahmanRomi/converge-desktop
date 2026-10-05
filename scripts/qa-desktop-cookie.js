@@ -346,7 +346,7 @@ async function run() {
   }
   blockRemote(session.defaultSession);
   app.on('web-contents-created', (_event, contents) => blockRemote(contents.session));
-  desktop = await createCookieApp({ qaOrigin: fixture.origin, show: false, dialogs: {
+  desktop = await createCookieApp({ qaOrigin: fixture.origin, show: false, legacyCoordinator: true, dialogs: {
     async showOpenDialog(_window, options) {
       openDialogCalls += 1;
       assert.ok(options.properties.includes('openFile'));

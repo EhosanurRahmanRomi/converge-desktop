@@ -6,7 +6,7 @@ const path = require('node:path');
 const { randomUUID } = require('node:crypto');
 const { MIME, MAX_FILE_BYTES, safeFilename, validateTextSource } = require('./files');
 
-const SIDES = new Set(['left', 'right']);
+const SIDES = new Set(['left', 'right', 'boss']);
 const TYPES = new Set(Object.values(MIME));
 const GENERIC_TYPES = new Set(['', 'application/octet-stream', 'binary/octet-stream']);
 const ZIP_NATIVE_TYPES = new Set(['application/zip', 'application/x-zip-compressed']);

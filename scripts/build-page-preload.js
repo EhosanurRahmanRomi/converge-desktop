@@ -30,6 +30,12 @@ const decoration = `
   } catch (_) { /* Retain ChatGPT's native appearance if effects cannot load. */ }
   let pageAppearance = null;
   let pageEffectsPaused = false;
+  let chatTheme = 'night';
+  ipcRenderer.on('converge:page-appearance', (_event, payload) => {
+    if (!['night', 'horror', 'alien'].includes(payload?.chatTheme)) return;
+    chatTheme = payload.chatTheme;
+    pageAppearance?.setTheme(chatTheme);
+  });
   ipcRenderer.on('converge:page-effects', (_event, payload) => {
     if (typeof payload?.paused !== 'boolean') return;
     pageEffectsPaused = payload.paused;
@@ -41,6 +47,7 @@ const footer = `
     try {
       pageAppearance = globalThis.ConvergePageAppearance?.create({ document, window, qaOrigin });
       pageAppearance?.setPaused(pageEffectsPaused);
+      pageAppearance?.setTheme(chatTheme);
     } catch (_) { /* A decoration is optional; composer and file transport remain native. */ }
     module.exports.createBridge({ chrome: { runtime }, document, window,
       async downloadVisible({ element, runId, requestId, id, name, mimeType, signal, isCurrent }) {

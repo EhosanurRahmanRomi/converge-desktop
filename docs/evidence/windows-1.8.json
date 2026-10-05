@@ -1,0 +1,343 @@
+{
+  "version": "1.8.0",
+  "date": "2026-10-05",
+  "platform": "Windows x64",
+  "sourceTests": {
+    "tests": 405,
+    "passed": 405,
+    "skipped": 0,
+    "concurrency": 1
+  },
+  "package": {
+    "passed": true,
+    "version": "1.8.0",
+    "runtimeFiles": [
+      {
+        "file": "desktop-main.js",
+        "sha256": "7491ad189b38961157802082f802ba6af96b0bb7018740dc8c2a78ff3f4e6305"
+      },
+      {
+        "file": "desktop-preload.js",
+        "sha256": "a0f944255b77eab3768259dbfd194a42693ca8e65cdf53bee9837fc5f70408f2"
+      },
+      {
+        "file": "src/platform/desktop-lifecycle.js",
+        "sha256": "7cb906dc488ebcb2d2190bb4b6060f16bb01d31c4a93f74c2d6cfe8d8f5cc28f"
+      },
+      {
+        "file": "src/browser/cookies.js",
+        "sha256": "20f79d39b92dfc16876a13251247940b515f929e599f7a1d089dbc8bbc7a30d7"
+      },
+      {
+        "file": "src/browser/files.js",
+        "sha256": "111745b7191971c0a7037a2b78a97caed3673361666dff1c05edfef6f3f7bd45"
+      },
+      {
+        "file": "src/browser/downloads.js",
+        "sha256": "e86acd7ad627380631ea7b690a177c800540c6d855667887030c289168f88e3e"
+      },
+      {
+        "file": "src/browser/desktop-coordinator.js",
+        "sha256": "64efad8eadc5680e90ab978f0442a972d2688df404fcf4199eb72b0f041b9025"
+      },
+      {
+        "file": "src/browser/boss-coordinator.js",
+        "sha256": "5ea582efdef42de8163def2b2132060f5fcd0f6015fcf0b890d8192c0239b14f"
+      },
+      {
+        "file": "src/browser/page-preload.js",
+        "sha256": "72be75558c4cd123669c19749dc5878d516fc2fbf21ad7a821396c0bceea6fb5"
+      },
+      {
+        "file": "chrome-extension/background.js",
+        "sha256": "3a009d6d9b2502f3c828113f2cd475ee5bb0b5b415cd4f5817d65c0888d303c5"
+      },
+      {
+        "file": "renderer/browser.html",
+        "sha256": "5c3a187ad252e2a3bd7799cb724f5100053f17d8abd46e8b51cfe73bbbcf295a"
+      },
+      {
+        "file": "renderer/browser-app.js",
+        "sha256": "36fe6e07cdd01f67b3ebc9b76d2a9264dcb799bbbc13f0a6bd118d1c4f5fea71"
+      },
+      {
+        "file": "renderer/browser.css",
+        "sha256": "3ead92d8202ffdf47fd72b1322958504da7d0c9e98d59595c72adc190f8b7dc3"
+      },
+      {
+        "file": "renderer/galaxy-scene.js",
+        "sha256": "ef5b85ca303f167c72a08a1f4d47a3da670fc1f99cb6914da7742034c4dc0720"
+      },
+      {
+        "file": "renderer/galaxy-scene.css",
+        "sha256": "a2e168477702cd25cb11cccdfadbe68ebbfce6a0182766d9a13adcbf2845c55e"
+      },
+      {
+        "file": "renderer/star-ribbons.js",
+        "sha256": "c9724874cb9f58975eff08ac4af2bc75c9ea42b9ed38d630850e3c06888cde7d"
+      },
+      {
+        "file": "renderer/ghost-v2.png",
+        "sha256": "3416c160be60ad2aaebe23855db0654a7a73ac54dad6fc6ccbb853e073ba754d"
+      },
+      {
+        "file": "renderer/flower-blossom-v1.png",
+        "sha256": "a644defaa480c166064921a22af8383f3f5e9b47f6f5af42feaa176849deb5d8"
+      },
+      {
+        "file": "assets/icon.ico",
+        "sha256": "ebc7920f6f2f66e120091b3155de80a6a59ace972f3a153e8cf62ffb7a78c88d"
+      },
+      {
+        "file": "assets/icon.png",
+        "sha256": "416e36aeb88fffd164fc99afb95304bdaaeb4de2bf995de6ce4cb8586528874d"
+      },
+      {
+        "file": "assets/icon.icns",
+        "sha256": "182f854e1ba9203d10d574207eeed0a00932d9e0862c6a013a53865dfd99c1ee"
+      }
+    ],
+    "artifacts": [
+      {
+        "file": "Converge-Setup-1.8.0-x64.exe",
+        "bytes": 114914722,
+        "sha256": "30c417f95a1375715c24cbf0176925e433e625008c0fde22e1af6570d3368c64"
+      },
+      {
+        "file": "Converge-Portable-1.8.0-x64.exe",
+        "bytes": 114617791,
+        "sha256": "b4db8cb252ae348c7e2c1fc9f400e7493070df0c4db4ae9f49ba73a9a4e83187"
+      }
+    ],
+    "asarSha256": "1c22aee70757dddeaf3687dfde7343193249428e359d9ee5ed78b4477143ff31"
+  },
+  "packagedFixture": {
+    "passed": true,
+    "stages": [
+      "Production Windows shell creates three sandboxed isolated native chat views and keeps its browser session in memory.",
+      "Import and Normal OK open exactly three distinct chats with the boss coordinator active.",
+      "One native file picker uploads the original source to the boss and both workers.",
+      "The boss writes distinct worker instructions, receives both results and exact generated files every cycle, then both workers verify one final candidate after four improvement cycles.",
+      "The real boss composer accepts an instruction during worker generation, delivers it in the next boss context, and completes the run with no queued message left behind.",
+      "Native Save downloads the actual accepted file and matches the coordinator SHA-256, with the requested corrected values.",
+      "The settings selector applies Horror, Alien and Night backgrounds to all three real chat views.",
+      "Robot, Explorer and Spirit character choices apply without changing the active chat run or its accepted files.",
+      "Clicking the center boss opens and closes its sliding native chat panel while preserving the worker workspace.",
+      "A follow-up reuses all three conversations; a new instruction while the boss generates is queued safely.",
+      "Stop cancels active boss generation and prevents queued instructions from restarting the stopped run.",
+      "Stop also cancels both workers during their concurrent generation, retaining each completed conversation.",
+      "Reset clears all three chats without clearing the imported session; Work mode is verified on the fresh boss and worker pages.",
+      "Temporary mode is also verified on all three new chats through its visible page controls.",
+      "Unreadable boss control output receives one format repair, then stops safely without dispatching an invented worker task or clearing the session."
+    ],
+    "localFixturesOnly": true,
+    "workCycles": 4,
+    "candidateId": "C4",
+    "sends": {
+      "left": 5,
+      "right": 5,
+      "boss": 6
+    },
+    "savedFileSha256": "41124dfe7b5162c7b244b70b82b71091d98fbe49101de22ca0a526bff8395ea7",
+    "themeCaptures": [
+      {
+        "chatTheme": "horror",
+        "background": "radial-gradient(at 50% 115%, rgba(126, 12, 28, 0.42), rgba(0, 0, 0, 0) 58%), radial-gradient(at 14% 15%, rgba(63, 39, 54, 0.3), rgba(0, 0, 0, 0) 45%), none",
+        "sha256": "179bd363deeccba6f60072593ea41f6857be5e4411ba44978bded738acd5b7c2"
+      },
+      {
+        "chatTheme": "alien",
+        "background": "radial-gradient(circle at 79% 19%, rgb(203, 255, 213) 0%, rgb(98, 214, 189) 1.7%, rgb(32, 99, 85) 1.9%, rgba(0, 0, 0, 0) 2.6%), radial-gradient(at 13% 82%, rgba(74, 25, 113, 0.58), rgba(0, 0, 0, 0) 56%), radial-gradient(at 76% 63%, rgba(6, 113, 87, 0.46), rgba(0, 0, 0, 0) 60%), none",
+        "sha256": "4322fd015952405bcb072398cc426f79ed1f28a920a047e706cce4291e756f7d"
+      },
+      {
+        "chatTheme": "night",
+        "background": "radial-gradient(at 76% 28%, rgb(118, 36, 184) 0%, rgba(0, 0, 0, 0) 56%), radial-gradient(at 20% 74%, rgb(8, 121, 168) 0%, rgba(0, 0, 0, 0) 61%), none",
+        "sha256": "82edd5c3a9cd87bb6833cbacb7455b8432faa19db2d73da817da24a8c0f86920"
+      }
+    ],
+    "captureWarnings": [],
+    "limitations": "Production packaged host under the matching development Electron launcher, with local model replies and dialog hooks."
+  },
+  "nativeStartup": {
+    "observed": true,
+    "versionLabel": "v1.8.0",
+    "executable": "dist/win-unpacked/Converge.exe",
+    "customCloseObserved": true,
+    "isolatedUserData": true,
+    "installerExecuted": false,
+    "portableWrapperExecuted": false
+  },
+  "liveFileTask": {
+    "passed": true,
+    "models": {
+      "left": "5.6 Sol High",
+      "right": "5.6 Sol High",
+      "boss": "5.6 Sol High"
+    },
+    "question": "Develop and refine a downloadable Python file clamp_value.py and a downloadable unittest file test_clamp_value.py. Implement clamp_value(value, low, high). Accept only int or float values, reject booleans, reject NaN and infinities, reject low greater than high, and clamp inclusively. Preserve arbitrarily large finite Python integers without converting them to float. Include tests for each boundary, all rejection cases and an integer such as 10**400. Worker A implements complete files; worker B independently challenges edge cases and evidence. Use four concise improvement cycles. Run the tests if you have Python tools available, and report honest limitations. Both workers must verify the SAME candidate file bytes before finishing. Return actual downloadable files, not just code blocks or claimed links.",
+    "workCycles": 4,
+    "candidateId": "C4",
+    "candidateSha256": "97d71f23f96e2c872b826ee3386318f4cfede49b04db7cf9fb93df36e12aa2ab",
+    "userRevision": 1,
+    "appliedRevision": 1,
+    "instruction": "Please strengthen the downloadable tests with deterministic randomized finite inputs (at least 200 cases), plus explicit rejection checks for every argument position. Keep the implementation simple and preserve huge integers. Have the other worker inspect the actual revised files and challenge missing coverage. Only report executed tests when there is execution evidence.",
+    "fileRevisions": [
+      {
+        "resultId": "W2",
+        "round": 1,
+        "side": "left",
+        "files": [
+          {
+            "name": "clamp_value.py",
+            "sha256": "e675182627cf277390965c0b4fe76a45fa9c6a6966c2ccd83486bb949c08291c"
+          },
+          {
+            "name": "test_clamp_value.py",
+            "sha256": "7f5c8ac4b6cb5faf2fb5c577f4958312100c53a05ef8f20a15105871482cd0f2"
+          }
+        ]
+      },
+      {
+        "resultId": "W4",
+        "round": 2,
+        "side": "left",
+        "files": [
+          {
+            "name": "clamp_value.py",
+            "sha256": "e675182627cf277390965c0b4fe76a45fa9c6a6966c2ccd83486bb949c08291c"
+          },
+          {
+            "name": "test_clamp_value.py",
+            "sha256": "615fedc9be526f5fae1a8fd97c00c7a01ce0022ff78caedb45f71c638a9bbe17"
+          }
+        ]
+      },
+      {
+        "resultId": "W6",
+        "round": 3,
+        "side": "left",
+        "files": [
+          {
+            "name": "clamp_value.py",
+            "sha256": "e675182627cf277390965c0b4fe76a45fa9c6a6966c2ccd83486bb949c08291c"
+          },
+          {
+            "name": "test_clamp_value.py",
+            "sha256": "fb8185c948a07ba737a47407c8baf16678167ca8836f5c119aafd2646c095d66"
+          }
+        ]
+      },
+      {
+        "resultId": "W7",
+        "round": 4,
+        "side": "left",
+        "files": [
+          {
+            "name": "clamp_value.py",
+            "sha256": "e675182627cf277390965c0b4fe76a45fa9c6a6966c2ccd83486bb949c08291c"
+          },
+          {
+            "name": "test_clamp_value.py",
+            "sha256": "b416108424dfbbd7e1980014afd319ca8dc4ca15989e10b3d11e9238f7d6e78c"
+          }
+        ]
+      }
+    ],
+    "files": [
+      {
+        "name": "clamp_value.py",
+        "byteLength": 1165,
+        "sha256": "e675182627cf277390965c0b4fe76a45fa9c6a6966c2ccd83486bb949c08291c"
+      },
+      {
+        "name": "test_clamp_value.py",
+        "byteLength": 8289,
+        "sha256": "b416108424dfbbd7e1980014afd319ca8dc4ca15989e10b3d11e9238f7d6e78c"
+      }
+    ],
+    "checks": {
+      "candidateId": "C4",
+      "sha256": "97d71f23f96e2c872b826ee3386318f4cfede49b04db7cf9fb93df36e12aa2ab",
+      "userRevision": 1,
+      "workers": {
+        "left": {
+          "verdict": "accept",
+          "checks": [
+            "Exact attached SHA-256 values independently matched: clamp_value.py = e675182627cf277390965c0b4fe76a45fa9c6a6966c2ccd83486bb949c08291c; test_clamp_value.py = b416108424dfbbd7e1980014afd319ca8dc4ca15989e10b3d11e9238f7d6e78c.",
+            "Executed python3 -m unittest -v test_clamp_value.py on copies of the exact attached bytes under canonical filenames: 16 tests ran in 0.004s, all passed, final result OK.",
+            "Executed python3 -m py_compile clamp_value.py test_clamp_value.py on the same exact bytes: exit code 0 with no output.",
+            "Implementation accepts only int/float while explicitly rejecting bool; only actual floats are passed to math.isfinite; reversed bounds raise ValueError; inclusive clamping uses direct comparisons without integer-to-float coercion.",
+            "Tests explicitly cover bool, unsupported types, NaN, +inf, and -inf separately in value, low, and high, plus low>high and basic inclusive clamp cases.",
+            "Randomized testing uses fixed seed 20261005 and exactly 320 finite cases, covers below/interior/above/equal scenarios and all 8 int/float type masks, and asserts 80 cases per scenario, 40 per type mask, and 10 per scenario/type-mask pair.",
+            "Randomized expected values use the independent equality oracle min(high, max(low, value)); the randomized assertion is equality-only, with no identity/type assertion in that block.",
+            "The 10**400 regression verifies exact interior preservation and exact lower/upper boundary returns as Python ints, and the no-float-coercion regression ensures integer-only validation never invokes math.isfinite while guarding against float() and math.isnan() use.",
+            "Independent direct runtime probe on the exact implementation confirmed 10**400 returns as type int with exact equality and object identity for the interior case, and both huge clamped boundaries compare exactly."
+          ],
+          "issues": []
+        },
+        "right": {
+          "verdict": "accept",
+          "checks": [
+            "Verified exact uploaded SHA-256 hashes: clamp_value.py = e675182627cf277390965c0b4fe76a45fa9c6a6966c2ccd83486bb949c08291c and test_clamp_value.py = b416108424dfbbd7e1980014afd319ca8dc4ca15989e10b3d11e9238f7d6e78c.",
+            "Inspected clamp_value.py: bool and unsupported types are rejected before numeric validation; math.isfinite is applied only to float values, so arbitrary-size ints are not coerced to float.",
+            "Inspected clamp_value.py: value, low, and high are all validated; low == high is accepted; low > high raises ValueError; below-range returns low, above-range returns high, and in-range/exact-boundary values are returned unchanged.",
+            "Inspected test_clamp_value.py: bool, unsupported type, NaN, +inf, and -inf are each explicitly rejected in value, low, and high positions; low > high is explicitly tested.",
+            "Inspected test_clamp_value.py: the randomized test uses fixed seed 20261005 and exactly 320 finite cases, covering below, inside, above, and equal-bound scenarios plus all eight int/float type masks.",
+            "Inspected test_clamp_value.py: randomized coverage assertions require 80 cases per scenario, 40 cases per type mask, and 10 cases for every scenario/type-mask pair.",
+            "Inspected test_clamp_value.py: randomized numeric oracle is min(high, max(low, value)) and is checked with numeric equality only; exact identity/type preservation is handled by dedicated tests.",
+            "Inspected test_clamp_value.py: dedicated 10**400 tests verify exact huge-int interior preservation, exact huge lower and upper bound preservation, integer type preservation, and that integer-only validation does not call math.isfinite.",
+            "Executed python3 -m unittest -v test_clamp_value.py on the exact W7 bytes copied without modification to canonical filenames: 16 tests ran and all passed, result OK.",
+            "Executed python3 -m py_compile clamp_value.py test_clamp_value.py on the exact W7 bytes: exit code 0 with no output."
+          ],
+          "issues": []
+        }
+      }
+    },
+    "nativeSaveObserved": true,
+    "independentLocalTests": {
+      "tests": 16,
+      "passed": 16,
+      "randomizedCases": 320,
+      "compileExit": 0
+    },
+    "limitations": "Production source under development Electron; subsequent artifact-request/focus fixes checked by final source and packaged gates."
+  },
+  "liveFixedAnswerFollowup": {
+    "passed": true,
+    "question": "What is 4 + 6?",
+    "answer": "10",
+    "sameChatPages": true,
+    "workCycles": 1,
+    "verificationPairs": 1,
+    "checks": {
+      "candidateId": "C1",
+      "sha256": "193debba657981337b4d2077becece5f6ae9e2cc7b9984cd3b776695761c974b",
+      "userRevision": 0,
+      "workers": {
+        "right": {
+          "verdict": "accept",
+          "checks": [
+            "Computed 4 + 6 independently and obtained 10.",
+            "Candidate text is exactly \"10\" with no extra content."
+          ],
+          "issues": []
+        },
+        "left": {
+          "verdict": "accept",
+          "checks": [
+            "Independently computed 4 + 6 = 10.",
+            "Candidate text is exactly \"10\" with no extra content."
+          ],
+          "issues": []
+        }
+      }
+    },
+    "requiredFiles": false
+  },
+  "limitations": [
+    "No new macOS binary built.",
+    "No quantitative GPU benchmark.",
+    "A reviewed answer is not a guarantee of universal correctness."
+  ]
+}

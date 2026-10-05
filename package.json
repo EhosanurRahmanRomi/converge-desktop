@@ -1,8 +1,8 @@
 {
   "name": "converge-desktop",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "private": true,
-  "description": "Two embedded ChatGPT reviewers with automatic review and verified file exchange for Windows and macOS",
+  "description": "A boss-directed workspace with two ChatGPT workers and verified file exchange",
   "main": "desktop-main.js",
   "author": "Converge",
   "license": "UNLICENSED",
@@ -10,6 +10,7 @@
     "start": "node scripts/build-page-preload.js && electron .",
     "test": "node scripts/run-tests.js",
     "qa:desktop": "node scripts/build-page-preload.js && electron scripts/qa-desktop-cookie.js",
+    "qa:boss": "node scripts/build-page-preload.js && electron scripts/qa-boss-workspace.js",
     "build:win": "node scripts/build-page-preload.js && electron-builder --win nsis portable --x64",
     "build:mac": "node scripts/build-macos-release.js",
     "verify:mac": "node scripts/verify-macos-release.js"
@@ -33,6 +34,7 @@
       "src/browser/files.js",
       "src/browser/downloads.js",
       "src/browser/desktop-coordinator.js",
+      "src/browser/boss-coordinator.js",
       "src/browser/page-preload.js",
       "chrome-extension/background.js",
       "renderer/browser.html",

@@ -59,6 +59,7 @@ async function harness() {
       if (name === './src/browser/files') return { MIME: {}, validateExport() {}, validateTextSource() {} };
       if (name === './src/browser/downloads') return { createDownloadBroker: () => ({ dispose: async () => {} }) };
       if (name === './src/browser/desktop-coordinator') return { createDesktopCoordinator: () => ({ getState: async () => ({}), dispose() {} }) };
+      if (name === './src/browser/boss-coordinator') return { createBossCoordinator: () => ({ getState: async () => ({}), dispose() {} }) };
       return require(name);
     },
   }, { filename: hostPath });

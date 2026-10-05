@@ -56,6 +56,7 @@ async function harness(options = {}) {
       if (name === './src/browser/files') return { MIME: {}, validateExport() {}, validateTextSource() {} };
       if (name === './src/browser/downloads') return { createDownloadBroker: () => ({ dispose: async () => { downloadsDisposed = true; } }) };
       if (name === './src/browser/desktop-coordinator') return { createDesktopCoordinator: () => ({ getState: async () => ({ status: 'idle' }), dispose() { coordinatorDisposed = true; } }) };
+      if (name === './src/browser/boss-coordinator') return { createBossCoordinator: () => ({ getState: async () => ({ status: 'idle' }), dispose() { coordinatorDisposed = true; } }) };
       return require(name);
     },
   }, { filename: hostPath });
@@ -83,6 +84,22 @@ test('frameless shell retains isolated web preferences and reports actual native
   assert.deepEqual(plain((await host.invoke('browser:bootstrap')).windowState), { maximized: false, minimized: false });
   host.window.maximized = true;
   assert.deepEqual(plain((await host.invoke('browser:bootstrap')).windowState), { maximized: true, minimized: false });
+});
+
+test('three isolated views share a validated background and reapply it after navigation', async () => {
+  const host = await harness();
+  assert.deepEqual(Object.keys(host.desktop.views).sort(), ['boss', 'left', 'right']);
+  for (const chatTheme of ['horror', 'alien', 'night']) {
+    assert.equal((await host.invoke('browser:appearance', { chatTheme })).ok, true);
+    for (const side of ['boss', 'left', 'right']) {
+      const applied = host.sent.findLast(item => item.contents === host.desktop.views[side].webContents && item.channel === 'converge:page-appearance');
+      assert.equal(applied.payload.chatTheme, chatTheme);
+    }
+  }
+  await assert.rejects(host.invoke('browser:appearance', { chatTheme: 'url(https://untrusted.invalid)' }), /supported/);
+  const boss = host.desktop.views.boss.webContents;
+  await assert.rejects(host.invoke('browser:appearance', { chatTheme: 'alien' }, { sender: boss, senderFrame: boss.mainFrame }), /denied/);
+  await assert.rejects(host.invoke('browser:boss-message', { text: 'impersonate user' }, { sender: boss, senderFrame: boss.mainFrame }), /denied/);
 });
 
 test('native window controls reject embedded chats, child frames, foreign senders and unknown actions', async () => {

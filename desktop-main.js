@@ -7,11 +7,13 @@ const path = require('node:path');
 const { randomUUID } = require('node:crypto');
 const { parseCookies } = require('./src/browser/cookies');
 const { createDesktopCoordinator } = require('./src/browser/desktop-coordinator');
+const { createBossCoordinator } = require('./src/browser/boss-coordinator');
 const { MIME, validateExport, validateTextSource } = require('./src/browser/files');
 const { createDownloadBroker } = require('./src/browser/downloads');
-const SIDES = ['left', 'right'];
+const SIDES = ['left', 'right', 'boss'];
 
 async function createCookieApp(options = {}) {
+  const SIDES = options.legacyCoordinator === true ? ['left', 'right'] : ['left', 'right', 'boss'];
   const qaOrigin = options.qaOrigin && /^http:\/\/127\.0\.0\.1:\d+$/.test(options.qaOrigin) ? options.qaOrigin : null;
   // Dialog hooks exist only for an isolated localhost QA app. Production uses
   // native OS dialogs and never accepts a renderer-supplied output path.
@@ -23,7 +25,7 @@ async function createCookieApp(options = {}) {
   // viewport, including the taskbar's reserved area.
   const workArea = screen.getPrimaryDisplay().workAreaSize;
   const mainWindow = new BrowserWindow({
-    title: 'Converge — Browser Studio',
+    title: 'Converge — Boss Workspace',
     width: Math.min(1600, workArea.width), height: Math.min(980, workArea.height),
     minWidth: Math.min(1100, workArea.width), minHeight: Math.min(640, workArea.height),
     show: false, backgroundColor: '#0a1118', icon: path.join(__dirname, platform === 'darwin' ? 'assets/icon.png' : 'assets/icon.ico'),
@@ -42,8 +44,19 @@ async function createCookieApp(options = {}) {
   let opening = false;
   let fileOperation = false;
   let effectsPaused = false;
+  let chatTheme = 'night';
   let closedCleanup = Promise.resolve();
   const emit = (channel, data) => { if (!mainWindow.isDestroyed()) mainWindow.webContents.send(channel, data); };
+  let closeRequested = false;
+  mainWindow.on('close', (event) => {
+    if (closeRequested || !event?.preventDefault) return;
+    event.preventDefault();
+    closeRequested = true;
+    emit('converge:workspace-closing', {});
+    // Allow the shell to stop its measured-bounds/effects callbacks before
+    // destroying the renderer and unregistering this window's IPC handlers.
+    setTimeout(() => { if (!mainWindow.isDestroyed()) mainWindow.close(); }, 75);
+  });
   const pageSide = (event) => SIDES.find((side) => views[side]?.webContents === event.sender);
   const permitted = (url) => {
     try { const parsed = new URL(url); return parsed.origin === 'https://chatgpt.com' || (qaOrigin && parsed.origin === qaOrigin); }
@@ -73,7 +86,7 @@ async function createCookieApp(options = {}) {
       view.webContents.send('converge:page-request', { id, message });
     });
   }
-  const coordinator = createDesktopCoordinator({
+  const coordinator = (options.legacyCoordinator === true ? createDesktopCoordinator : createBossCoordinator)({
     async openPage(side, url) {
       ready.delete(side);
       rejectPending(side, 'The page is opening a fresh chat.');
@@ -280,11 +293,24 @@ async function createCookieApp(options = {}) {
   handle('browser:prepare', () => coordinator.request('PREPARE'));
   handle('browser:start', async (payload) => { await assertIdle(); return coordinator.request('START', payload); });
   handle('browser:stop', () => coordinator.stop());
+  handle('browser:boss-message', async (payload) => {
+    if (fileOperation || opening) throw new Error('Wait for the workspace operation to finish.');
+    return coordinator.request('BOSS_MESSAGE', payload);
+  });
+  handle('browser:appearance', (payload) => {
+    if (!['night', 'horror', 'alien'].includes(payload?.chatTheme)) throw new Error('Choose a supported chat background.');
+    chatTheme = payload.chatTheme;
+    for (const side of SIDES) {
+      const contents = views[side].webContents;
+      if (!contents.isDestroyed() && permitted(contents.getURL())) contents.send('converge:page-appearance', { chatTheme });
+    }
+    return { ok: true, chatTheme };
+  });
   handle('browser:attach', async () => {
     await assertIdle();
     fileOperation = true;
     try {
-    const chosen = await fileDialogs.showOpenDialog(mainWindow, { title: 'Attach the same source files to both chats', properties: ['openFile', 'multiSelections'],
+    const chosen = await fileDialogs.showOpenDialog(mainWindow, { title: 'Attach source files to the boss and both workers', properties: ['openFile', 'multiSelections'],
       filters: [{ name: 'Images, documents and source code', extensions: Object.keys(MIME) }] });
     if (chosen.canceled) return { ok: true, canceled: true, state: await coordinator.getState() };
     if (chosen.filePaths.length > 5) throw new Error('Choose up to five files.');
@@ -387,6 +413,7 @@ async function createCookieApp(options = {}) {
     if (side && event.senderFrame === event.sender.mainFrame && permitted(event.senderFrame.url)) {
       ready.add(side);
       event.sender.send('converge:page-effects', { paused: effectsPaused || !windowVisible() });
+      event.sender.send('converge:page-appearance', { chatTheme });
     }
   };
   const pageResponse = (event, payload) => {

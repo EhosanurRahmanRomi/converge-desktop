@@ -344,3 +344,90 @@ body.window-maximized .window-button .restore-icon,.window-button[aria-label="Re
   .galaxy-theme .controls-overlay .workspace{padding-inline:5px;gap:5px}
   .galaxy-theme .review-deck .bot-mood-bubble{top:19px}
 }
+
+/* Three personalities share one compact stage. The middle character is also
+   the handle for the real boss page, so opening it never shrinks both workers. */
+.galaxy-theme .workspace{position:relative}
+.galaxy-theme .review-deck .bridge-label{left:50%;top:9px;max-width:195px;font-size:6px;padding:0;border:0;background:none;opacity:0;pointer-events:none}
+.galaxy-theme .controls-overlay .topbar-status{top:4px;max-width:220px;font-size:7px;line-height:11px;pointer-events:none}
+.boss-character-button{position:absolute;left:50%;top:17px;transform:translateX(-50%);width:128px;height:calc(var(--review-stage-height) - 18px);border:0;border-radius:16px;background:none;color:#ffdda2;z-index:3;padding:0;display:block;--reviewer-glow:#ffe29d80;cursor:pointer}
+.boss-character-button:hover{background:#ffdc9b08}
+.boss-character-button:focus-visible{outline:1px solid #ffe9b6;outline-offset:0;background:#f4cf8909}
+.boss-character-button:not(:disabled):active{transform:translateX(-50%)}
+.galaxy-theme .review-deck .boss-bot{display:block;width:102px;height:82px;margin:0 auto;transform-origin:50% 78%;color:#ffdda2;filter:none}
+.boss-character-label{position:absolute;right:-16px;top:55px;display:flex;align-items:center;gap:5px;font-size:7px;letter-spacing:1.7px;font-weight:700;color:#ffe3aa;text-shadow:0 0 7px #f0b34d88;pointer-events:none}
+.boss-character-label>span{font-size:11px;letter-spacing:0;color:#ecd8f1}
+.galaxy-theme .review-deck .boss-bot .bot-mood-bubble{left:calc(100% - 6px);top:4px;border-color:#ffe9bdaa;background:linear-gradient(130deg,#74603e6b,#69457c85);box-shadow:0 0 10px #f2c99538}
+.boss-crown{transform-origin:90px 22px;animation:bossCrown 18s ease-in-out infinite}
+.boss-character-button.active .boss-character-label{color:#fff3d6}
+.boss-character-button.has-queued-message:after{content:"";position:absolute;right:3px;bottom:7px;width:6px;height:6px;border-radius:50%;background:#ffe1a0;box-shadow:0 0 7px #ffdfa080}
+.boss-character-button.sending .bot-right-arm{animation:offerPaper 2.8s ease-in-out}
+.boss-character-button.receiving .bot-left-arm{animation:receivePaper 2.8s ease-in-out}
+.character-astronaut,.character-spirit{display:none}
+body[data-character-style="astronaut"] .bot>.character-robot,body[data-character-style="spirit"] .bot>.character-robot{display:none}
+body[data-character-style="astronaut"] .bot>.character-astronaut,body[data-character-style="spirit"] .bot>.character-spirit{display:block}
+.spirit-tail{transform-origin:90px 109px;animation:spiritDrift 12s ease-in-out infinite}
+.character-spirit .bot-head{animation-duration:32s}
+.character-astronaut .bot-head{animation-duration:34s}
+@keyframes bossCrown{0%,100%{transform:translateY(0) rotate(0)}40%,60%{transform:translateY(-1px) rotate(3deg)}}
+@keyframes spiritDrift{0%,100%{transform:skewX(-3deg)}50%{transform:skewX(3deg)}}
+
+.boss-drawer{position:absolute;top:calc(var(--review-stage-height) + 12px);right:8px;bottom:60px;width:calc(50% - 12px);max-width:760px;min-width:310px;z-index:9;display:flex;flex-direction:column;overflow:hidden;border:1px solid #e6cf9a57;border-radius:12px;background:#101624;box-shadow:-14px 0 28px #02050d55;animation:bossDrawerEnter .22s ease-out}
+.boss-drawer-heading{display:flex;align-items:center;gap:11px;min-height:61px;padding:11px 14px;background:linear-gradient(110deg,#2c2631,#191e2f);border-bottom:1px solid #ead0a32a;flex-shrink:0}
+.boss-insignia{display:grid;place-items:center;width:31px;height:33px;border-radius:9px;background:#f6d9970c;border:1px solid #ead9b733;color:#ffdda2;font-size:24px}
+.boss-drawer-heading>div{min-width:0}
+.boss-drawer-heading .drawer-eyebrow{font-size:7px;letter-spacing:1.4px;color:#c2ad87}
+.boss-drawer-heading h2{font-size:15px;letter-spacing:-.25px;font-weight:650;color:#f3e8d3;margin:3px 0 2px}
+.boss-drawer-heading p{font-size:8px;color:#b7b8c7}
+.boss-drawer-heading .icon-button{margin-left:auto;color:#d8cbb6}
+.boss-drawer .page-detail{font-size:9px;padding:7px 14px;background:#141a28;flex-shrink:0}
+.boss-drawer .page-detail.ready{display:none}
+.boss-slot{min-height:100px}
+.boss-monogram{color:#efd4a6!important;border-color:#e7c89a40!important;background:#edca8e09!important;font-size:42px}
+.boss-composer{flex-shrink:0;padding:11px 13px 12px;background:#131b2a;border-top:1px solid #d9c4aa2b}
+.boss-composer-label{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:7px}
+.boss-composer-label>label{font-size:10px;font-weight:600;color:#e4dbc9}
+.boss-composer-label>span{font-size:8px;color:#9facc0;text-align:right}
+.boss-composer-label>span.queued{color:#ffdfa2}
+.boss-composer textarea{display:block;resize:vertical;width:100%;min-height:56px;max-height:140px;border:1px solid #bdc9de38;border-radius:8px;background:#0b1220;color:#eef1f7;font-size:11px;line-height:1.6;padding:9px 11px}
+.boss-composer textarea::placeholder{color:#8b9ab1}
+.boss-composer-actions{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-top:8px}
+.boss-composer-actions>p{color:#8b9db7;font-size:8px;line-height:1.65;max-width:350px;flex:1}
+.boss-composer-actions .button.primary{background:linear-gradient(110deg,#f5daa1,#d4c2f2);border-color:#efe0c29c;color:#271c2b;padding:8px 11px;font-size:10px;white-space:nowrap;box-shadow:none}
+.boss-attach-button{display:grid;place-items:center;flex-shrink:0;width:29px;height:31px;border:1px solid #b2c1d633;border-radius:8px;background:#a9c4ed08;color:#c4cee1;padding:5px}
+.boss-attach-button:hover:not(:disabled){background:#cadcf315;border-color:#dbdfeb69}
+.boss-attach-button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.boss-files-status{font-size:8px;color:#b5c4df;line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-top:5px}
+.boss-composer .field-message{font-size:9px;margin:8px 0 0;max-height:70px;overflow-y:auto}
+.transcript-entry.boss{border-left-color:#e8c88988;background:#211e2900}
+.transcript-entry.boss .transcript-heading strong{color:#ebd2a8}
+.boss-review-card{border:1px solid #dcc69b36;background:#e5caa508;border-radius:10px;padding:12px 14px;margin-bottom:13px}
+.boss-review-card h3{font-size:11px;color:#ead7b0;font-weight:650;margin-bottom:7px}
+.boss-review-card p{font-size:11px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;color:#bdc8d9}
+.boss-review-card>p+p{margin-top:9px;color:#a8bdca}
+.boss-review-limitations{margin-top:9px;border-top:1px solid #d3baa022;padding-top:8px}
+.boss-review-limitations>strong{font-size:9px;color:#e6bf9f;display:block;margin-bottom:4px}
+@keyframes bossDrawerEnter{from{opacity:.3;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+
+/* Chat atmospheres are static surfaces. Native pages receive the same selected
+   theme through the host; these waiting surfaces do not redraw continuously. */
+body[data-chat-theme="horror"]{--text:#f1e8ec;--teal:#e8b8c7;--purple:#cda6bf}
+body[data-chat-theme="horror"] .galaxy{opacity:.14}
+body[data-chat-theme="horror"] .web-slot{background:radial-gradient(ellipse at 20% 65%,#59233344,transparent 58%),radial-gradient(ellipse at 88% 7%,#3b243a33,transparent 52%),#050508}
+body[data-chat-theme="horror"] .chat-toolbar{background:linear-gradient(100deg,#28171dcc,#101015ee);border-color:#e8b8c723}
+body[data-chat-theme="horror"] .chat-pane{border-color:#e4adb32e}
+body[data-chat-theme="horror"] .empty-page,body[data-chat-theme="horror"] .right-pane .empty-page{background:radial-gradient(ellipse at 50% 60%,#70475415,transparent 70%)}
+body[data-chat-theme="horror"] .empty-monogram{color:#d5a2b8a6;border-color:#c79ba53e;background:#29121a55;box-shadow:none}
+body[data-chat-theme="horror"] .page-detail{background:#130d11}
+body[data-chat-theme="alien"]{--teal:#92f0ce;--purple:#bac59f}
+body[data-chat-theme="alien"] .galaxy{opacity:.18}
+body[data-chat-theme="alien"] .web-slot{background:radial-gradient(ellipse at 80% 18%,#4a938025,transparent 42%),radial-gradient(ellipse at 12% 77%,#32472a48,transparent 55%),linear-gradient(145deg,#041715,#101521)}
+body[data-chat-theme="alien"] .chat-toolbar{background:linear-gradient(100deg,#214237aa,#112822dd);border-color:#94f7c926}
+body[data-chat-theme="alien"] .chat-pane{border-color:#9cc7a63d}
+body[data-chat-theme="alien"] .empty-page,body[data-chat-theme="alien"] .right-pane .empty-page{background:radial-gradient(ellipse at 50% 47%,#84eac210,transparent 72%)}
+body[data-chat-theme="alien"] .empty-monogram{color:#a5dbc2c9;border-color:#a1dfb940;background:#16382a3a;box-shadow:none}
+body[data-chat-theme="alien"] .page-detail{background:#0a1a17}
+@media(max-width:1050px){.boss-character-label{right:1px;font-size:6px;letter-spacing:1px}.galaxy-theme .review-deck .boss-bot{width:94px;height:78px}.boss-character-button{width:115px}.boss-drawer-heading{padding:9px 11px}.boss-composer-actions>p{font-size:7px}.boss-composer{padding:9px 10px}.galaxy-theme .controls-overlay .topbar-status{font-size:6px;max-width:190px}}
+@media(max-width:700px){.boss-drawer{width:calc(100% - 12px);min-width:0;right:6px;bottom:53px;top:calc(var(--review-stage-height) + 9px)}.boss-character-button{top:14px;height:67px;width:91px}.galaxy-theme .review-deck .boss-bot{height:69px;width:83px}.boss-character-label{display:none}.galaxy-theme .review-deck .boss-bot .bot-mood-bubble{left:calc(100% - 10px);top:8px;width:25px;height:25px}.galaxy-theme .controls-overlay .topbar-status{max-width:155px;font-size:6px;top:3px}.galaxy-theme .review-deck .reviewer-copy{width:86px}.boss-composer-actions>p{max-width:240px}}
+@media(max-height:680px){.boss-drawer{top:calc(var(--review-stage-height) + 12px);bottom:57px}.boss-character-button{top:14px;height:67px}.galaxy-theme .review-deck .boss-bot{width:88px;height:70px}.boss-character-label{top:46px}.boss-drawer-heading{min-height:49px;padding-block:7px}.boss-composer{padding-block:8px}.boss-composer-actions>p{font-size:7px}.boss-composer textarea{min-height:46px}.galaxy-theme .controls-overlay .topbar-status{top:3px}}
+@media(prefers-reduced-motion:reduce){.boss-drawer{animation:none}}

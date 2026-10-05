@@ -98,7 +98,7 @@ function safeFilename(value, mimeType) {
 // generation, reordered attachment, changed descriptor, or malformed binary
 // must never silently become the final download.
 function validateExport(media, exported) {
-  if (!media || !['left', 'right'].includes(media.side) || !media.runId || !media.requestId ||
+  if (!media || !['left', 'right', 'boss'].includes(media.side) || !media.runId || !media.requestId ||
       !Array.isArray(media.files) || !media.files.length || media.files.length > 5) {
     throw new Error('There are no supported candidate files to save.');
   }

@@ -1,5 +1,7 @@
 # User guide
 
+**Windows 1.8 boss workspace:** follow the [three-chat guide](BOSS_WORKSPACE.md). The sections below describe the previous two-reviewer releases, including macOS 1.7.
+
 [← Project](../README.md) · [Verification](VERIFICATION.md)
 
 ## 1. Open Converge

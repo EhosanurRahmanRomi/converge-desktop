@@ -97,6 +97,18 @@ if (!process.versions.electron) {
       const pausedFrames = (await isolated('globalThis.ConvergePageAppearance.create().diagnostics()')).frames;
       await settle(220);
       assert.equal((await isolated('globalThis.ConvergePageAppearance.create().diagnostics()')).frames, pausedFrames);
+      // Appearance changes stay cosmetic on the actual embedded page, including
+      // file/editor controls. A renderer cannot turn arbitrary values into CSS.
+      for (const theme of ['horror', 'alien', 'night']) {
+        win.webContents.send('converge:page-appearance', { chatTheme: theme }); await settle(70);
+        assert.equal(await evaluate("document.documentElement.getAttribute('data-converge-chat-theme')"), theme);
+        assert.equal((await isolated('globalThis.ConvergePageAppearance.create().diagnostics()')).chatTheme, theme);
+        assert.equal(await evaluate("document.querySelector('article').textContent===window.originalText"), true);
+        assert.equal(await evaluate("document.querySelector('#prompt-textarea').textContent"), 'Native editor still works');
+        assert.equal((await isolated('globalThis.ConvergePageAppearance.create().diagnostics()')).frames, pausedFrames);
+      }
+      win.webContents.send('converge:page-appearance', { chatTheme: 'url(https://untrusted.invalid)' }); await settle(60);
+      assert.equal(await evaluate("document.documentElement.getAttribute('data-converge-chat-theme')"), 'night');
       win.webContents.send('converge:page-effects', { paused: false }); await settle(180);
       assert.equal((await isolated('globalThis.ConvergePageAppearance.create().diagnostics()')).effectsSuppressed, false);
       assert.equal((await isolated('globalThis.ConvergePageAppearance.create().diagnostics()')).frames, pausedFrames);

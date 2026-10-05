@@ -2,6 +2,17 @@
 
 [← Project](../README.md) · [Verification](VERIFICATION.md)
 
+## 1.8.0 — Windows boss workspace
+
+- Added a third ChatGPT conversation that plans assignments for two workers and reviews their answers and generated files.
+- Added a sliding boss panel, opened from the middle animated character, with an instruction box for starting work and adding ideas during a run.
+- Preserved same-chat follow-ups, queued instructions, Stop, Reset, Normal/Temporary/Work choices and exact candidate/file checks.
+- Added Night sky, Black horror and Alien backgrounds to the actual chat pages.
+- Added Robot, Explorer and Spirit character styles, including a distinct boss character.
+- Kept the tall worker panes and paused decorative effects in hidden or minimized windows.
+
+This is a locally built Windows update. The published macOS 1.7.0 release retains its existing two-reviewer interface. See the [boss user guide](BOSS_WORKSPACE.md), [architecture](BOSS_ARCHITECTURE.md) and [Windows verification record](WINDOWS_1_8_VERIFICATION.md).
+
 ## 1.7.0 — macOS Apple Silicon
 
 The existing Converge workspace is now packaged for native ARM64 Macs, including the MacBook Air M4. The Windows 1.6.5 downloads remain available separately.

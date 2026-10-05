@@ -20,6 +20,24 @@
     html.${CLASS} #${LAYER_ID} canvas {
       display: block; width: 100%; height: 100%; pointer-events: none !important;
     }
+    html.${CLASS}[data-converge-chat-theme="horror"] { background: #050405 !important; }
+    html.${CLASS}[data-converge-chat-theme="horror"] #${LAYER_ID} {
+      background: radial-gradient(ellipse at 50% 115%, rgba(126, 12, 28, .42), transparent 58%),
+        radial-gradient(ellipse at 14% 15%, rgba(63, 39, 54, .3), transparent 45%), #050405;
+    }
+    html.${CLASS}[data-converge-chat-theme="alien"] { background: #041512 !important; }
+    html.${CLASS}[data-converge-chat-theme="alien"] #${LAYER_ID} {
+      background: radial-gradient(circle at 79% 19%, #cbffd5 0%, #62d6bd 1.7%, #206355 1.9%, transparent 2.6%),
+        radial-gradient(ellipse at 13% 82%, rgba(74, 25, 113, .58), transparent 56%),
+        radial-gradient(ellipse at 76% 63%, rgba(6, 113, 87, .46), transparent 60%), #041512;
+    }
+    html.${CLASS}:not([data-converge-chat-theme="night"]) #${LAYER_ID} canvas { visibility: hidden; }
+    html.${CLASS}[data-converge-chat-theme="alien"] main article[data-testid^="conversation-turn"] {
+      background-color: rgba(2, 15, 17, .72) !important;
+    }
+    html.${CLASS}[data-converge-chat-theme="horror"] main article[data-testid^="conversation-turn"] {
+      background-color: rgba(5, 4, 7, .78) !important;
+    }
     html.${CLASS} :is(#root, #__next, main, [${LAYOUT}]) {
       background-color: transparent !important;
       background-image: none !important;
@@ -78,6 +96,8 @@
     document.head.appendChild(style);
     document.body.prepend(layer);
     document.documentElement.classList.add(CLASS);
+    let chatTheme = 'night';
+    document.documentElement.setAttribute('data-converge-chat-theme', chatTheme);
 
     let scene;
     // Keep the chat backdrop still. Visible motion is concentrated in the
@@ -145,12 +165,19 @@
       for (const element of marked) element.removeAttribute(LAYOUT);
       marked.clear(); style.remove(); layer.remove();
       document.documentElement.classList.remove(CLASS);
+      document.documentElement.removeAttribute('data-converge-chat-theme');
       controller = null;
     };
     window.addEventListener('pagehide', dispose, { once: true });
     controller = Object.freeze({
       setPaused(value) { paused = value === true; setScenePaused(); },
-      diagnostics() { return { ...scene?.diagnostics?.(), decoratedLayouts: marked.size, animated: false, effectsSuppressed: effectsSuppressed() }; },
+      setTheme(value) {
+        if (!['night', 'horror', 'alien'].includes(value) || disposed) return false;
+        chatTheme = value;
+        document.documentElement.setAttribute('data-converge-chat-theme', chatTheme);
+        return true;
+      },
+      diagnostics() { return { ...scene?.diagnostics?.(), chatTheme, decoratedLayouts: marked.size, animated: false, effectsSuppressed: effectsSuppressed() }; },
       dispose,
     });
     return controller;

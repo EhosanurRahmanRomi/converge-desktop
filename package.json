@@ -11,6 +11,7 @@
     "test": "node scripts/run-tests.js",
     "qa:desktop": "node scripts/build-page-preload.js && electron scripts/qa-desktop-cookie.js",
     "qa:boss": "node scripts/build-page-preload.js && electron scripts/qa-boss-workspace.js",
+    "qa:boss:packaged": "node scripts/qa-packaged-boss.js",
     "build:win": "node scripts/build-page-preload.js && electron-builder --win nsis portable --x64",
     "build:mac": "node scripts/build-macos-release.js",
     "verify:mac": "node scripts/verify-macos-release.js"

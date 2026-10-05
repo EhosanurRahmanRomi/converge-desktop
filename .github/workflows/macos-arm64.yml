@@ -2,7 +2,10 @@ name: Native macOS ARM64 release checks
 
 on:
   push:
-    branches: [macos-port]
+    branches: [main, macos-port, windows-boss-workspace]
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
   workflow_dispatch:
 
 permissions:
@@ -46,13 +49,17 @@ jobs:
         run: |
           node scripts/qa-packaged-desktop.js 2>&1 | tee .live-test/macos-packaged-qa.log
           node -e "const assert=require('node:assert/strict'),r=require('./desktop-cookie-packaged-qa-result.json'),p=require('./package.json'); assert.equal(r.passed,true); assert.equal(r.localFixturesOnly,true); assert.ok(r.tests.length>=24); assert.equal(r.packageVersion,p.version); assert.equal(r.launcherVersion,p.version); assert.equal(r.bootstrapVersion,p.version)"
+      - name: Verify the packaged boss and both workers
+        env:
+          CONVERGE_PACKAGED_ASAR: dist/mac-arm64/Converge.app/Contents/Resources/app.asar
+        run: npm run qa:boss:packaged 2>&1 | tee .live-test/macos-boss-qa.log
       - name: Require a clean source tree after all build gates
         run: git diff --exit-code
       - name: Record verification scope
         run: |
           cat >> "$GITHUB_STEP_SUMMARY" <<'SUMMARY'
           ## Converge Apple Silicon verification
-          Native ARM64 source tests, offline packaged integration tests, actual packaged startup, native editing, close/reopen, bundle permissions, framework links, source byte parity and ad-hoc signatures are required before artifacts are uploaded. The ZIP is extracted and the DMG mounted read-only for the same bundle checks.
+          Native ARM64 source tests, offline packaged boss and legacy integration tests, actual packaged startup, native editing in the shell and all three chats, close/reopen, bundle permissions, framework links, source byte parity and ad-hoc signatures are required before artifacts are uploaded. The ZIP is extracted and the DMG mounted read-only for the same bundle checks.
 
           The release is **ad-hoc signed**, without Developer ID signing or Apple notarization. The host is a GitHub ARM64 runner. These checks do not claim a physical MacBook Air M4 test or authenticated live ChatGPT/file exchange.
           SUMMARY
@@ -78,6 +85,8 @@ jobs:
             .live-test/macos-*.log
             .live-test/macos-native-startup.json
             .live-test/macos-native-startup.png
+            .live-test/boss-workspace-qa-packaged/*.json
+            .live-test/boss-workspace-qa-packaged/*.png
             desktop-cookie-packaged-qa-result.json
             desktop-cookie-qa-progress.json
             desktop-cookie-studio*.png

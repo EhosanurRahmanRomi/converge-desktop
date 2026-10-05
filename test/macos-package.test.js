@@ -124,9 +124,13 @@ test('Mac packaging cannot label a future build with a historical release versio
 });
 test('actual app smoke must cover native editing, disposal and activation in the correct packaged binary', () => {
   const executable = path.resolve('fixture/Converge'), report = { status: 'PASS', platform: 'darwin', arch: 'arm64', packaged: true, version: metadata.version, executable, visibleShell: true, nativeKeyWindow: true, visibilityScope: 'Observed native show state and actual native key window after shell first paint', commandShortcutHint: true, nativeMenu: true,
-    nativeEditingVerified: { shell: true, left: true, right: true }, didClose: true, embeddedViewsDisposed: true, closeCleanupCompleted: true, activateEventComplete: true, freshWorkspaceOnActivate: true,
+    nativeEditingVerified: { shell: true, left: true, right: true, boss: true, bossInstruction: true }, bossDrawerVerified: true, didClose: true, embeddedViewsDisposed: true, closeCleanupCompleted: true, activateEventComplete: true, freshWorkspaceOnActivate: true,
     activationScope: 'Automated Electron activate event, not physical Dock input', providerScope: 'Empty isolated session; no authentication, provider navigation or live model task' };
   assert.equal(validateNativeSmoke(report, metadata.version, executable), true);
-  for (const field of ['packaged', 'nativeKeyWindow', 'embeddedViewsDisposed', 'freshWorkspaceOnActivate']) assert.throws(() => validateNativeSmoke({ ...report, [field]: false }, metadata.version, executable));
-  assert.throws(() => validateNativeSmoke({ ...report, nativeEditingVerified: { shell: true, left: true, right: false } }, metadata.version, executable), /Native editing/);
+  for (const field of ['packaged', 'nativeKeyWindow', 'bossDrawerVerified', 'embeddedViewsDisposed', 'freshWorkspaceOnActivate']) assert.throws(() => validateNativeSmoke({ ...report, [field]: false }, metadata.version, executable));
+  for (const missingSide of ['shell', 'left', 'right', 'boss', 'bossInstruction']) {
+    const incomplete = { ...report.nativeEditingVerified }; delete incomplete[missingSide];
+    assert.throws(() => validateNativeSmoke({ ...report, nativeEditingVerified: incomplete }, metadata.version, executable), /Native editing/);
+    assert.throws(() => validateNativeSmoke({ ...report, nativeEditingVerified: { ...report.nativeEditingVerified, [missingSide]: false } }, metadata.version, executable), /Native editing/);
+  }
 });

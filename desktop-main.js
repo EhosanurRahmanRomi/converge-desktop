@@ -488,7 +488,7 @@ async function runNativeMacSmoke(lifecycle) {
     assert.equal(owned.mainWindow.isFocused(), true, 'Native key window focus was lost');
     assert.deepEqual(Object.keys(owned.views), SIDES);
     for (const side of SIDES) assert.ok(['', 'about:blank'].includes(owned.views[side].webContents.getURL()), 'Smoke must not navigate a provider page');
-    return owned.mainWindow.webContents.executeJavaScript(`new Promise((resolve,reject)=>{const began=performance.now();const check=()=>{const version=document.getElementById('version')?.textContent;if(version===${JSON.stringify(`v${app.getVersion()}`)}){const ids=['windowMinimize','windowMaximize','windowClose','chooseCookies','leftSlot','rightSlot'];resolve({version,platformHint:document.getElementById('startShortcutModifier')?.textContent,controls:ids.every(id=>!!document.getElementById(id)),sessionImported:document.getElementById('sessionBadge')?.textContent==='Imported'});return;}if(performance.now()-began>5000){reject(Error('Native shell bootstrap did not settle'));return;}setTimeout(check,25);};check();})`);
+    return owned.mainWindow.webContents.executeJavaScript(`new Promise((resolve,reject)=>{const began=performance.now();const check=()=>{const version=document.getElementById('version')?.textContent;if(version===${JSON.stringify(`v${app.getVersion()}`)}){const ids=['windowMinimize','windowMaximize','windowClose','chooseCookies','leftSlot','rightSlot','toggleBoss','closeBoss','bossSlot','bossMessageInput'];resolve({version,platformHint:document.getElementById('startShortcutModifier')?.textContent,controls:ids.every(id=>!!document.getElementById(id)),sessionImported:document.getElementById('sessionBadge')?.textContent==='Imported'});return;}if(performance.now()-began>5000){reject(Error('Native shell bootstrap did not settle'));return;}setTimeout(check,25);};check();})`);
   };
   const initial = await checkShell(desktop);
   assert.equal(initial.controls, true); assert.equal(initial.sessionImported, false); assert.equal(initial.platformHint, 'Command');
@@ -501,22 +501,40 @@ async function runNativeMacSmoke(lifecycle) {
   const previousClipboard = await clipboard.readText();
   const editing = {};
   try {
-    for (const side of ['shell', ...SIDES]) {
-      const contents = side === 'shell' ? desktop.mainWindow.webContents : desktop.views[side].webContents;
-      if (side !== 'shell') {
+    for (const side of ['shell', ...SIDES, 'bossInstruction']) {
+      // Use the real drawer controls and their measured slot geometry. There
+      // is no imported session in this smoke, so provider layout is inactive;
+      // blank local views only exercise native first-responder editing here.
+      for (const viewSide of SIDES) desktop.views[viewSide].setVisible(false);
+      const bossSurface = side === 'boss' || side === 'bossInstruction';
+      await desktop.mainWindow.webContents.executeJavaScript(`(()=>{const boss=document.getElementById('bossDrawer');if(boss.hidden===${bossSurface})document.getElementById('toggleBoss').click();const app=document.getElementById('app');if(app.classList.contains('sidebar-collapsed')===${side === 'shell'})document.getElementById('toggleSidebar').click();})()`);
+      if (bossSurface) {
+        await poll(() => desktop.mainWindow.webContents.executeJavaScript("document.getElementById('bossDrawer').hidden===false && document.getElementById('toggleBoss').getAttribute('aria-expanded')==='true'"), true, 'boss drawer open');
+        await desktop.mainWindow.webContents.executeJavaScript("Promise.all(document.getElementById('bossDrawer').getAnimations().map(animation=>animation.finished.catch(()=>{})))");
+      }
+      const shellSurface = side === 'shell' || side === 'bossInstruction';
+      const editorId = side === 'bossInstruction' ? 'bossMessageInput' : 'question';
+      const contents = shellSurface ? desktop.mainWindow.webContents : desktop.views[side].webContents;
+      if (!shellSurface) {
         await contents.loadURL('about:blank');
+        const slotId = side === 'boss' ? 'bossSlot' : `${side}Slot`;
+        const bounds = await desktop.mainWindow.webContents.executeJavaScript(`(()=>{const r=document.getElementById(${JSON.stringify(slotId)}).getBoundingClientRect();return {x:Math.round(r.x),y:Math.round(r.y),width:Math.round(r.width),height:Math.round(r.height)};})()`);
+        assert.ok(bounds.width >= 80 && bounds.height >= 80, `${side} native editing slot is not visible`);
+        desktop.views[side].setBounds(bounds);
         desktop.views[side].setVisible(true);
         await contents.executeJavaScript("document.body.innerHTML='<textarea id=question></textarea>'");
       }
       const copyText = `CONVERGE_NATIVE_COPY_${side}`, pasteText = `CONVERGE_NATIVE_PASTE_${side}`;
-      await contents.executeJavaScript(`document.getElementById('question').value=${JSON.stringify(copyText)};document.getElementById('question').focus()`);
+      await contents.executeJavaScript(`document.getElementById(${JSON.stringify(editorId)}).value=${JSON.stringify(copyText)};document.getElementById(${JSON.stringify(editorId)}).focus()`);
       app.focus({ steal: true }); desktop.mainWindow.focus(); contents.focus();
+      await poll(() => contents.isFocused(), true, `${side} native first responder`);
+      await poll(() => contents.executeJavaScript(`document.activeElement?.id===${JSON.stringify(editorId)}`), true, `${side} editor focus`);
       Menu.sendActionToFirstResponder('selectAll:');
       Menu.sendActionToFirstResponder('copy:');
       await poll(() => clipboard.readText(), copyText, `${side} copy`);
       await clipboard.writeText(pasteText);
       Menu.sendActionToFirstResponder('paste:');
-      await poll(() => contents.executeJavaScript("document.getElementById('question').value"), pasteText, `${side} paste`);
+      await poll(() => contents.executeJavaScript(`document.getElementById(${JSON.stringify(editorId)}).value`), pasteText, `${side} paste`);
       editing[side] = true;
     }
   } finally { await clipboard.writeText(previousClipboard); }
@@ -537,7 +555,7 @@ async function runNativeMacSmoke(lifecycle) {
   const report = { status: 'PASS', platform, arch: process.arch, packaged: app.isPackaged,
     version: app.getVersion(), executable: process.execPath, visibleShell: true, nativeKeyWindow: true,
     visibilityScope: 'Observed native show state and actual native key window after shell first paint', commandShortcutHint: true,
-    nativeMenu: true, nativeEditingVerified: editing, didClose: true, embeddedViewsDisposed: true, closeCleanupCompleted: true,
+    nativeMenu: true, nativeEditingVerified: editing, bossDrawerVerified: true, didClose: true, embeddedViewsDisposed: true, closeCleanupCompleted: true,
     activateEventComplete: true, freshWorkspaceOnActivate: true,
     activationScope: 'Automated Electron activate event, not physical Dock input',
     providerScope: 'Empty isolated session; no authentication, provider navigation or live model task',

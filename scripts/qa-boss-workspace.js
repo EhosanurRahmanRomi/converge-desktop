@@ -12,6 +12,7 @@ const { app, session } = require('electron');
 const root = path.join(__dirname, '..');
 const packagedAsar = process.env.CONVERGE_PACKAGED_ASAR && path.resolve(process.env.CONVERGE_PACKAGED_ASAR);
 const productionRoot = packagedAsar || root;
+const packageVersion = JSON.parse(fs.readFileSync(path.join(productionRoot, 'package.json'), 'utf8')).version;
 if (packagedAsar) app.setAppPath(packagedAsar);
 const { createCookieApp } = require(path.join(productionRoot, 'desktop-main.js'));
 const profileRoot = fs.mkdtempSync(path.join(app.getPath('temp'), 'converge-boss-qa-'));
@@ -54,6 +55,7 @@ let completed = false;
 let openDialogCount = 0;
 let saveDialogCount = 0;
 let stateMonitor;
+let bootstrapVersion;
 
 function digest(bytes) { return createHash('sha256').update(bytes).digest('hex'); }
 function pass(message) {
@@ -292,13 +294,17 @@ async function run() {
   desktop.mainWindow.webContents.on('console-message', event => consoleMessages.push({ side: 'shell', level: event.level, message: event.message }));
   for (const side of ['left', 'right', 'boss']) desktop.views[side].webContents.on('console-message', event => consoleMessages.push({ side, level: event.level, message: event.message }));
   await waitFor(() => shell(`typeof window.convergeBrowser==='object' && document.getElementById('previewNotice').hidden`), 'Shell preload did not initialize');
+  bootstrapVersion = (await shell('window.convergeBrowser.bootstrap()')).version;
+  assert.equal(bootstrapVersion, app.getVersion());
+  if (packagedAsar) assert.equal(app.getVersion(), packageVersion, 'Packaged fixture launcher must use archive metadata.');
+  assert.equal(await shell('document.getElementById("version").textContent'), `v${bootstrapVersion}`);
   assert.deepEqual(Object.keys(desktop.views).sort(), ['boss', 'left', 'right']);
   for (const side of ['left', 'right', 'boss']) {
     const preferences = desktop.views[side].webContents.getLastWebPreferences();
     assert.equal(preferences.sandbox, true); assert.equal(preferences.contextIsolation, true); assert.equal(preferences.nodeIntegration, false);
   }
   assert.equal(desktop.browserSession.storagePath, null);
-  pass('Production Windows shell creates three sandboxed isolated native chat views and keeps its browser session in memory.');
+  pass(`Production ${process.platform === 'darwin' ? 'macOS' : 'Windows'} shell creates three sandboxed isolated native chat views and keeps its browser session in memory.`);
 
   const fakeCookies = JSON.stringify([{ domain: '.chatgpt.com', name: 'converge_boss_fixture', value: 'offline-fixture', path: '/', secure: true, session: true, sameSite: 'lax' }]);
   const imported = await shell(`window.convergeBrowser.importCookies(${JSON.stringify(fakeCookies)})`);
@@ -496,7 +502,8 @@ async function run() {
   assert.deepEqual(uncaught, [], 'Renderer/page emitted an uncaught runtime error.');
   completed = true;
   fs.writeFileSync(path.join(evidenceRoot, packagedAsar ? 'packaged-result.json' : 'result.json'), JSON.stringify({ passed: true,
-    localFixturesOnly: true, tests: log, screenshots, captureWarnings, blockedRemoteOrigins: [...blockedRemoteOrigins],
+    localFixturesOnly: true, platform: process.platform, packageVersion, launcherVersion: app.getVersion(), bootstrapVersion,
+    tests: log, screenshots, captureWarnings, blockedRemoteOrigins: [...blockedRemoteOrigins],
     consoleMessages, themeCaptures, sourceSha256: digest(sourceBytes), savedFileSha256: digest(fs.readFileSync(savedPath)),
     finalCandidateId: result.candidate.id, workCycles: result.round, sends: Object.fromEntries(Object.entries(sends).map(([side, turns]) => [side, turns.length])),
     ...(packagedAsar ? { packagedAsar, note: 'Production shell, coordinator and preloads were loaded from app.asar under development Electron. Installer execution and live authentication were not tested by this fixture.' } : {}),

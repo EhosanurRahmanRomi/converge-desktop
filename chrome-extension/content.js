@@ -38,6 +38,10 @@
   const MAX_REPLY_CHARS = 300000;
   const MAX_FILE_BYTES = 12 * 1024 * 1024;
   const MAX_TOTAL_BYTES = 24 * 1024 * 1024;
+  // Each native upload is limited to five files. A boss prompt may inspect
+  // five original sources and both workers' five-file result bundles after
+  // those uploads have each been confirmed separately.
+  const MAX_ATTACHED_SOURCE_NAMES = 15;
   const MIME_BY_EXTENSION = {
     png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif',
     pdf: 'application/pdf', zip: 'application/zip', txt: 'text/plain', md: 'text/markdown', csv: 'text/csv', json: 'application/json',
@@ -202,7 +206,8 @@
     }
 
     function hasExpectedSources(composer, names) {
-      if (!Array.isArray(names) || names.length > 5 || names.some((name) => typeof name !== 'string' || !/^[^\\/\x00-\x1f]{1,180}$/.test(name))) return false;
+      if (!Array.isArray(names) || names.length > MAX_ATTACHED_SOURCE_NAMES || new Set(names).size !== names.length ||
+          names.some((name) => typeof name !== 'string' || !/^[^\\/\x00-\x1f]{1,180}$/.test(name))) return false;
       if (!names.length) return true;
       const container = composerScope(composer);
       const scope = container?.parentElement || container;
@@ -1031,7 +1036,9 @@
             const contentType = String(response.headers?.get?.('content-type') || '').split(';')[0].trim().toLowerCase();
             if (contentType && contentType !== entry.mimeType &&
                 !(entry.mimeType === 'application/zip' && contentType === 'application/x-zip-compressed') &&
-                !['application/octet-stream', 'binary/octet-stream', 'application/zip'].includes(contentType)) {
+                !(contentType === 'application/zip' && entry.mimeType.includes('openxmlformats')) &&
+                !(contentType === 'text/x-python' && entry.mimeType === 'text/plain' && /\.py$/i.test(entry.name)) &&
+                !['application/octet-stream', 'binary/octet-stream'].includes(contentType)) {
               throw new Error('The visible download returned an unexpected file type.');
             }
             if (!response.body?.getReader) throw new Error('The browser cannot read this download safely.');
@@ -1415,7 +1422,7 @@
         composer = findComposer();
         if (!composer) throw new Error('The attachment upload changed the chat composer.');
         if (message.expectedSourceNames !== undefined && !hasExpectedSources(composer, message.expectedSourceNames)) {
-          throw new Error('An expected source document is no longer attached. Attach the source files to both chats again before starting.');
+          throw new Error('An expected source document is no longer attached. Verify every required attachment in this chat before starting.');
         }
         fillComposer(composer, message.text);
         let stableComposer = null;
@@ -1745,11 +1752,14 @@
       const previewsBefore = new Map(imagePreviews(attachmentScope).map((element) => [element, attachmentImageIdentity(element)]));
       const transfer = new win.DataTransfer();
       let total = 0;
+      const names = new Set();
       for (const item of message.files) {
         if (!item || typeof item.name !== 'string' || !/^[^\\/\x00-\x1f]{1,180}$/.test(item.name) ||
             typeof item.mimeType !== 'string' || !ALLOWED_MIME.has(item.mimeType) || typeof item.base64 !== 'string') {
           return { ok: false, error: 'Unsupported file name or type.' };
         }
+        if (names.has(item.name)) return { ok: false, error: 'Attachment file names must be unique within a batch.' };
+        names.add(item.name);
         // Repeating four-character groups over a multi-MB base64 string can
         // exhaust V8's regexp stack. Bound size first; this single alphabet
         // repetition plus quartet length retains strict padding validation.
@@ -1757,11 +1767,17 @@
           return { ok: false, error: 'Invalid or oversized file contents.' };
         }
         const bytes = decodeBase64(item.base64);
+        if (encodeBase64(bytes) !== item.base64) return { ok: false, error: 'Invalid noncanonical file contents.' };
         total += bytes.byteLength;
         if (!bytes.byteLength || bytes.byteLength > MAX_FILE_BYTES || total > MAX_TOTAL_BYTES) {
           return { ok: false, error: 'File limit is 12 MB each and 24 MB total.' };
         }
-        try { validateZipArchive(item.name, item.mimeType, bytes); validateSettingsFile(item.name, item.mimeType, bytes); }
+        try {
+          validateZipArchive(item.name, item.mimeType, bytes);
+          validateSettingsFile(item.name, item.mimeType, bytes);
+          if (filenameMime(item.name) !== item.mimeType) throw new Error('The attachment file type does not match its filename.');
+          validateReadableSource(item.name, item.mimeType, bytes);
+        }
         catch (error) { return { ok: false, error: error.message }; }
         transfer.items.add(new win.File([bytes], item.name, { type: item.mimeType }));
       }
@@ -1865,7 +1881,7 @@
       } catch (error) {
         if (waitTask.controller.signal.aborted) return { ok: false, error: String(waitTask.controller.signal.reason || 'Attachment upload was cancelled.') };
         if (error.message !== 'Timed out waiting for the ChatGPT page.') return { ok: false, error: error.message };
-        return { ok: false, error: 'The page did not show a new preview for every image or a name for every document. Check both chats before starting.' };
+        return { ok: false, error: 'The page did not show a new preview for every image or a name for every document. Check the required attachments in this chat before starting.' };
       } finally { if (activeAttachment === waitTask) activeAttachment = null; }
       return { ok: true, attached: message.files.length };
     }
@@ -1917,6 +1933,11 @@
       if (statusTimer !== null) clearTimeout(statusTimer);
       doc.removeEventListener?.('input', scheduleStatus, true);
       clearMediaSnapshots();
+      // Source uploads and completed-result exports can run while there is
+      // no active prompt. Release their owned waits/downloads on navigation
+      // too, before a fresh page tries to use the same host-side broker.
+      activeAttachment?.controller.abort('The chat page closed or navigated.');
+      for (const controller of mediaExports.keys()) controller.abort('The chat page closed or navigated.');
       if (!active) return;
       const task = active;
       active = null;

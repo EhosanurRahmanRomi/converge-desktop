@@ -20,8 +20,29 @@ const evidenceRoot = path.join(root, '.live-test', packagedAsar ? 'boss-workspac
 fs.mkdirSync(evidenceRoot, { recursive: true });
 const sourceBytes = Buffer.from('OFFLINE SOURCE ONLY\nMaximumLoss=100\nFixedLots=0.01\n');
 const sourcePath = path.join(profileRoot, 'original-source.txt');
+const sourceImagePath = path.join(profileRoot, 'source-diagram.png');
+const sourcePdfPath = path.join(profileRoot, 'source-reference.pdf');
 const savedPath = path.join(profileRoot, 'saved-boss-result.txt');
 fs.writeFileSync(sourcePath, sourceBytes);
+const sourceImageBytes = fs.readFileSync(path.join(root, 'assets/icon.png'));
+// Small valid one-page PDF: only local inert fixture data is uploaded.
+const pdfParts = ['%PDF-1.4\n'];
+const pdfOffsets = [0];
+for (const [index, body] of [
+  '<< /Type /Catalog /Pages 2 0 R >>',
+  '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+  '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 100] /Contents 4 0 R >>',
+  '<< /Length 0 >>\nstream\n\nendstream',
+].entries()) {
+  pdfOffsets.push(Buffer.byteLength(pdfParts.join('')));
+  pdfParts.push(`${index + 1} 0 obj\n${body}\nendobj\n`);
+}
+const pdfXref = Buffer.byteLength(pdfParts.join(''));
+pdfParts.push(`xref\n0 5\n0000000000 65535 f \n${pdfOffsets.slice(1).map(offset => `${String(offset).padStart(10, '0')} 00000 n \n`).join('')}trailer\n<< /Size 5 /Root 1 0 R >>\nstartxref\n${pdfXref}\n%%EOF\n`);
+const sourcePdfBytes = Buffer.from(pdfParts.join(''));
+fs.writeFileSync(sourceImagePath, sourceImageBytes);
+fs.writeFileSync(sourcePdfPath, sourcePdfBytes);
+let sourceSelection = [sourcePath];
 const log = [];
 const consoleMessages = [];
 const screenshots = [];
@@ -254,7 +275,7 @@ async function run() {
   blockRemote(session.defaultSession);
   app.on('web-contents-created', (_event, contents) => blockRemote(contents.session));
   desktop = await createCookieApp({ qaOrigin: fixture.origin, show: false, dialogs: {
-    async showOpenDialog() { openDialogCount += 1; return { canceled: false, filePaths: [sourcePath] }; },
+    async showOpenDialog() { openDialogCount += 1; return { canceled: false, filePaths: sourceSelection }; },
     async showSaveDialog(_window, options) {
       assert.match(options.defaultPath, /^boss-refined-v\d+\.txt$/); saveDialogCount += 1;
       return { canceled: false, filePath: savedPath };
@@ -287,9 +308,26 @@ async function run() {
   assert.equal((await desktop.coordinator.getState()).coordinatorMode, 'boss');
   pass('Import and Normal OK open exactly three distinct chats with the boss coordinator active.');
 
+  sourceSelection = [sourcePath, sourcePdfPath, sourceImagePath];
+  const mixedAttached = await shell('window.convergeBrowser.attachFiles()');
+  assert.equal(mixedAttached.ok, true, mixedAttached.error);
+  for (const side of ['left', 'right', 'boss']) {
+    assert.deepEqual(await page(side, 'window.fixtureUploads[0]'), [
+      { name: 'original-source.txt', type: 'text/plain', size: sourceBytes.length },
+      { name: 'source-reference.pdf', type: 'application/pdf', size: sourcePdfBytes.length },
+      { name: 'source-diagram.png', type: 'image/png', size: sourceImageBytes.length },
+    ]);
+    assert.equal(await page(side, 'document.querySelectorAll("#previews img").length'), 1);
+  }
+  const resetMixed = await shell('window.convergeBrowser.resetChats()');
+  assert.equal(resetMixed.ok, true, resetMixed.error);
+  await open();
+  sourceSelection = [sourcePath];
+  pass('A mixed text, valid PDF and PNG source selection reaches all three native file inputs; Reset clears the staged previews and retains the session.');
+
   const attached = await shell(`window.convergeBrowser.attachFiles()`);
   assert.equal(attached.ok, true, attached.error);
-  assert.equal(openDialogCount, 1);
+  assert.equal(openDialogCount, 2);
   for (const side of ['left', 'right', 'boss']) assert.deepEqual(await page(side, 'window.fixtureUploads[0]'),
     [{ name: 'original-source.txt', type: 'text/plain', size: sourceBytes.length }]);
   pass('One native file picker uploads the original source to the boss and both workers.');
@@ -351,7 +389,7 @@ async function run() {
   desktop.mainWindow.showInactive();
   await new Promise(resolve => setTimeout(resolve, 500));
   const themeCaptures = [];
-  for (const chatTheme of ['horror', 'alien', 'night']) {
+  for (const chatTheme of ['horror', 'alien', 'night', 'cyberpunk', 'anime']) {
     await shell(`document.getElementById('chatTheme').value=${JSON.stringify(chatTheme)};document.getElementById('chatTheme').dispatchEvent(new Event('change',{bubbles:true}));`);
     await waitFor(async () => (await Promise.all(['left', 'right', 'boss'].map(side => page(side, 'document.documentElement.getAttribute("data-converge-chat-theme")')))).every(theme => theme === chatTheme), `Theme ${chatTheme} did not reach all native pages`);
     // Occluded native child views can suspend animation frames. Bound the
@@ -363,12 +401,12 @@ async function run() {
     const filename = await capturePage('left', `chat-background-${chatTheme}`);
     if (filename) themeCaptures.push({ chatTheme, background, sha256: digest(fs.readFileSync(filename)) });
   }
-  assert.equal(themeCaptures.length, 3, 'Every chat theme needs a real native-page screenshot.');
-  assert.equal(new Set(themeCaptures.map(item => item.sha256)).size, 3,
-    'Three native chat theme captures must differ after their actual paint settles.');
+  assert.equal(themeCaptures.length, 5, 'Every chat theme needs a real native-page screenshot.');
+  assert.equal(new Set(themeCaptures.map(item => item.sha256)).size, 5,
+    'Five native chat theme captures must differ after their actual paint settles.');
   assert.equal(new Set(themeCaptures.map(item => item.background)).size, themeCaptures.length,
     'Theme settings must apply different CSS backgrounds to the native chat page.');
-  pass('The settings selector applies Horror, Alien and Night backgrounds to all three real chat views.');
+  pass('The settings selector applies Horror, Alien, Night, Cyberpunk and Anime backgrounds to all three real chat views.');
   for (const characterStyle of ['astronaut', 'spirit', 'robot']) {
     await shell(`document.getElementById('characterStyle').value=${JSON.stringify(characterStyle)};document.getElementById('characterStyle').dispatchEvent(new Event('change',{bubbles:true}));`);
     assert.equal(await shell('document.body.dataset.characterStyle'), characterStyle);

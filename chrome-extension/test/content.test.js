@@ -95,6 +95,7 @@ function applyParagraphLinkDOM(target, text) {
 function fixture({ privacy = 'selected', onSend, setup, composerMode = 'default', renderEditor, sendAppearsAfterText = false, options = {}, downloadVisible } = {}) {
   const messages = [];
   const listeners = [];
+  const windowListeners = new Map();
   const composer = composerMode === 'rich-editor' ? new FakeRichEditor() : new FakeTextArea();
   const send = new FakeElement('BUTTON', '', { 'data-testid': 'send-button' });
   const stop = new FakeElement('BUTTON', '', { 'data-testid': 'stop-button' });
@@ -181,7 +182,8 @@ function fixture({ privacy = 'selected', onSend, setup, composerMode = 'default'
     InputEvent: class { constructor(type, args) { this.type = type; this.args = args; } },
     getSelection: () => ({ removeAllRanges() {}, addRange() {} }),
     getComputedStyle: () => ({ display: 'block', visibility: 'visible' }),
-    addEventListener() {}
+    addEventListener(type, listener) { windowListeners.set(type, listener); },
+    dispatchEvent(event) { windowListeners.get(event.type)?.(event); return true; }
   };
   const chrome = {
     runtime: {
@@ -552,6 +554,21 @@ test('a source PDF removed after upload stops before filling or sending; filenam
     onSend({ text, addUser, addAssistant }) { addUser(text); addAssistant('Read the source file.'); } });
   assert.equal((await page.bridge.sendPrompt({ runId: 'present-source', requestId: 'source', text: 'Correct this source.', expectedSourceNames: ['source.pdf'] })).ok, true);
   await waitFor(() => page.messages.find((message) => message.type === 'REPLY'));
+});
+
+test('source receipt names are distinct and capped at the complete fifteen-file boss bundle', async () => {
+  const names = Array.from({ length: 15 }, (_, index) => `source-${index + 1}.pdf`);
+  for (const expectedSourceNames of [names, [...names, 'source-16.pdf'], ['source-1.pdf', 'source-1.pdf']]) {
+    let sends = 0;
+    const page = fixture({ setup({ form }) { form.innerText = [...names, 'source-16.pdf'].join('\n'); },
+      onSend({ text, addUser, addAssistant }) { sends += 1; addUser(text); addAssistant('Every source reviewed.'); } });
+    const result = await page.bridge.sendPrompt({ runId: `source-limit-${expectedSourceNames.length}`, requestId: 'request',
+      text: 'Inspect all attachments.', expectedSourceNames });
+    assert.equal(result.ok, expectedSourceNames === names, result.error);
+    assert.equal(sends, expectedSourceNames === names ? 1 : 0);
+    if (expectedSourceNames !== names) { assert.match(result.error, /source document is no longer attached/); assert.equal(page.composer.value, ''); }
+    else await waitFor(() => page.messages.find(message => message.type === 'REPLY'));
+  }
 });
 
 test('an answer saying Work and conflicting selected controls cannot verify Work mode', async () => {
@@ -1149,6 +1166,44 @@ test('a filename already visible before selection cannot prove a new document up
   assert.match(result.error, /new preview|name/);
 });
 
+test('invalid source bytes, noncanonical base64 and duplicate filenames never reach the attachment picker', async () => {
+  const cases = [
+    [{ name: 'reviewed.py', mimeType: 'text/plain', base64: Buffer.from([0x4d, 0x5a, 0, 1]).toString('base64') }],
+    [{ name: 'reviewed.mq5', mimeType: 'text/plain', base64: Buffer.from([0xff, 0x80]).toString('base64') }],
+    [{ name: 'reviewed.mq5', mimeType: 'image/png', base64: 'YQ==' }],
+    [{ name: 'source.pdf', mimeType: 'text/plain', base64: 'YQ==' }],
+    [{ name: 'source.pdf', mimeType: 'application/pdf', base64: 'YR==' }],
+    [{ name: 'duplicate.txt', mimeType: 'text/plain', base64: 'YQ==' }, { name: 'duplicate.txt', mimeType: 'text/plain', base64: 'Yg==' }],
+  ];
+  for (const files of cases) {
+    let selected = 0;
+    const page = fixture({ setup({ state }) {
+      state.fileInput = new FakeElement('INPUT'); state.fileInput.multiple = true;
+      state.fileInput.dispatchEvent = () => { selected += 1; return true; };
+    } });
+    const result = await page.bridge.uploadFiles({ files });
+    assert.equal(result.ok, false, JSON.stringify(files));
+    assert.match(result.error, /binary|Unicode|does not match|noncanonical|unique/);
+    assert.equal(selected, 0, 'Invalid data must not mutate native attachment selection.');
+  }
+});
+
+test('UTF-8 and BOM-marked UTF-16 source uploads preserve every inert byte', async () => {
+  const text = '// বাংলা\r\nvoid OnTick() {}\r\n';
+  const little = Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(text, 'utf16le')]);
+  const big = Buffer.from(little); big.swap16();
+  for (const bytes of [Buffer.from(text), little, big]) {
+    let selected;
+    const page = fixture({ setup({ state, form }) {
+      state.fileInput = new FakeElement('INPUT');
+      state.fileInput.dispatchEvent = () => { selected = state.fileInput.files; form.innerText = 'reviewed.mq5'; return true; };
+    } });
+    const result = await page.bridge.uploadFiles({ files: [{ name: 'reviewed.mq5', mimeType: 'text/plain', base64: bytes.toString('base64') }] });
+    assert.deepEqual(result, { ok: true, attached: 1 });
+    assert.deepEqual(Buffer.from(selected[0].parts[0]), bytes);
+  }
+});
+
 test('ZIP packages and .set text aliases upload their exact inert bytes before a prompt', async () => {
   const archives = require('../../test/fixtures/archive-bytes.json');
   const files = [{name:'package.zip',mimeType:'application/zip',base64:archives.packageBase64},
@@ -1207,6 +1262,42 @@ test('CANCEL aborts incoming attachment wait and prevents the following prompt',
   assert.equal(sends, 0);
   assert.equal(page.composer.value, '');
   assert.equal(page.messages.filter((message) => ['ERROR', 'REPLY'].includes(message.type)).length, 0);
+});
+
+test('pagehide aborts a standalone source upload promptly without an active prompt', async () => {
+  const page = fixture({ options: { uploadTimeoutMs: 5000 }, setup({ state }) { state.fileInput = new FakeElement('INPUT'); } });
+  const upload = page.bridge.uploadFiles({ files: [{ name: 'photo.png', mimeType: 'image/png', base64: 'YQ==' }] });
+  await new Promise(resolve => setTimeout(resolve, 10));
+  const started = Date.now();
+  page.window.dispatchEvent(new page.window.Event('pagehide'));
+  const result = await upload;
+  assert.equal(result.ok, false);
+  assert.match(result.error, /closed or navigated/);
+  assert.ok(Date.now() - started < 500, 'Navigation must release the upload without waiting for its provider timeout.');
+  assert.equal(page.messages.some(message => ['ERROR', 'REPLY'].includes(message.type)), false);
+});
+
+test('pagehide cancels a completed-result native export even when no prompt remains active', async () => {
+  const link = downloadableFile('reviewed.pdf', 'sandbox:/mnt/data/reviewed.pdf');
+  let capturedSignal;
+  let finishNative;
+  const page = fixture({ downloadVisible: request => {
+    capturedSignal = request.signal;
+    return new Promise(resolve => { finishNative = resolve; });
+  }, onSend({ text, addUser, addAssistant }) { addUser(text); addMediaToTurn(addAssistant('Completed PDF.'), [link]); } });
+  const request = { runId: 'export-pagehide', requestId: 'completed-result', text: 'Create a PDF.', relayMedia: true };
+  assert.equal((await page.bridge.sendPrompt(request)).ok, true);
+  await waitFor(() => page.messages.find(message => message.type === 'REPLY'));
+  const exporting = page.bridge.exportMedia({ ...request, ids: ['media-1'] });
+  await waitFor(() => capturedSignal);
+  page.window.dispatchEvent(new page.window.Event('pagehide'));
+  const result = await exporting;
+  assert.equal(result.ok, false);
+  assert.match(result.error, /closed or navigated/);
+  assert.equal(capturedSignal.aborted, true);
+  finishNative({ ok: true, mimeType: 'application/pdf', base64: Buffer.from('%PDF late completion').toString('base64') });
+  await new Promise(setImmediate);
+  assert.equal(page.messages.filter(message => message.type === 'REPLY').length, 1, 'A late download cannot resume the exchange.');
 });
 
 test('image-only completion emits descriptors without bytes or URLs and exports a rendered PNG', async () => {
@@ -1519,6 +1610,41 @@ test('visible download export uses only the captured href and ignores paper cita
   download.href = 'https://chatgpt.com/changed.csv';
   assert.deepEqual((await page.bridge.exportMedia({ ...request, ids: ['media-1'] })).files, result.files);
   assert.equal(fetches.length, 1);
+});
+
+test('a fetched ZIP cannot masquerade as PDF, image or source while OpenXML containers keep their own MIME', async () => {
+  for (const name of ['reviewed.pdf', 'reviewed.png', 'reviewed.py', 'reviewed.docx']) {
+    const link = downloadableFile(name, `https://chatgpt.com/visible/${name}`);
+    const page = fixture({ onSend({ text, addUser, addAssistant }) { addUser(text); addMediaToTurn(addAssistant('File ready.'), [link]); } });
+    let reads = 0;
+    page.window.fetch = async () => ({ ok: true, type: 'basic', headers: { get: key => key === 'content-type' ? 'application/zip' : null },
+      body: { getReader: () => ({ async read() { reads += 1; return reads === 1 ? { done: false, value: new Uint8Array(Buffer.from('opaque office container')) } : { done: true }; } }) } });
+    const request = { runId: `mime-zip-${name}`, requestId: 'download', text: 'Create output.', relayMedia: true };
+    assert.equal((await page.bridge.sendPrompt(request)).ok, true);
+    await waitFor(() => page.messages.find(message => message.type === 'REPLY'));
+    const exported = await page.bridge.exportMedia({ ...request, ids: ['media-1'] });
+    assert.equal(exported.ok, name.endsWith('.docx'), exported.error);
+    if (!exported.ok) { assert.match(exported.error, /unexpected file type/); assert.equal(reads, 0); }
+    else assert.equal(exported.files[0].mimeType, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  }
+});
+
+test('fetched Python MIME aliases remain bound to the selected .py source filename', async () => {
+  for (const name of ['reviewed.py', 'reviewed.txt']) {
+    const link = downloadableFile(name, `https://chatgpt.com/visible/${name}`);
+    const bytes = Buffer.from('def solve():\n    return 10\n');
+    const page = fixture({ onSend({ text, addUser, addAssistant }) { addUser(text); addMediaToTurn(addAssistant('Source ready.'), [link]); } });
+    let reads = 0;
+    page.window.fetch = async () => ({ ok: true, type: 'basic', headers: { get: key => key === 'content-type' ? 'TEXT/X-PYTHON; charset=utf-8' : null },
+      body: { getReader: () => ({ async read() { reads += 1; return reads === 1 ? { done: false, value: new Uint8Array(bytes) } : { done: true }; } }) } });
+    const request = { runId: `python-mime-${name}`, requestId: 'source', text: 'Create source.', relayMedia: true };
+    assert.equal((await page.bridge.sendPrompt(request)).ok, true);
+    await waitFor(() => page.messages.find(message => message.type === 'REPLY'));
+    const exported = await page.bridge.exportMedia({ ...request, ids: ['media-1'] });
+    assert.equal(exported.ok, name.endsWith('.py'), exported.error);
+    if (exported.ok) assert.deepEqual(Buffer.from(exported.files[0].base64, 'base64'), bytes);
+    else { assert.match(exported.error, /unexpected file type/); assert.equal(reads, 0); }
+  }
 });
 
 test('a visible unsupported download stops enabled media relay clearly', async () => {

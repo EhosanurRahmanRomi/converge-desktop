@@ -6,8 +6,13 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { app, BrowserWindow, session } = require('electron');
+const output = require('./qa-output').createQaOutput({ onError: () => app.exit(1) });
+const evidencePath = path.join(__dirname, '..', '.live-test', 'attachment-chromium-result.json');
 const { makePdf } = require('./qa-desktop-fixture');
 app.setPath('userData', require('node:fs').mkdtempSync(path.join(app.getPath('temp'), 'converge-attachment-qa-')));
+// Destroying the final fixture window must not auto-quit Electron before its
+// asynchronous evidence write finishes. The completion handler owns exit.
+app.on('window-all-closed', () => {});
 
 const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6Zf8AAAAASUVORK5CYII=';
 const pdf = makePdf('Attachment fixture source: 2 + 2 = 4.').toString('base64');
@@ -53,7 +58,7 @@ async function run() {
   }
   const upload = (items) => js(`window.bridge.uploadFiles(${JSON.stringify({ files: items })})`);
   async function check(name, operation) {
-    await operation();checks.push(name);process.stdout.write(`PASS: ${name}\n`);
+    await operation();checks.push(name);output.out(`PASS: ${name}\n`);
   }
   try {
     await check('One hidden form picker accepts a real PDF and image and confirms both previews.', async () => {
@@ -98,6 +103,29 @@ async function run() {
         const sent = await js(`window.bridge.sendPrompt(${JSON.stringify({ type: 'SEND_PROMPT', runId: `alias-${suffix}`, requestId: `source-${suffix}`, text: 'Inspect the attached PDF and picture.', expectedSourceNames: ['source.pdf', 'photo.png'] })})`);
         assert.equal(sent.ok, true, sent.error);
         assert.equal(await js(`window.events.filter(event=>event.type==='SUBMITTED').length`), 1);
+      }
+    });
+    await check('Three separate five-file batches confirm all fifteen boss sources before a single prompt sends.', async () => {
+      const originals = Array.from({ length: 5 }, (_, i) => ({ ...files.pdf, name: `ORIGINAL_SOURCE_${i + 1}.pdf` }));
+      const left = Array.from({ length: 5 }, (_, i) => ({ name: `RESULT_W1_${i + 1}.txt`, mimeType: 'text/plain', base64: Buffer.from(`Worker A result ${i + 1}\n`).toString('base64') }));
+      const right = Array.from({ length: 5 }, (_, i) => ({ ...files.image, name: `RESULT_W2_${i + 1}.png` }));
+      const batches = [originals, left, right];
+      for (const removedName of [null, originals[0].name, right[4].name]) {
+        await load(`<form>${composer}<input id="documents" type="file" aria-label="Attach files" multiple hidden></form>`,
+          `window.renameUploads='(1)';bindPicker(document.getElementById('documents'));${bindSend}`);
+        for (const batch of batches) assert.deepEqual(await upload(batch), { ok: true, attached: 5 });
+        const allNames = batches.flat().map(file => file.name);
+        assert.equal(await js('window.selected.length'), 3, 'No upload batch may be silently dropped.');
+        assert.equal(await js('document.querySelectorAll("#previews [data-testid=attachment]").length'), 15);
+        await confirmNormal();
+        if (removedName) {
+          const observed = removedName.replace(/(\.[^.]+)$/, '(1)$1');
+          await js(`document.querySelector('[title="'+${JSON.stringify(observed)}+'"]')?.remove()`);
+        }
+        const sent = await js(`window.bridge.sendPrompt(${JSON.stringify({ type: 'SEND_PROMPT', runId: `staged-${removedName || 'all'}`, requestId: 'boss-review', text: 'Inspect every original and both worker bundles.', expectedSourceNames: allNames })})`);
+        assert.equal(sent.ok, removedName === null, sent.error);
+        assert.equal(await js('window.events.filter(event=>event.type==="SUBMITTED").length'), removedName ? 0 : 1);
+        if (removedName) assert.match(sent.error, /source document is no longer attached/i);
       }
     });
     await check('Removing the new renamed document cannot be hidden by an older original-name chip.', async () => {
@@ -233,7 +261,14 @@ async function run() {
       assert.equal(await js('document.getElementById("prompt-textarea").value'), '');
     });
   } finally { win.destroy(); }
-  process.stdout.write(`Attachment Chromium regressions: ${checks.length} passed.\n`);
+  await fs.mkdir(path.dirname(evidencePath), { recursive: true });
+  await fs.writeFile(evidencePath, JSON.stringify({ passed: true, tests: checks, localFixturesOnly: true }, null, 2));
+  output.out(`Attachment Chromium regressions: ${checks.length} passed.\n`);
 }
 
-app.whenReady().then(run).then(() => app.quit(), (error) => { process.stderr.write(`${error.stack || error}\n`);app.exit(1); });
+app.whenReady().then(run).then(() => app.quit(), async error => {
+  output.error(`${error.stack || error}\n`);
+  try { await fs.mkdir(path.dirname(evidencePath), { recursive: true });
+    await fs.writeFile(evidencePath, JSON.stringify({ passed: false, tests: checks, error: error.stack || String(error) }, null, 2));
+  } finally { app.exit(1); }
+});

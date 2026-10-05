@@ -1,6 +1,6 @@
 # Windows boss workspace
 
-Converge 1.8 introduces three conversations: a boss and two workers. You give the boss a task; it chooses separate instructions for the workers, reads their results, and directs the next round of work.
+Converge 1.8.1 uses three conversations: a boss and two workers. You give the boss a task; it chooses separate instructions for the workers, reads their results, and directs the next round of work.
 
 ## Connect and start
 
@@ -35,13 +35,16 @@ Agreement improves the review process but is not proof of factual correctness, p
 - **Night sky**: a still galaxy with stars.
 - **Black horror**: deep black with muted crimson light.
 - **Alien**: a green and violet atmosphere with a distant glowing moon.
+- **Cyberpunk**: a dark futuristic skyline, cyan and magenta light, and a geometric horizon.
+- **Anime**: a painted dusk sky with a warm moon and a soft blossom silhouette.
 
 **Character style** changes the team's animated figures. The existing atmosphere selection changes the top and bottom decoration. Turn animations off in settings or with the header effects button. The chat backgrounds remain still; hidden or minimized windows suspend decorative animation. System reduced-motion preferences are respected.
 
 ## Files and troubleshooting
 
-- Supported uploads: up to five files, 12 MB per file and 24 MB combined. Unsupported formats must be converted before uploading.
+- Source selection accepts up to five files, 12 MB per file and 24 MB combined. Unsupported formats must be converted before uploading.
 - Generated files are transferred as actual bytes when the page exposes a supported downloadable file or image. The app cannot transfer a file that the model only describes.
+- Combined source and worker results support up to 15 distinct attachments, staged in batches of five files and 24 MB. Every expected attachment must appear before the prompt is sent; provider limits or a missing receipt stop the transfer visibly. A provider may impose a lower cumulative limit.
 - Save the current reviewed files using the output drawer. Sources and generated outputs have separate identities.
 - An expired session or a changed ChatGPT page can prevent readiness. Import a current export and check the pages. Reset does not log out Chrome.
 - If you manually edit a page during an automatic exchange, stop the run before continuing through the boss instruction box.

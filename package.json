@@ -1,6 +1,6 @@
 {
   "name": "converge-desktop",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "private": true,
   "description": "A boss-directed workspace with two ChatGPT workers and verified file exchange",
   "main": "desktop-main.js",
@@ -101,10 +101,10 @@
           ]
         }
       ],
-      "artifactName": "Converge-1.7.0-macOS-${arch}.${ext}"
+      "artifactName": "Converge-${version}-macOS-${arch}.${ext}"
     },
     "dmg": {
-      "title": "Converge 1.7.0 — Apple Silicon",
+      "title": "Converge ${version} — Apple Silicon",
       "contents": [
         {
           "x": 160,

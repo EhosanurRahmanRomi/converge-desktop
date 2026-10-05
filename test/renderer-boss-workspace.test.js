@@ -72,7 +72,11 @@ if (!process.versions.electron) {
       await settled();
       assert.equal(await evaluate("document.getElementById('bossDrawer').hidden"), true);
       assert.equal(await evaluate('bossFixture.bounds.at(-1).boss.width'), 0);
-      await evaluate("document.getElementById('closeSidebar').click()"); await settled();
+      await evaluate("document.getElementById('closeSidebar').focus();document.getElementById('closeSidebar').click()"); await settled();
+      assert.equal(await evaluate('document.activeElement.id'), 'toggleSidebar', 'Closing controls left focus inside hidden content');
+      assert.equal(await evaluate("document.getElementById('sidebar').inert"), true, 'Hidden controls still participate in keyboard navigation');
+      await evaluate("document.getElementById('question').focus()");
+      assert.equal(await evaluate('document.activeElement.id'), 'toggleSidebar');
       let boxes = await geometry();
       assert.ok((boxes.native.left.width + boxes.native.right.width) / 1366 >= .85);
       await evaluate("document.getElementById('toggleBoss').click()"); await settled();
@@ -83,6 +87,11 @@ if (!process.versions.electron) {
       assert.equal(boxes.native.boss.height, Math.round(boxes.boss.height));
       assert.ok(boxes.native.right.width === 0 || boxes.native.right.x + boxes.native.right.width <= Math.round(boxes.drawer.x), 'A native worker can cover the boss drawer');
       assert.equal(boxes.native.left.width, Math.round(boxes.left.width));
+      assert.match(await evaluate("document.getElementById('bossMessageHint').textContent"), /does not control workers/);
+      // A fast reopen/close must cancel the deferred composer focus request.
+      await evaluate("document.getElementById('closeBoss').click();document.getElementById('toggleBoss').click();document.getElementById('closeBoss').click()"); await settled();
+      assert.equal(await evaluate('document.activeElement.id'), 'toggleBoss', 'A deferred focus request targeted the hidden boss composer');
+      await evaluate("document.getElementById('toggleBoss').click()"); await settled();
 
       // Page readiness cannot accidentally skip the normally hidden boss.
       await evaluate("bossFixture.publish({pages:{...bossFixture.state.pages,boss:{...ready,ready:false}}})");
@@ -90,21 +99,25 @@ if (!process.versions.electron) {
       assert.equal(await evaluate("document.getElementById('sendBossMessage').disabled"), true);
       await evaluate("bossFixture.publish({pages:{...bossFixture.state.pages,boss:{...ready}}})");
 
-      for (const theme of ['horror', 'alien', 'night']) {
+      const themeSurfaces = {};
+      for (const theme of ['horror', 'alien', 'cyberpunk', 'anime', 'night']) {
         await select('chatTheme', theme);
         await wait(`bossFixture.themes.at(-1)?.chatTheme===${JSON.stringify(theme)}`);
         assert.equal(await evaluate('document.body.dataset.chatTheme'), theme);
         assert.equal(await evaluate("localStorage.getItem('converge.chat.theme')"), theme);
+        themeSurfaces[theme] = await evaluate("getComputedStyle(document.getElementById('leftSlot')).backgroundImage");
+        assert.ok(await evaluate("document.getElementById('chatThemeDescription').textContent.length>20"));
       }
+      assert.equal(new Set(Object.values(themeSurfaces)).size, 5, 'Waiting screens do not show five distinct chat themes');
       for (const style of ['astronaut', 'spirit', 'robot']) {
         await select('characterStyle', style);
         const visible = await evaluate("[...document.querySelectorAll('.bot > svg.bot-character')].filter(svg=>getComputedStyle(svg).display!=='none').map(svg=>[...svg.classList].find(name=>name.startsWith('character-')))");
         assert.deepEqual(visible, Array(3).fill(`character-${style}`));
       }
-      await select('chatTheme', 'alien'); await select('characterStyle', 'spirit');
-      await reload(); await wait("document.getElementById('chatTheme').value==='alien'");
+      await select('chatTheme', 'anime'); await select('characterStyle', 'spirit');
+      await reload(); await wait("document.getElementById('chatTheme').value==='anime'");
       assert.equal(await evaluate('document.body.dataset.characterStyle'), 'spirit');
-      assert.equal(await evaluate('bossFixture.themes.at(-1).chatTheme'), 'alien');
+      assert.equal(await evaluate('bossFixture.themes.at(-1).chatTheme'), 'anime');
       await evaluate("document.getElementById('toggleBoss').click()"); await settled();
       await typeInstruction('Build a revised result with evidence.'); await send();
       await wait('bossFixture.starts.length===1');
@@ -140,6 +153,11 @@ if (!process.versions.electron) {
       assert.match(await evaluate("document.getElementById('transcript').textContent"), /BOSS · TEAM DIRECTOR/);
       await evaluate("document.getElementById('closeBoss').click();document.getElementById('viewOutput').click()"); await settled();
       assert.equal(await evaluate("document.getElementById('bossDrawer').hidden"), false, 'Boss-owned output opened the wrong native page');
+      await evaluate("bossFixture.publish({candidate:{...bossFixture.state.candidate,media:{...bossFixture.state.candidate.media,side:'right'}}});document.getElementById('viewOutput').click()"); await settled();
+      assert.equal(await evaluate("document.getElementById('bossDrawer').hidden"), true, 'The boss drawer hides the selected worker output');
+      assert.equal(await evaluate("document.getElementById('chatGrid').classList.contains('expanded-right')"), true);
+      assert.ok((await geometry()).native.right.width > 1000, 'The selected worker output did not open at full width');
+      await evaluate("document.getElementById('restoreSplit').click();document.getElementById('toggleBoss').click()"); await settled();
       await evaluate("document.getElementById('bossMessageInput').focus();document.getElementById('toggleResults').click()"); await settled();
       assert.equal(await evaluate("document.getElementById('bossDrawer').hidden"), true);
       assert.equal(await evaluate("document.activeElement.id"), 'toggleBoss', 'Closing the drawer left focus inside hidden content');

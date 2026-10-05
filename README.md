@@ -4,11 +4,11 @@
 
 A desktop workspace where a **boss chat directs two worker chats**: it plans their tasks, reviews their results, requests improvements and checks the final candidate. The two workers remain visible; click the middle boss character to open its sliding chat panel and guide the team.
 
-**Current Windows development build: 1.8.0 x64 · Published Windows: 1.6.5 x64 · Published macOS: 1.7.0 ARM64**
+**Current Windows development build: 1.8.1 x64 · Published Windows: 1.6.5 x64 · Published macOS: 1.7.0 ARM64**
 
-Windows **1.8.0 has been built locally**. Its installer and portable executable are not yet published as a GitHub release. The download links below still point to the previous two-reviewer versions. The published Mac 1.7.0 app does not contain the new boss workflow.
+Windows **1.8.1 has been built locally**. Its installer and portable executable are not yet published as a GitHub release. The download links below still point to the previous two-reviewer versions. The published Mac 1.7.0 app does not contain the new boss workflow.
 
-[Boss workspace guide](docs/BOSS_WORKSPACE.md) · [Boss architecture](docs/BOSS_ARCHITECTURE.md) · [Windows 1.8 verification](docs/WINDOWS_1_8_VERIFICATION.md)
+[Boss workspace guide](docs/BOSS_WORKSPACE.md) · [Boss architecture](docs/BOSS_ARCHITECTURE.md) · [Windows 1.8 verification](docs/WINDOWS_1_8_1_VERIFICATION.md)
 
 ![Windows 1.8 boss and two worker characters](docs/images/windows-boss-team.png)
 
@@ -18,7 +18,7 @@ Windows **1.8.0 has been built locally**. Its installer and portable executable 
 
 | Platform | Release | Downloads | Verification |
 |---|---|---|---|
-| Windows x64 | **1.8.0 · local build** | Installer and portable built locally; no public release link yet | [Current Windows verification](docs/WINDOWS_1_8_VERIFICATION.md) |
+| Windows x64 | **1.8.1 · local build** | Installer and portable built locally; no public release link yet | [Current Windows verification](docs/WINDOWS_1_8_1_VERIFICATION.md) |
 | Windows x64 | **1.6.5 · published** | [Installer](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.6.5/Converge-Setup-1.6.5-x64.exe) · [Portable](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.6.5/Converge-Portable-1.6.5-x64.exe) | [Recorded Windows evidence](docs/VERIFICATION.md) |
 | macOS 13+, Apple Silicon, including MacBook Air M4 | **1.7.0** | [DMG](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.7.0/Converge-1.7.0-macOS-arm64.dmg) · [ZIP](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.7.0/Converge-1.7.0-macOS-arm64.zip) | [Recorded Mac evidence](docs/MACOS_VERIFICATION.md) |
 
@@ -39,28 +39,49 @@ The published Mac 1.7.0 build preserves the earlier two-reviewer workspace, anim
 - **Two visible workers.** The left/right worker workspace retains its tall chat layout. Closing the boss panel restores both workers; progress and output files remain in the bottom band.
 - **Real file handoff.** Original source files go to the team. Generated files and images are captured and attached for further checks. Result identities and byte hashes bind final verification to the actual candidate files.
 - **A checked finish.** Improvement tasks use at least four work cycles; fixed-answer verification uses a shorter route. The host requires both workers to verify the selected candidate before the boss approves completion. Missing output files or unresolved findings prevent agreement. Stop and run limits remain available.
-- **Selectable appearance.** Night sky, Black horror and Alien world backgrounds apply to the actual chat pages. Robots, Curious explorers and Wonder spirits change the three characters. Stars, Ghost and Flowers decorate the upper and lower strips; animations can be turned off while work continues. Chat backgrounds stay still to reduce rendering work.
+- **Selectable appearance.** Night sky, Black horror, Alien, Cyberpunk and Anime backgrounds apply to the actual chat pages. Robots, Curious explorers and Wonder spirits change the three characters. Stars, Ghost and Flowers decorate the upper and lower strips; animations can be turned off while work continues. Chat backgrounds stay still to reduce rendering work.
 - **Reusable chats.** Start another task in the same team, or Reset to choose Temporary, Normal or Work mode for three fresh chats. Work mode depends on what the account exposes.
 
 Converge uses an imported ChatGPT browser session. The current desktop flow does not require an API key. It uses its own in-memory session and does not modify or log out your Chrome profile.
 
 ## Start the Windows 1.8 team
 
-1. Open the locally supplied Windows **1.8.0** installer or portable app. The currently published [Windows 1.6.5 release](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.6.5) has the earlier two-reviewer flow. On an Apple Silicon Mac, use the [1.7.0 DMG](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.7.0/Converge-1.7.0-macOS-arm64.dmg) and follow its [Mac guide](docs/MACOS_GUIDE.md).
+1. Open the locally supplied Windows **1.8.1** installer or portable app. The currently published [Windows 1.6.5 release](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.6.5) has the earlier two-reviewer flow. On an Apple Silicon Mac, use the [1.7.0 DMG](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.7.0/Converge-1.7.0-macOS-arm64.dmg) and follow its [Mac guide](docs/MACOS_GUIDE.md).
 2. Open **Import JSON file** and choose your current ChatGPT cookie export. Import begins immediately; pasting JSON is an optional alternative.
 3. Choose a chat type and press **Open the team**. Select the desired model in each worker page, then click the boss character to select its model.
 4. Attach source files before starting. Give your task through **Instruction to the boss**, or use **Brief the boss** in the controls drawer. Send team instructions through these app controls; typing directly into an embedded page does not start the coordinated workflow.
 5. Add instructions to the boss while the team works. Watch the progress band, inspect its review and limitations in the result drawer, and use **Save final files** when the checked result is accepted.
 
-See the [boss workspace guide](docs/BOSS_WORKSPACE.md) for queuing, blocked tasks, appearance settings and file handling. The [Windows 1.8 verification record](docs/WINDOWS_1_8_VERIFICATION.md) documents this build’s own test scope; the historical results below belong to their stated versions.
+See the [boss workspace guide](docs/BOSS_WORKSPACE.md) for queuing, blocked tasks, appearance settings and file handling. The [Windows 1.8 verification record](docs/WINDOWS_1_8_1_VERIFICATION.md) documents this build’s own test scope; the historical results below belong to their stated versions.
 
-The Windows executables are unsigned. Installation and portable-wrapper startup were not exercised in the recorded 1.6.5 verification; the actual unpacked built application was visibly launched and closed.
+The Windows executables are unsigned. The actual 1.8.1 portable executable was opened and closed successfully. Installer installation and upgrade were not exercised.
 
 The Mac release uses an ad-hoc signature and has no Apple Developer ID signature or notarization. See the [Mac guide](docs/MACOS_GUIDE.md) for first-launch instructions and the [Mac verification record](docs/MACOS_VERIFICATION.md) for its own test scope.
 
 ![The slide-out controls and task brief](docs/images/desktop-controls.png)
 
 *Windows 1.6.5 controls preview. The panel is opaque for readability and slides away when a review starts; this image does not show the 1.8 boss controls.*
+
+## New chat themes in Windows 1.8.1
+
+![Cyberpunk city chat background](docs/images/chat-theme-cyberpunk.png)
+
+![Anime twilight chat background](docs/images/chat-theme-anime.png)
+
+*Controlled Chromium previews. These backgrounds apply to the boss and both workers; they use local, still artwork with readable messages and file links.*
+
+## What was verified for Windows 1.8.1
+
+| Check | Recorded result |
+|---|---|
+| Complete automated suite | **425 / 425 passed** |
+| Packaged production workflows | **16 / 16 passed** |
+| Chromium attachment checks | **18 / 18 passed**, including a deliberately detached output pipe |
+| Actual portable executable | **v1.8.1** startup and Close passed |
+| Live GPT-5.6 Sol High team | **4 improvement cycles**, both workers accepted exact **C4** files |
+| Saved Python implementation and tests | Hashes matched C4; **28 / 28 tests passed** independently |
+
+[Read the current evidence and limits →](docs/WINDOWS_1_8_1_VERIFICATION.md)
 
 ## What was verified for macOS 1.7.0
 
@@ -99,14 +120,14 @@ Agreement is a review result, not a guarantee of correctness. The boss and worke
 |---|---|
 | [Boss workspace guide](docs/BOSS_WORKSPACE.md) | Current Windows 1.8 team setup, boss instructions, queues, files and appearance |
 | [Boss architecture](docs/BOSS_ARCHITECTURE.md) | Three-page orchestration, boss decisions, worker results and final-candidate checks |
-| [Windows 1.8 verification](docs/WINDOWS_1_8_VERIFICATION.md) | Current build evidence, artifacts and testing limits |
+| [Windows 1.8 verification](docs/WINDOWS_1_8_1_VERIFICATION.md) | Current build evidence, artifacts and testing limits |
 | [Earlier user guide](docs/USER_GUIDE.md) | Published two-reviewer setup, modes, files, results and troubleshooting |
 | [Mac guide](docs/MACOS_GUIDE.md) | Apple Silicon installation, Command shortcuts, Dock behavior and native file dialogs |
 | [Mac verification](docs/MACOS_VERIFICATION.md) | Native build gates, package identities and Mac-specific evidence |
 | [Developer guide](docs/DEVELOPER_GUIDE.md) | Local setup, tests, Windows and Apple Silicon Mac builds, and source map |
 | [Architecture](docs/ARCHITECTURE.md) | Session boundaries, review lifecycle and file identity |
 | [Verification](docs/VERIFICATION.md) | Recorded tests, live review, artifact hashes and scope |
-| [Release notes](docs/RELEASE_NOTES.md) | macOS 1.7.0 and Windows 1.6.5 changes |
+| [Release notes](docs/RELEASE_NOTES.md) | Current Windows 1.8.1 fixes and previous release changes |
 | [Artwork](docs/ARTWORK.md) | Current visual assets and provenance |
 | [Historical documentation](docs/history/README.md) | Earlier development records, kept separate from current claims |
 

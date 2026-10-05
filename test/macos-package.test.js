@@ -114,6 +114,14 @@ test('macOS release build cannot run as Windows cross-build or change signing an
     const copy = structuredClone(metadata); alter(copy); assert.throws(() => validateBuildConfiguration(copy, 'darwin', 'arm64'));
   }
 });
+
+test('Mac packaging cannot label a future build with a historical release version', () => {
+  for (const alter of [copy => { copy.build.mac.artifactName = 'Converge-1.7.0-macOS-${arch}.${ext}'; },
+    copy => { copy.build.dmg.title = 'Converge 1.7.0 — Apple Silicon'; }]) {
+    const copy = structuredClone(metadata); alter(copy);
+    assert.throws(() => validateBuildConfiguration(copy, 'darwin', 'arm64'), /current package version/);
+  }
+});
 test('actual app smoke must cover native editing, disposal and activation in the correct packaged binary', () => {
   const executable = path.resolve('fixture/Converge'), report = { status: 'PASS', platform: 'darwin', arch: 'arm64', packaged: true, version: metadata.version, executable, visibleShell: true, nativeKeyWindow: true, visibilityScope: 'Observed native show state and actual native key window after shell first paint', commandShortcutHint: true, nativeMenu: true,
     nativeEditingVerified: { shell: true, left: true, right: true }, didClose: true, embeddedViewsDisposed: true, closeCleanupCompleted: true, activateEventComplete: true, freshWorkspaceOnActivate: true,

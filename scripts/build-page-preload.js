@@ -32,7 +32,7 @@ const decoration = `
   let pageEffectsPaused = false;
   let chatTheme = 'night';
   ipcRenderer.on('converge:page-appearance', (_event, payload) => {
-    if (!['night', 'horror', 'alien'].includes(payload?.chatTheme)) return;
+    if (!['night', 'horror', 'alien', 'cyberpunk', 'anime'].includes(payload?.chatTheme)) return;
     chatTheme = payload.chatTheme;
     pageAppearance?.setTheme(chatTheme);
   });

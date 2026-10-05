@@ -89,7 +89,7 @@ test('frameless shell retains isolated web preferences and reports actual native
 test('three isolated views share a validated background and reapply it after navigation', async () => {
   const host = await harness();
   assert.deepEqual(Object.keys(host.desktop.views).sort(), ['boss', 'left', 'right']);
-  for (const chatTheme of ['horror', 'alien', 'night']) {
+  for (const chatTheme of ['horror', 'alien', 'night', 'cyberpunk', 'anime']) {
     assert.equal((await host.invoke('browser:appearance', { chatTheme })).ok, true);
     for (const side of ['boss', 'left', 'right']) {
       const applied = host.sent.findLast(item => item.contents === host.desktop.views[side].webContents && item.channel === 'converge:page-appearance');

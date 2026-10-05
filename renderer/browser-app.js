@@ -65,6 +65,17 @@
     typeof state.candidate === 'string' ? state.candidate : String(state.candidate?.answer || state.candidate?.text || '');
 
   const appearancePreference = { chatTheme: 'converge.chat.theme', characterStyle: 'converge.characters.style' };
+  const chatThemes = ['night', 'horror', 'alien', 'cyberpunk', 'anime'];
+  const chatThemeDescriptions = {
+    night: 'A still galaxy behind all three chats. Backgrounds stay still to keep rendering light.',
+    horror: 'Black velvet and a crimson haze. A still scene keeps the conversation clear.',
+    alien: 'An emerald moon over a distant violet world. A still scene keeps rendering light.',
+    cyberpunk: 'A neon skyline, holographic grid and cyan–magenta lights. A still vector scene keeps rendering light.',
+    anime: 'Painted twilight, layered mountains and cherry blossoms. A still vector scene keeps rendering light.'
+  };
+  function describeChatTheme() {
+    document.getElementById('chatThemeDescription').textContent = chatThemeDescriptions[ui.chatTheme.value] || chatThemeDescriptions.night;
+  }
   function chooseAppearance(name, choices, fallback) {
     let value = fallback;
     try { const saved = localStorage.getItem(appearancePreference[name]); if (choices.includes(saved)) value = saved; } catch (_) {}
@@ -72,7 +83,8 @@
     document.body.dataset[name] = value;
     return value;
   }
-  chooseAppearance('chatTheme', ['night', 'horror', 'alien'], 'night');
+  chooseAppearance('chatTheme', chatThemes, 'night');
+  describeChatTheme();
   chooseAppearance('characterStyle', ['robot', 'astronaut', 'spirit'], 'robot');
   async function syncChatAppearance() {
     if (typeof api.setAppearance !== 'function') return;
@@ -80,8 +92,9 @@
     catch (error) { showError(error); }
   }
   ui.chatTheme.addEventListener('change', () => {
-    if (!['night', 'horror', 'alien'].includes(ui.chatTheme.value)) return;
+    if (!chatThemes.includes(ui.chatTheme.value)) return;
     document.body.dataset.chatTheme = ui.chatTheme.value;
+    describeChatTheme();
     try { localStorage.setItem(appearancePreference.chatTheme, ui.chatTheme.value); } catch (_) {}
     syncChatAppearance();
   });
@@ -317,9 +330,9 @@
       !hasPages() ? 'Team not connected' : isRunning() ? state.pages?.boss?.busy ? 'Boss is thinking' : 'Team working' : 'Ready for your task';
     ui.bossQueueStatus.classList.toggle('queued', queued > 0);
     ui.bossMessageHint.textContent = state.status === 'blocked' ?
-      'Give the boss the missing information here to continue the same task. The current results and source files are retained.' : isRunning() ?
-      'New instructions are queued and delivered when the boss can review them. Use this box to guide the team.' :
-      'Use this box to start the team. The chat above shows the boss’s planning; choose its model there.';
+      'Send missing information here to continue this task. Direct chat above does not control workers.' : isRunning() ?
+      'Send team instructions here; additions are queued for the boss. Direct chat above does not control workers.' :
+      'Send team instructions here. The ChatGPT box above is for direct chat and does not control workers.';
     ui.toggleBoss.classList.toggle('has-queued-message', queued > 0);
     ui.toggleBoss.title = `${bossOpen ? 'Close' : 'Open'} boss chat${queued ? ` · ${queued} queued` : ''}`;
   }
@@ -351,7 +364,9 @@
       };
       bossBoundsFrame = requestAnimationFrame(trackEntrance);
     }
-    if (bossOpen) requestAnimationFrame(() => ui.bossMessageInput.focus({ preventScroll: true }));
+    if (bossOpen) requestAnimationFrame(() => {
+      if (bossOpen && !windowClosing) ui.bossMessageInput.focus({ preventScroll: true });
+    });
   }
 
   function renderStatus() {
@@ -889,8 +904,10 @@
 
   function setSidebarOpen(open) {
     if (open && bossOpen) setBossOpen(false);
+    if (!open && ui.sidebar.contains(document.activeElement)) ui.toggleSidebar.focus({ preventScroll: true });
     ui.app.classList.toggle('sidebar-collapsed', !open);
     ui.sidebar.setAttribute('aria-hidden', String(!open));
+    ui.sidebar.inert = !open;
     ui.toggleSidebar.setAttribute('aria-expanded', String(open));
     ui.toggleSidebar.setAttribute('aria-label', open ? 'Hide controls' : 'Show controls');
     scheduleBounds();
@@ -1098,7 +1115,14 @@
   }
   ui.saveFiles.addEventListener('click', saveCurrentFiles);
   ui.saveFilesCompact.addEventListener('click', saveCurrentFiles);
-  ui.viewOutput.addEventListener('click', () => { if (mediaInfo().side === 'boss') setBossOpen(true); else setExpanded(mediaInfo().side === 'right' ? 'right' : 'left'); });
+  ui.viewOutput.addEventListener('click', () => {
+    if (mediaInfo().side === 'boss') setBossOpen(true);
+    else {
+      setBossOpen(false);
+      setResultsOpen(false);
+      setExpanded(mediaInfo().side === 'right' ? 'right' : 'left');
+    }
+  });
   ui.diagnostics.addEventListener('click', () => action('diagnostics', async () => {
     const result = await request('diagnostics');
     await request('copy', JSON.stringify(result.diagnostics || {}, null, 2));

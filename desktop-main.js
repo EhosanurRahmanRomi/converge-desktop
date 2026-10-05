@@ -298,7 +298,7 @@ async function createCookieApp(options = {}) {
     return coordinator.request('BOSS_MESSAGE', payload);
   });
   handle('browser:appearance', (payload) => {
-    if (!['night', 'horror', 'alien'].includes(payload?.chatTheme)) throw new Error('Choose a supported chat background.');
+    if (!['night', 'horror', 'alien', 'cyberpunk', 'anime'].includes(payload?.chatTheme)) throw new Error('Choose a supported chat background.');
     chatTheme = payload.chatTheme;
     for (const side of SIDES) {
       const contents = views[side].webContents;

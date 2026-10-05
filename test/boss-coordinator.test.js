@@ -484,3 +484,238 @@ test('second independent task reuses all conversations and resets old result/att
   await until(async () => (await h.coordinator.getState()).status === 'agreed');
   assert.equal(h.opened.length, 3);
 });
+
+test('initial explicit file and image requests enforce exchange and actual output before final verification', async t => {
+  for (const question of ['Create a PDF report.', 'Create two downloadable Python files.', 'Generate an image illustrating a galaxy.']) {
+    const h = harness(); t.after(() => h.coordinator.dispose());
+    await h.coordinator.request('OPEN_LAYOUT', { chatMode: 'normal' });
+    const rejected = await h.coordinator.request('START', { question, relayMedia: false });
+    assert.equal(rejected.ok, false, question);
+    assert.match(rejected.error, /Enable file and image exchange/);
+    assert.equal((await h.coordinator.getState()).status, 'setup');
+    assert.equal(h.prompts().length, 0);
+  }
+  const h = harness({ reply(side, message, context) {
+    if (side === 'boss' && marker(message.text, 'BOSS_CONTEXT').control_repair) return { text: JSON.stringify({ request_id: message.requestId,
+      action: 'blocked', reason: 'The requested PDF output is unavailable.' }) };
+    return normalReply(side, message, context);
+  } }); t.after(() => h.coordinator.dispose());
+  await begin(h, { question: 'Create a PDF report.', relayMedia: true });
+  await until(async () => (await h.coordinator.getState()).status === 'blocked');
+  const state = await h.coordinator.getState();
+  assert.equal(state.requireFiles, true);
+  assert.equal(state.requirePdf, true);
+  assert.equal(state.verificationRounds, 0);
+});
+
+test('analysis of a PDF or image without creation does not infer an output artifact', async t => {
+  for (const question of ['Explain why PDF compression works.', 'Describe this galaxy image.', 'Do not create a PDF. Explain the answer only.']) {
+    const h = harness(); t.after(() => h.coordinator.dispose());
+    const started = await begin(h, { question, relayMedia: false });
+    assert.equal(started.state.requireFiles, false, question);
+    assert.equal(started.state.requirePdf, false, question);
+    assert.equal(started.state.requireImages, false, question);
+  }
+});
+
+test('real candidate-bound native compile and six-month backtest evidence can satisfy the finish gate', async t => {
+  const h = harness({ reply(side, message, context) {
+    if (side === 'boss') return normalReply(side, message, context);
+    if (message.text.includes('Perform an independent final check')) {
+      const candidate = marker(message.text, 'FINAL_CANDIDATE');
+      const source = candidate.media.files.find(file => file.name === 'strategy.mq5');
+      return { text: JSON.stringify({ candidate_id: candidate.id, candidate_sha256: candidate.sha256, verdict: 'accept',
+        checks: ['Inspected the attached native log and complete tester report against the exact source hash.'], issues: [],
+        taskEvidence: [{ requirementId: 'mt5-compile', status: 'completed', sourceSha256: source.contentSha256,
+          reportName: 'compiler.log', tool: 'MetaEditor', results: '0 errors, 0 warnings', evidence: 'Native compilation log tied to the exact source.' },
+        { requirementId: 'mt5-backtest', status: 'completed', sourceSha256: source.contentSha256,
+          reportName: 'tester.html', tool: 'MT5 Strategy Tester', symbol: 'XAUUSDm', broker: 'Fixture broker', timeframe: 'M3',
+          start: '2026-01-01', end: '2026-07-01', tickModel: 'Every tick based on real ticks',
+          costs: 'Actual broker spread and commissions from fixture settings', results: 'Fixture native report fields checked.',
+          evidence: 'Inspected the attached native tester report and run settings.' }] }) };
+    }
+    const bytes = [Buffer.from('void OnTick() {}\n'), Buffer.from('0 errors, 0 warnings\n'), Buffer.from('<html>MT5 tester report fixture</html>')];
+    const files = ['strategy.mq5', 'compiler.log', 'tester.html'].map((name, index) => ({
+      id: `${message.requestId}-${index}`, name, mimeType: 'text/plain', fingerprint: `native-${message.requestId}-${index}`,
+      contentSha256: hash(bytes[index]), byteLength: bytes[index].length, base64: bytes[index].toString('base64'),
+    }));
+    context.exported.set(`${message.runId}:${message.requestId}`, files);
+    return { text: 'Complete candidate and native evidence fixture.', media: files.map(({ base64: _base64, ...file }) => file) };
+  } }); t.after(() => h.coordinator.dispose());
+  await begin(h, { question: 'Create an MQL5 MT5 EA, compile with MetaEditor, and backtest with six months of real ticks.', relayMedia: true });
+  await until(async () => ['agreed', 'error', 'limit_reached'].includes((await h.coordinator.getState()).status));
+  const state = await h.coordinator.getState();
+  assert.equal(state.status, 'agreed', state.error);
+  assert.deepEqual(state.requiredWork.map(work => work.id), ['mt5-compile', 'mt5-backtest']);
+  assert.ok(Object.values(state.workEvidence).every(evidence => evidence.candidateId === state.candidate.id && evidence.taskEvidence.length === 2));
+});
+
+test('full 15-file boss boundary is staged in three bounded batches and verified before one prompt', async t => {
+  const h = harness({ reply(side, message, context) {
+    if (side === 'boss' || message.text.includes('Perform an independent final check')) return normalReply(side, message, context);
+    const files = Array.from({ length: 5 }, (_, index) => {
+      const bytes = Buffer.from(`Output ${side} ${index}\n`);
+      return { id: `${message.requestId}-${index}`, name: `output-${index}.txt`, mimeType: 'text/plain',
+        fingerprint: `result-${message.requestId}-${index}`, contentSha256: hash(bytes), byteLength: bytes.length, base64: bytes.toString('base64') };
+    });
+    context.exported.set(`${message.runId}:${message.requestId}`, files);
+    return { text: `${side} complete results.`, media: files.map(({ base64: _base64, ...file }) => file) };
+  } }); t.after(() => h.coordinator.dispose());
+  await h.coordinator.request('OPEN_LAYOUT', { chatMode: 'normal' });
+  const originals = Array.from({ length: 5 }, (_, index) => ({ name: `source-${index}.pdf`, mimeType: 'application/pdf',
+    base64: Buffer.from(`%PDF-1.7 original fixture ${index}`).toString('base64') }));
+  assert.equal((await h.coordinator.request('ATTACH_FILES', { files: originals })).ok, true);
+  assert.equal((await h.coordinator.request('START', { question: 'Analyze the originals and produce text explanations.', relayMedia: true })).ok, true);
+  await until(async () => ['agreed', 'error'].includes((await h.coordinator.getState()).status));
+  const state = await h.coordinator.getState();
+  assert.equal(state.status, 'agreed', state.error);
+  const boss = h.prompts().find(call => call.side === 'boss' && call.message.expectedSourceNames?.length === 15);
+  assert.ok(boss);
+  assert.equal(boss.message.files, undefined);
+  const staged = h.sent.filter(call => call.side === 'boss' && call.message.type === 'UPLOAD_FILES' && call.message.requestId === boss.message.requestId);
+  assert.deepEqual(staged.map(call => call.message.files.length), [5, 5, 5]);
+  assert.deepEqual(boss.message.expectedSourceNames, staged.flatMap(call => call.message.files.map(file => file.name)));
+  assert.equal(new Set(boss.message.expectedSourceNames).size, 15);
+  assert.ok(staged.every(call => h.sent.indexOf(call) < h.sent.indexOf(boss)));
+});
+
+test('an incomplete staged transfer stops visibly without submitting a partial work message', async t => {
+  let stageCount = 0;
+  const h = harness({ reply(side, message, context) { return normalReply(side, message, context, true); },
+    transport(side, message) {
+      if (side === 'boss' && message.type === 'UPLOAD_FILES' && message.requestId) {
+        stageCount += 1;
+        if (stageCount === 2) return { ok: false, error: 'Provider rejected the second attachment batch.' };
+      }
+    } }); t.after(() => h.coordinator.dispose());
+  await h.coordinator.request('OPEN_LAYOUT', { chatMode: 'normal' });
+  assert.equal((await h.coordinator.request('ATTACH_FILES', { files: Array.from({ length: 5 }, (_, index) => ({
+    name: `source-${index}.pdf`, mimeType: 'application/pdf', base64: Buffer.from(`%PDF-1.7 ${index}`).toString('base64'),
+  })) })).ok, true);
+  assert.equal((await h.coordinator.request('START', { question: 'Analyze the files.', relayMedia: true })).ok, true);
+  await until(async () => (await h.coordinator.getState()).status === 'error');
+  assert.match((await h.coordinator.getState()).error, /second attachment batch/);
+  assert.equal(stageCount, 2);
+  assert.equal(h.prompts().filter(call => call.side === 'boss').length, 1);
+});
+
+test('large text excluded from readable snapshots is fully refreshed for boss and workers', async t => {
+  const h = harness({ reply: normalReply }); t.after(() => h.coordinator.dispose());
+  await h.coordinator.request('OPEN_LAYOUT', { chatMode: 'normal' });
+  const source = 'large original text\n'.repeat(4_000);
+  assert.equal((await h.coordinator.request('ATTACH_FILES', { files: [{ name: 'large.txt', mimeType: 'text/plain',
+    base64: Buffer.from(source).toString('base64') }] })).ok, true);
+  assert.equal((await h.coordinator.request('START', { question: 'Analyze this text without changing it.', relayMedia: true })).ok, true);
+  await until(async () => ['agreed', 'error'].includes((await h.coordinator.getState()).status));
+  const state = await h.coordinator.getState();
+  assert.equal(state.status, 'agreed', state.error);
+  const initial = marker(h.prompts().find(call => call.side === 'boss').message.text, 'BOSS_CONTEXT');
+  assert.deepEqual(initial.complete_readable_sources, []);
+  for (const side of ['boss', 'left', 'right']) {
+    const refreshed = h.prompts().filter(call => call.side === side).slice(1).flatMap(call => call.message.files || []);
+    assert.ok(refreshed.some(file => file.name === 'ORIGINAL_large.txt' && file.base64 === Buffer.from(source).toString('base64')), side);
+  }
+});
+
+test('format repair preserves a changed verified file and prevents accepting the original candidate', async t => {
+  let malformed = false;
+  const h = harness({ reply(side, message, context) {
+    if (side === 'boss') {
+      const boss = marker(message.text, 'BOSS_CONTEXT');
+      if (boss.final_verification?.workers.left?.verdict === 'revise') return { text: JSON.stringify({
+        request_id: message.requestId, action: 'blocked', reason: 'The replacement file must be selected and checked before completion.' }) };
+    }
+    if (side === 'left' && message.text.includes('Perform an independent final check') && !malformed) {
+      malformed = true;
+      return { text: 'A revised file is attached but JSON formatting failed.', media: [context.generatedFile(side, message, Buffer.from('changed = True\n'))] };
+    }
+    return normalReply(side, message, context, true);
+  } }); t.after(() => h.coordinator.dispose());
+  await begin(h, { question: 'Create an improved Python file.', relayMedia: true });
+  await until(async () => ['blocked', 'error'].includes((await h.coordinator.getState()).status));
+  const state = await h.coordinator.getState();
+  assert.equal(state.status, 'blocked', state.error);
+  const repaired = state.workerResults.find(result => result.side === 'left' && result.kind === 'verify');
+  assert.equal(repaired.verification.verdict, 'revise');
+  assert.equal(repaired.media.files[0].contentSha256, hash(Buffer.from('changed = True\n')));
+  assert.notEqual(repaired.media.requestId, repaired.requestId);
+  assert.equal(state.acceptedBy.left, undefined);
+  const boss = h.prompts().filter(call => call.side === 'boss').at(-1);
+  assert.ok(boss.message.files.some(file => Buffer.from(file.base64, 'base64').toString() === 'changed = True\n'));
+});
+
+test('preparing an oversized second worker prompt neither dispatches the first nor erases the last actual results', async t => {
+  const h = harness({ reply(side, message) {
+    if (side !== 'boss') return { text: side === 'left' ? 'x'.repeat(78_000) : 'Brief independent result.' };
+    const boss = marker(message.text, 'BOSS_CONTEXT');
+    if (boss.control_repair) return null;
+    return { text: JSON.stringify({ request_id: message.requestId, action: 'dispatch',
+      assignments: { left: 'A.', right: boss.completed_work_cycles ? 'B'.repeat(24_000) : 'B.' },
+      candidate_result_id: boss.completed_work_cycles ? 'W1' : null }) };
+  } }); t.after(() => h.coordinator.dispose());
+  await h.coordinator.request('OPEN_LAYOUT', { chatMode: 'normal' });
+  assert.equal((await h.coordinator.request('ATTACH_FILES', { files: [{ name: 'quoted.txt', mimeType: 'text/plain',
+    base64: Buffer.from('"'.repeat(44_000)).toString('base64') }] })).ok, true);
+  assert.equal((await h.coordinator.request('START', { question: 'Analyze this text.', relayMedia: true })).ok, true);
+  await until(() => h.prompts().some(call => call.side === 'boss' && marker(call.message.text, 'BOSS_CONTEXT').control_repair));
+  const state = await h.coordinator.getState();
+  assert.equal(state.status, 'running', state.error);
+  assert.deepEqual(Object.keys(state.pending), ['boss']);
+  assert.deepEqual(state.lastBatch, ['W1', 'W2']);
+  assert.equal(h.prompts().filter(call => call.side !== 'boss').length, 2);
+  const repair = marker(h.prompts().filter(call => call.side === 'boss').at(-1).message.text, 'BOSS_CONTEXT');
+  assert.match(repair.control_repair.error, /transport budget/);
+  assert.equal(repair.candidate.answer.length, 78_000);
+  assert.equal(repair.candidate.text, undefined);
+  assert.equal(repair.worker_results.length, 2);
+});
+
+test('Stop during a staged batch cancels the run and prevents later batches or prompt submission', async t => {
+  let finishUpload;
+  const h = harness({ reply(side, message, context) { return normalReply(side, message, context, true); },
+    transport(side, message) {
+      if (side === 'boss' && message.type === 'UPLOAD_FILES' && message.requestId) {
+        return new Promise(resolve => { finishUpload = () => resolve({ ok: true, attached: message.files.length }); });
+      }
+    } }); t.after(() => h.coordinator.dispose());
+  await h.coordinator.request('OPEN_LAYOUT', { chatMode: 'normal' });
+  assert.equal((await h.coordinator.request('ATTACH_FILES', { files: Array.from({ length: 5 }, (_, index) => ({
+    name: `source-${index}.pdf`, mimeType: 'application/pdf', base64: Buffer.from(`%PDF-1.7 ${index}`).toString('base64'),
+  })) })).ok, true);
+  assert.equal((await h.coordinator.request('START', { question: 'Analyze the files.', relayMedia: true })).ok, true);
+  await until(() => Boolean(finishUpload));
+  const stopped = await h.coordinator.request('STOP');
+  assert.equal(stopped.state.status, 'stopped');
+  assert.deepEqual(stopped.state.pending, {});
+  assert.ok(h.sent.some(call => call.side === 'boss' && call.message.type === 'CANCEL'));
+  finishUpload(); await pause(); await pause();
+  assert.equal(h.sent.filter(call => call.side === 'boss' && call.message.type === 'UPLOAD_FILES' && call.message.requestId).length, 1);
+  assert.equal(h.prompts().filter(call => call.side === 'boss').length, 1);
+  assert.equal((await h.coordinator.getState()).status, 'stopped');
+});
+
+test('a requested PDF analysis of code sources requires the PDF without demanding an unrequested revised program', async t => {
+  const h = harness({ reply(side, message, context) {
+    const response = normalReply(side, message, context, !message.text.includes('Perform an independent final check'));
+    if (side !== 'boss' && response.media) {
+      const file = context.exported.get(`${message.runId}:${message.requestId}`)[0];
+      const bytes = Buffer.from('%PDF-1.7 fixture analysis of the original source');
+      Object.assign(file, { name: 'analysis.pdf', mimeType: 'application/pdf', base64: bytes.toString('base64'),
+        contentSha256: hash(bytes), byteLength: bytes.length });
+      Object.assign(response.media[0], { name: file.name, mimeType: file.mimeType, contentSha256: file.contentSha256, byteLength: file.byteLength });
+    }
+    return response;
+  } }); t.after(() => h.coordinator.dispose());
+  await h.coordinator.request('OPEN_LAYOUT', { chatMode: 'normal' });
+  assert.equal((await h.coordinator.request('ATTACH_FILES', { files: [{ name: 'original.py', mimeType: 'text/plain',
+    base64: Buffer.from('def original(x):\n    return x\n').toString('base64') }] })).ok, true);
+  assert.equal((await h.coordinator.request('START', { question: 'Create a PDF report analyzing the source. Do not modify the code.', relayMedia: true })).ok, true);
+  await until(async () => ['agreed', 'error', 'limit_reached'].includes((await h.coordinator.getState()).status));
+  const state = await h.coordinator.getState();
+  assert.equal(state.status, 'agreed', state.error);
+  assert.equal(state.codeTask, true);
+  assert.equal(state.requireCodeFile, false);
+  assert.equal(state.requirePdf, true);
+  assert.deepEqual(state.candidate.media.files.map(file => file.name), ['analysis.pdf']);
+  assert.ok(h.prompts().filter(call => call.side === 'boss').every(call => marker(call.message.text, 'BOSS_CONTEXT').required_outputs.code_extension === ''));
+});

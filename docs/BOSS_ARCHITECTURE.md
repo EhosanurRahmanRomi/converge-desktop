@@ -38,6 +38,10 @@ Source bytes stay private to the coordinator. Original files, worker results and
 
 The page bridge captures supported visible output actions. The main process validates descriptors, format, size, canonical base64 and SHA-256 before relaying files. Save checks the same identity again and uses native dialogs. A changed or reordered file is rejected rather than silently substituted.
 
+Originals and the latest worker bundles may total more than one native upload. Transfers stage up to 15 distinct names in batches of five and 24 MB, and verify the complete set of visible receipts before one prompt submission. Stop aborts pending batches. Provider upload rejection stops visibly; no missing file is replaced with its filename or a prose description. Large text originals omitted from bounded readable snapshots are refreshed using their complete bytes.
+
+If a final checker produces a changed file alongside malformed control JSON, a formatting retry retains that verified replacement. It cannot erase the changed-file evidence and accept the older candidate. Both worker calls are prepared before registering either, so a transport-budget error on the second assignment cannot leave the first falsely pending.
+
 ## Rendering
 
 The worker views fill the main workspace. The boss view is hidden until its drawer opens. Native bounds are clipped so worker pages cannot cover the boss drawer, controls or output drawer. Background choices are applied inside each page by a cosmetic preload module. Chat backgrounds are still; narrow decorative ribbons and character transforms carry motion. Pause, hidden-window and reduced-motion policies suspend decorative work while transport remains responsive.

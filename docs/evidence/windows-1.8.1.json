@@ -1,0 +1,450 @@
+{
+  "version": "1.8.1",
+  "date": "2026-10-05",
+  "platform": "Windows x64",
+  "sourceTests": {
+    "passed": 425,
+    "total": 425,
+    "failed": 0,
+    "skipped": 0,
+    "concurrency": 1
+  },
+  "package": {
+    "passed": true,
+    "version": "1.8.1",
+    "runtimeFiles": [
+      {
+        "file": "desktop-main.js",
+        "sha256": "1673ff495fd11aa6914561c7241a84deb5a805df77da185120afe89217253145"
+      },
+      {
+        "file": "desktop-preload.js",
+        "sha256": "a0f944255b77eab3768259dbfd194a42693ca8e65cdf53bee9837fc5f70408f2"
+      },
+      {
+        "file": "src/platform/desktop-lifecycle.js",
+        "sha256": "7cb906dc488ebcb2d2190bb4b6060f16bb01d31c4a93f74c2d6cfe8d8f5cc28f"
+      },
+      {
+        "file": "src/browser/cookies.js",
+        "sha256": "20f79d39b92dfc16876a13251247940b515f929e599f7a1d089dbc8bbc7a30d7"
+      },
+      {
+        "file": "src/browser/files.js",
+        "sha256": "111745b7191971c0a7037a2b78a97caed3673361666dff1c05edfef6f3f7bd45"
+      },
+      {
+        "file": "src/browser/downloads.js",
+        "sha256": "e86acd7ad627380631ea7b690a177c800540c6d855667887030c289168f88e3e"
+      },
+      {
+        "file": "src/browser/desktop-coordinator.js",
+        "sha256": "64efad8eadc5680e90ab978f0442a972d2688df404fcf4199eb72b0f041b9025"
+      },
+      {
+        "file": "src/browser/boss-coordinator.js",
+        "sha256": "b7261c237d47bd3a15d4076447a10238f29e59f137cccae49f2e43a9e4cde0f0"
+      },
+      {
+        "file": "src/browser/page-preload.js",
+        "sha256": "362d481556993b69f1f3a15d12a28aa6f13951f93acaf31cc7fe13bf9f86bdaf"
+      },
+      {
+        "file": "chrome-extension/background.js",
+        "sha256": "3a009d6d9b2502f3c828113f2cd475ee5bb0b5b415cd4f5817d65c0888d303c5"
+      },
+      {
+        "file": "renderer/browser.html",
+        "sha256": "4f7b09f0b3100f3f38dd9f98cec1367bc1ab0f090afa80c5ca270d053846b1ed"
+      },
+      {
+        "file": "renderer/browser-app.js",
+        "sha256": "b69e6ddf815bbc6671a3b942be1a96e29d287a34655e3299b59fcab3e237ad63"
+      },
+      {
+        "file": "renderer/browser.css",
+        "sha256": "de7827a9e2e8aacd41f83a7c75cf6e845eb87052da6faf62654c4d7ff1974f77"
+      },
+      {
+        "file": "renderer/galaxy-scene.js",
+        "sha256": "ef5b85ca303f167c72a08a1f4d47a3da670fc1f99cb6914da7742034c4dc0720"
+      },
+      {
+        "file": "renderer/galaxy-scene.css",
+        "sha256": "a2e168477702cd25cb11cccdfadbe68ebbfce6a0182766d9a13adcbf2845c55e"
+      },
+      {
+        "file": "renderer/star-ribbons.js",
+        "sha256": "c9724874cb9f58975eff08ac4af2bc75c9ea42b9ed38d630850e3c06888cde7d"
+      },
+      {
+        "file": "renderer/ghost-v2.png",
+        "sha256": "3416c160be60ad2aaebe23855db0654a7a73ac54dad6fc6ccbb853e073ba754d"
+      },
+      {
+        "file": "renderer/flower-blossom-v1.png",
+        "sha256": "a644defaa480c166064921a22af8383f3f5e9b47f6f5af42feaa176849deb5d8"
+      },
+      {
+        "file": "assets/icon.ico",
+        "sha256": "ebc7920f6f2f66e120091b3155de80a6a59ace972f3a153e8cf62ffb7a78c88d"
+      },
+      {
+        "file": "assets/icon.png",
+        "sha256": "416e36aeb88fffd164fc99afb95304bdaaeb4de2bf995de6ce4cb8586528874d"
+      },
+      {
+        "file": "assets/icon.icns",
+        "sha256": "182f854e1ba9203d10d574207eeed0a00932d9e0862c6a013a53865dfd99c1ee"
+      }
+    ],
+    "artifacts": [
+      {
+        "file": "Converge-Setup-1.8.1-x64.exe",
+        "bytes": 114924377,
+        "sha256": "1f9801dcc2c63f513044bbe06822f2a886db2ddc2d436310a4c3f3f379452676"
+      },
+      {
+        "file": "Converge-Portable-1.8.1-x64.exe",
+        "bytes": 114627437,
+        "sha256": "8291fd2b33a256381630fc1924f06c468b911be81276261d57dc6338bc3d17ab"
+      }
+    ],
+    "asarSha256": "28970f5093816d4045f73f5fb42332e0ccee78a6ab3c9f112cfd951886a17099"
+  },
+  "packagedFixture": {
+    "passed": true,
+    "localFixturesOnly": true,
+    "stages": [
+      "Production Windows shell creates three sandboxed isolated native chat views and keeps its browser session in memory.",
+      "Import and Normal OK open exactly three distinct chats with the boss coordinator active.",
+      "A mixed text, valid PDF and PNG source selection reaches all three native file inputs; Reset clears the staged previews and retains the session.",
+      "One native file picker uploads the original source to the boss and both workers.",
+      "The boss writes distinct worker instructions, receives both results and exact generated files every cycle, then both workers verify one final candidate after four improvement cycles.",
+      "The real boss composer accepts an instruction during worker generation, delivers it in the next boss context, and completes the run with no queued message left behind.",
+      "Native Save downloads the actual accepted file and matches the coordinator SHA-256, with the requested corrected values.",
+      "The settings selector applies Horror, Alien, Night, Cyberpunk and Anime backgrounds to all three real chat views.",
+      "Robot, Explorer and Spirit character choices apply without changing the active chat run or its accepted files.",
+      "Clicking the center boss opens and closes its sliding native chat panel while preserving the worker workspace.",
+      "A follow-up reuses all three conversations; a new instruction while the boss generates is queued safely.",
+      "Stop cancels active boss generation and prevents queued instructions from restarting the stopped run.",
+      "Stop also cancels both workers during their concurrent generation, retaining each completed conversation.",
+      "Reset clears all three chats without clearing the imported session; Work mode is verified on the fresh boss and worker pages.",
+      "Temporary mode is also verified on all three new chats through its visible page controls.",
+      "Unreadable boss control output receives one format repair, then stops safely without dispatching an invented worker task or clearing the session."
+    ],
+    "workCycles": 4,
+    "candidateId": "C4",
+    "sourceSha256": "461f4ce7c0098f0a0c2a460626912c9078494534b1af22f44833c375749f7f50",
+    "savedFileSha256": "41124dfe7b5162c7b244b70b82b71091d98fbe49101de22ca0a526bff8395ea7",
+    "captureWarnings": [],
+    "themes": [
+      {
+        "theme": "horror",
+        "screenshotSha256": "179bd363deeccba6f60072593ea41f6857be5e4411ba44978bded738acd5b7c2"
+      },
+      {
+        "theme": "alien",
+        "screenshotSha256": "4322fd015952405bcb072398cc426f79ed1f28a920a047e706cce4291e756f7d"
+      },
+      {
+        "theme": "night",
+        "screenshotSha256": "82edd5c3a9cd87bb6833cbacb7455b8432faa19db2d73da817da24a8c0f86920"
+      },
+      {
+        "theme": "cyberpunk",
+        "screenshotSha256": "4037fa3f6ad5058b8cb6649057c9f322b129834a7a8f1417fef713588036a5c8"
+      },
+      {
+        "theme": "anime",
+        "screenshotSha256": "16e735d544c3a4a7c161b759453b4a81a24e3bc72f9eea5ba0984f9106a6adb4"
+      }
+    ]
+  },
+  "attachmentChromium": {
+    "passed": true,
+    "localFixturesOnly": true,
+    "stages": [
+      "One hidden form picker accepts a real PDF and image and confirms both previews.",
+      "The observed three-picker composer selects Attach files for PDFs, images, and mixed batches.",
+      "Numeric and timestamp server-renamed PDF and PNG attachments are verified and both source names reach Send.",
+      "Three separate five-file batches confirm all fifteen boss sources before a single prompt sends.",
+      "Removing the new renamed document cannot be hidden by an older original-name chip.",
+      "An incoming revised file renamed by the server uploads before the review prompt sends.",
+      "Valid 6 MB and the full 12 MB source-file limit upload without exhausting the regexp stack.",
+      "Invalid base64 padding and over-limit contents never reach the picker.",
+      "A composer without a form stays within its nearby control group.",
+      "A delayed picker is awaited before selecting any file.",
+      "An external form-associated Attach files input is selected while old-turn inputs are ignored.",
+      "Specific image accept rules choose photos over photos/videos when the general picker is disabled.",
+      "Identical eligible pickers remain ambiguous and no selection occurs.",
+      "An image-only or single-file picker cannot receive an incompatible document or multi-file batch.",
+      "A visible upload rejection blocks success even when a filename chip appeared.",
+      "A plain network-failure widget with a PDF filename blocks both upload confirmation and Start readiness.",
+      "An old failed widget outside the composer cannot reject the fresh source upload.",
+      "Removing an uploaded nameless image blocks the subsequent source prompt before Send."
+    ],
+    "deliberatelyDetachedStdout": true,
+    "exitCode": 0,
+    "durableEvidenceWritten": true
+  },
+  "nativeStartup": {
+    "portableWrapperExecuted": true,
+    "versionObserved": "1.8.1",
+    "extractedAppWindowObserved": true,
+    "ownCloseObserved": true,
+    "wrapperExited": true,
+    "isolatedUserData": true,
+    "installerExecuted": false
+  },
+  "liveFileTask": {
+    "passed": true,
+    "models": {
+      "left": "5.6 Sol High",
+      "right": "5.6 Sol High",
+      "boss": "5.6 Sol High"
+    },
+    "workCycles": 4,
+    "candidateId": "C4",
+    "candidateSha256": "34329bf738e13b7e9b64fefce1e8460559e7a31d3cbeeed564bd9b2300046232",
+    "candidateResultId": "W7",
+    "userRevision": 1,
+    "appliedRevision": 1,
+    "question": "Develop and thoroughly review a Python standard-library-only function topological_sort(graph) for a Mapping from string node names to an iterable of prerequisite string node names. Return the lexicographically smallest valid topological ordering, including prerequisite-only nodes. Duplicate dependencies must not inflate indegrees. Do not mutate inputs. Reject a string used as the dependency iterable, non-string keys/dependencies, and a non-mapping graph with TypeError. Detect self loops and longer cycles with ValueError. Support lists, tuples, sets and one-shot generators as dependency iterables. Produce exactly two complete downloadable files named topological_sort.py and test_topological_sort.py. Include deterministic examples, invalid-input and cycle tests, at least 100 fixed-seed randomized DAG cases, and a genuinely independent oracle for small graphs that checks the lexicographically smallest ordering. Keep the implementation scalable. Run actual tests if the tool is available and report only actual execution results. Let the two workers challenge correctness, complexity and coverage through at least four useful work cycles before both verify the exact same final files. Prefer useful test or correctness improvements over invented objections. This is a test of this app's boss/worker workflow and real downloadable file transfer.",
+    "instructions": [
+      "Add an explicit nonrecursive 10000-node chain test, a wide frontier/tie-break case, and an input insertion-order invariance test. Validate the randomized results with an independent oracle that does not copy the implementation branches; for small graphs use exhaustive permutation checking to prove lexicographic minimality. Review generator consumption and mutation safety. Keep exactly the two original output filenames. Execute the final tests if possible and clearly distinguish executed evidence from analysis."
+    ],
+    "fileRevisions": [
+      {
+        "id": "W1",
+        "side": "left",
+        "round": 1,
+        "files": [
+          {
+            "name": "topological_sort.py",
+            "sha256": "5f136a7f00aa8d0ecf228f62c76820849e55cc550e87d3425b003ad5ea840e58",
+            "bytes": 3236
+          },
+          {
+            "name": "test_topological_sort.py",
+            "sha256": "0ddf8134c997f349a9e0cfb04b4a1d9e0567e945409965a497ef442c1cdf61ca",
+            "bytes": 8490
+          }
+        ]
+      },
+      {
+        "id": "W2",
+        "side": "right",
+        "round": 1,
+        "files": [
+          {
+            "name": "topological_sort.py",
+            "sha256": "db308d391dda7fb744724c8a93e33e7228dcd3148c1b373bdf75bf6ed1791d85",
+            "bytes": 3296
+          },
+          {
+            "name": "test_topological_sort.py",
+            "sha256": "752e9ac59ba5f0a3174af3d21858c2c3b3f23a1feb1ce956095183616f0b0a4e",
+            "bytes": 10201
+          }
+        ]
+      },
+      {
+        "id": "W3",
+        "side": "right",
+        "round": 2,
+        "files": [
+          {
+            "name": "topological_sort.py",
+            "sha256": "55a6e2928b17b8016ab8ca523a676d3b37efef902a926b435b5aac4009231dac",
+            "bytes": 3677
+          },
+          {
+            "name": "test_topological_sort.py",
+            "sha256": "c49fcfee8ed6b8fbbaf0af47b9648700f65d37404699120a28cb29638f07c3f2",
+            "bytes": 14799
+          }
+        ]
+      },
+      {
+        "id": "W4",
+        "side": "left",
+        "round": 2,
+        "files": [
+          {
+            "name": "topological_sort.py",
+            "sha256": "61a2fca43f3a2f35980866b117a658b0a625ca27793d43d3625b1b998b5f34df",
+            "bytes": 3654
+          },
+          {
+            "name": "test_topological_sort.py",
+            "sha256": "0f32c2253b7ab54105bdb9e451fb655d7960512bf9e88b6cf52ce1a328bfdcd9",
+            "bytes": 14254
+          }
+        ]
+      },
+      {
+        "id": "W5",
+        "side": "right",
+        "round": 3,
+        "files": [
+          {
+            "name": "topological_sort.py",
+            "sha256": "a6995172876e26d20854adb17944841953eca9c235eefb18fdf3fd0b08a9dd01",
+            "bytes": 4238
+          },
+          {
+            "name": "test_topological_sort.py",
+            "sha256": "f91e0c73100b17b7c9dd2a7b9a9c599950dcd5bccd5b177730e22fb8b9aaac83",
+            "bytes": 16193
+          }
+        ]
+      },
+      {
+        "id": "W6",
+        "side": "left",
+        "round": 3,
+        "files": [
+          {
+            "name": "topological_sort.py",
+            "sha256": "55a6e2928b17b8016ab8ca523a676d3b37efef902a926b435b5aac4009231dac",
+            "bytes": 3677
+          },
+          {
+            "name": "test_topological_sort.py",
+            "sha256": "1084b66ae1d3045b1053e84c3e2c89219ab77dbd6b60668037a529b9bcd886c0",
+            "bytes": 17896
+          }
+        ]
+      },
+      {
+        "id": "W7",
+        "side": "right",
+        "round": 4,
+        "files": [
+          {
+            "name": "topological_sort.py",
+            "sha256": "a584638811919aae234e14689af2d9a7636c4ec6726bcb8572be4f54f248f005",
+            "bytes": 4135
+          },
+          {
+            "name": "test_topological_sort.py",
+            "sha256": "1084b66ae1d3045b1053e84c3e2c89219ab77dbd6b60668037a529b9bcd886c0",
+            "bytes": 17896
+          }
+        ]
+      },
+      {
+        "id": "W8",
+        "side": "left",
+        "round": 4,
+        "files": [
+          {
+            "name": "topological_sort.py",
+            "sha256": "46fbd4099c1f2d8b946067c3ca9ad5eccea5e27bee4b92bf9ce99c9795c6f1f3",
+            "bytes": 3972
+          },
+          {
+            "name": "test_topological_sort.py",
+            "sha256": "1084b66ae1d3045b1053e84c3e2c89219ab77dbd6b60668037a529b9bcd886c0",
+            "bytes": 17896
+          }
+        ]
+      }
+    ],
+    "files": [
+      {
+        "name": "topological_sort.py",
+        "bytes": 4135,
+        "sha256": "a584638811919aae234e14689af2d9a7636c4ec6726bcb8572be4f54f248f005"
+      },
+      {
+        "name": "test_topological_sort.py",
+        "bytes": 17896,
+        "sha256": "1084b66ae1d3045b1053e84c3e2c89219ab77dbd6b60668037a529b9bcd886c0"
+      }
+    ],
+    "finalChecks": {
+      "candidateId": "C4",
+      "sha256": "34329bf738e13b7e9b64fefce1e8460559e7a31d3cbeeed564bd9b2300046232",
+      "userRevision": 1,
+      "workers": {
+        "left": {
+          "verdict": "accept",
+          "checks": [
+            "Confirmed the exact attached production file SHA-256 is a584638811919aae234e14689af2d9a7636c4ec6726bcb8572be4f54f248f005 and the exact attached test file SHA-256 is 1084b66ae1d3045b1053e84c3e2c89219ab77dbd6b60668037a529b9bcd886c0; no file was modified or substituted.",
+            "Executed python3 -m unittest -v test_topological_sort.py against the exact candidate from the correct working directory: 28 tests ran and all passed.",
+            "Executed python3 -m py_compile topological_sort.py test_topological_sort.py against the exact candidate: successful exit with no compiler errors.",
+            "Inspected production code and confirmed acceptance of collections.abc.Mapping, validation of string keys and dependency elements, TypeError rejection for non-Mapping graphs, whole-string dependency iterables, non-iterable dependency values, and non-string dependency elements.",
+            "Confirmed dependency iterables are obtained once and advanced directly with next(), supporting strict one-shot iterators and generators without a second iter() call.",
+            "Confirmed normalization copies dependencies into private sets, deduplicating duplicate prerequisites without mutating caller-owned containers.",
+            "Confirmed prerequisite-only nodes are included, adjacency is prerequisite-to-dependent, indegrees count unique prerequisites, and a min-heap selects the globally lexicographically smallest ready string using ordinary Python string ordering.",
+            "Confirmed processed-node count mismatch raises ValueError for self-loops and longer directed cycles.",
+            "Confirmed production imports only standard-library modules and documents expected O(R + E + V log V) time and O(V + E) auxiliary space.",
+            "Confirmed the shipped test suite contains an independent permutation/direct-precedence oracle that does not reuse heap/Kahn production logic.",
+            "Confirmed the shipped suite enumerates all 65,536 directed relations on four nodes and asserts exactly 543 acyclic and 64,993 cyclic relations.",
+            "Confirmed the shipped suite contains 150 fixed-seed randomized DAG cases and 100 randomized duplicate/container/insertion-order variants.",
+            "Confirmed the shipped suite covers UserDict and MappingProxyType, exact TypeError validation, string dependency-container rejection, non-string generator rejection without overconsumption, strict one-shot iterator acquisition exactly once, iteration-time TypeError propagation, duplicate-edge deduplication, prerequisite-only nodes, deterministic sets, insertion-order invariance, mutation and identity preservation, and cycle handling.",
+            "Confirmed the shipped suite contains the 200-node frontier test where a newly unlocked lexicographically smaller node preempts already-ready nodes.",
+            "Confirmed the shipped suite contains the 10,000-node chain with its first node prerequisite-only and executes it under recursion limit 100, providing direct nonrecursive scalability coverage.",
+            "Confirmed the shipped suite checks empty graph behavior and Python string lexicographic edge cases including empty string, prefixes, ASCII case distinctions, and Unicode names against the independent oracle.",
+            "Confirmed the candidate consists of exactly the requested canonical files topological_sort.py and test_topological_sort.py."
+          ],
+          "issues": []
+        },
+        "right": {
+          "verdict": "accept",
+          "checks": [
+            "Verified exact attached-file SHA-256 identities before testing: topological_sort.py = a584638811919aae234e14689af2d9a7636c4ec6726bcb8572be4f54f248f005 and test_topological_sort.py = 1084b66ae1d3045b1053e84c3e2c89219ab77dbd6b60668037a529b9bcd886c0.",
+            "Inspected normalization: accepts Mapping, rejects non-string keys and whole-string dependency collections, obtains each dependency iterator once, advances it with next(), rejects non-string dependency elements immediately, and deduplicates dependencies in a private set without mutating caller containers.",
+            "Checked graph construction: prerequisite-only nodes are included, indegrees count unique prerequisites, adjacency is prerequisite-to-dependent, zero-indegree nodes use a min-heap, newly ready nodes are pushed into that heap, and processed-count mismatch detects cycles with ValueError.",
+            "Reasoned that min-heap selection yields the lexicographically smallest valid next node even when a newly unlocked node is smaller than nodes already waiting; iteration order of dependent sets does not alter the heap minimum.",
+            "Executed python3 -m unittest -v test_topological_sort.py against the exact candidate bytes: all 28 tests passed in 1.631s with final status OK.",
+            "Executed python3 -m py_compile topological_sort.py test_topological_sort.py against the exact candidate bytes: successful exit with no output.",
+            "Independently checked malformed-input behavior: non-Mapping graph, non-string key, whole-string dependency value, non-iterable dependency value, and non-string generator element produce TypeError; self-loop and multi-node cycle produce ValueError.",
+            "Confirmed non-mutation and one-shot behavior are substantive tests: StrictSinglePassIterator fails on a second __iter__ call, passing tests assert iter_calls == 1 and expected next/yield counts, and mutable input containers are checked for unchanged content and preserved identity.",
+            "Confirmed the exhaustive oracle is independent of production: it uses permutation enumeration and direct prerequisite-position validation, returns min(valid_orders), and does not call production helpers or reuse Kahn/heap logic.",
+            "Confirmed the exhaustive audit enumerates all 65,536 directed relations on four nodes, including self-edges, compares all acyclic cases against the independent oracle, requires ValueError for cyclic cases, and asserts 543 acyclic plus 64,993 cyclic relations.",
+            "Confirmed the wide-frontier test creates 200 initially ready frontier nodes and verifies that a newly unlocked lexicographically smaller node preempts them.",
+            "Confirmed explicit insertion-order and dependency-container invariance coverage across differently ordered mappings and list, tuple, set, duplicate-edge, and UserDict variants.",
+            "Confirmed the 10,000-node chain omits its first node as a mapping key so it is prerequisite-only, lowers sys.setrecursionlimit(100) before calling topological_sort, restores the previous limit afterward, and asserts the exact 10,000-node result.",
+            "Confirmed 150 fixed-seed randomized DAGs are checked against the independent exhaustive oracle and 100 additional variants randomize insertion order, duplicate multiplicity, dependency order, container type, and one-shot iterators.",
+            "Confirmed ASCII, prefix, empty-string, and Unicode lexicographic cases are checked against the independent permutation oracle.",
+            "Confirmed complexity documentation matches the implementation: expected O(R + E + V log V) time with expected O(1) set operations and O(V + E) auxiliary space; the logarithmic heap factor applies to node pushes and pops rather than each edge.",
+            "Confirmed imports are standard-library-only apart from importing the module under test."
+          ],
+          "issues": []
+        }
+      }
+    },
+    "nativeSaveObserved": true,
+    "independentLocalTests": {
+      "passed": 28,
+      "total": 28,
+      "exhaustiveFourNodeRelations": 65536,
+      "randomizedDags": 150,
+      "containerVariants": 100,
+      "chainNodes": 10000,
+      "frontierNodes": 200,
+      "runtimeSeconds": 7.319,
+      "compileExitCode": 0
+    },
+    "limitations": "Production source under matching development Electron. Package flow and real portable startup checked separately."
+  },
+  "reportedError": {
+    "script": "scripts/qa-attachment-dom.js",
+    "code": "EPIPE",
+    "cause": "Detached test output pipe",
+    "liveTeamContinued": true,
+    "corrected": "Bounded output stream handling and evidence completion before test exit",
+    "regression": "Deliberately detached stdout, all 18 Chromium scenarios completed, process exit 0"
+  },
+  "limitations": [
+    "Installer installation and upgrade not exercised.",
+    "No new macOS binary built.",
+    "No actual MT5 test or profitability proof; native evidence uses controlled regression fixtures.",
+    "Provider cumulative 15-attachment limit not exercised live.",
+    "No quantitative GPU benchmark.",
+    "Agreement does not guarantee every future answer is correct."
+  ]
+}

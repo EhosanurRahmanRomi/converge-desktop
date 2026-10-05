@@ -99,14 +99,31 @@ if (!process.versions.electron) {
       assert.equal((await isolated('globalThis.ConvergePageAppearance.create().diagnostics()')).frames, pausedFrames);
       // Appearance changes stay cosmetic on the actual embedded page, including
       // file/editor controls. A renderer cannot turn arbitrary values into CSS.
-      for (const theme of ['horror', 'alien', 'night']) {
+      const themeSurfaces = {};
+      for (const theme of ['horror', 'alien', 'cyberpunk', 'anime', 'night']) {
         win.webContents.send('converge:page-appearance', { chatTheme: theme }); await settle(70);
         assert.equal(await evaluate("document.documentElement.getAttribute('data-converge-chat-theme')"), theme);
         assert.equal((await isolated('globalThis.ConvergePageAppearance.create().diagnostics()')).chatTheme, theme);
         assert.equal(await evaluate("document.querySelector('article').textContent===window.originalText"), true);
         assert.equal(await evaluate("document.querySelector('#prompt-textarea').textContent"), 'Native editor still works');
         assert.equal((await isolated('globalThis.ConvergePageAppearance.create().diagnostics()')).frames, pausedFrames);
+        assert.equal(await evaluate("getComputedStyle(document.querySelector('#converge-page-galaxy canvas')).visibility"), theme === 'night' ? 'visible' : 'hidden');
+        themeSurfaces[theme] = await evaluate("getComputedStyle(document.querySelector('#converge-page-galaxy')).backgroundImage");
+        assert.equal(await evaluate("(()=>{const r=document.querySelector('#send').getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2).id})()"), 'send');
+        assert.equal(await evaluate("getComputedStyle(document.querySelector('pre')).backgroundColor"), 'rgba(6, 9, 22, 0.95)');
+        assert.equal(await evaluate("getComputedStyle(document.querySelector('#download')).color"), 'rgb(185, 233, 252)', 'An unstyled download link is unreadable on the dark chat theme');
+        if (['cyberpunk', 'anime'].includes(theme)) {
+          assert.match(themeSurfaces[theme], /data:image\/svg\+xml/, 'The selected vector scene is missing from the actual page');
+          assert.equal(await evaluate("getComputedStyle(document.querySelector('article')).backgroundColor"), theme === 'cyberpunk' ? 'rgba(4, 12, 27, 0.79)' : 'rgba(17, 22, 43, 0.79)');
+          assert.equal(await evaluate("getComputedStyle(document.querySelector('#converge-page-galaxy')).animationName"), 'none');
+          if (process.env.CONVERGE_PAGE_GALAXY_CAPTURE === '1') {
+            await fs.mkdir(path.join(__dirname, '..', '.design'), { recursive: true });
+            await settle(150);
+            await fs.writeFile(path.join(__dirname, '..', '.design', `embedded-chat-${theme}.png`), (await win.webContents.capturePage()).toPNG());
+          }
+        }
       }
+      assert.equal(new Set(Object.values(themeSurfaces)).size, 5, 'Two selected themes render the same actual chat surface');
       win.webContents.send('converge:page-appearance', { chatTheme: 'url(https://untrusted.invalid)' }); await settle(60);
       assert.equal(await evaluate("document.documentElement.getAttribute('data-converge-chat-theme')"), 'night');
       win.webContents.send('converge:page-effects', { paused: false }); await settle(180);

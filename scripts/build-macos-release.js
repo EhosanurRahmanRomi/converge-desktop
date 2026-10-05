@@ -20,6 +20,8 @@ function validateBuildConfiguration(metadata, platform = process.platform, arch 
   assert.deepEqual(targets.map(item => item.target).sort(), ['dmg', 'zip']);
   assert.ok(targets.every(item => Array.isArray(item.arch) && item.arch.length === 1 && item.arch[0] === 'arm64'), 'Only native ARM64 release targets are allowed.');
   assert.equal(metadata.build.mac.icon, 'assets/icon.icns');
+  assert.ok(metadata.build.mac.artifactName.includes('${version}'), 'Mac artifact names must use the current package version.');
+  assert.ok(metadata.build.dmg.title.includes('${version}'), 'Mac disk image titles must use the current package version.');
   return true;
 }
 

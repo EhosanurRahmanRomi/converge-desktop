@@ -2,6 +2,17 @@
 
 [← Project](../README.md) · [Verification](VERIFICATION.md)
 
+## 1.8.1 — Windows logic audit and new chat themes
+
+- Added Cyberpunk and Anime backgrounds to all three native chat pages and empty panes, retaining Night sky, Black horror and Alien.
+- Rechecked boss planning, worker dispatch, requested artifacts, actual file relay and final acceptance. Corrected the argument order in native MT5 evidence checks and inferred required outputs from the initial task.
+- Added bounded sequential attachment staging for combined source and worker results, with a complete receipt check before sending a prompt.
+- Tightened upload and download validation so malformed text, noncanonical base64 and incorrect archive MIME types fail visibly.
+- Retained exact candidate identities, queued instruction revisions, finite round limits and immediate Stop.
+- Fixed the attachment-test program's broken-output-pipe dialog, and kept its evidence write alive until completion. This is verification-tool cleanup; it does not mask app errors.
+
+This is a locally built Windows update. See the [current verification](WINDOWS_1_8_1_VERIFICATION.md) for its tested scope. Historical 1.8.0 evidence remains separate.
+
 ## 1.8.0 — Windows boss workspace
 
 - Added a third ChatGPT conversation that plans assignments for two workers and reviews their answers and generated files.

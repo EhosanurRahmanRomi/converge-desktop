@@ -1,0 +1,1036 @@
+{
+  "checkedAt": "2026-10-07T10:37:54.613Z",
+  "passed": true,
+  "platform": "darwin",
+  "architecture": "arm64",
+  "hostMacOS": "15.7.9",
+  "sourceCommit": "c43f95db6628f40b67d01340fb7bd3cd783c1bd0",
+  "workflowRunId": "37608181127",
+  "version": "1.9.9",
+  "originalBundle": {
+    "label": "built application",
+    "bundleIdentifier": "app.converge.desktop",
+    "version": "1.9.9",
+    "minimumSystemVersion": "13.0",
+    "signature": {
+      "verified": true,
+      "type": "ad-hoc",
+      "notarized": false,
+      "detail": "--prepared:/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app/Contents/Frameworks/Converge Helper (GPU).app\n--validated:/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app/Contents/Frameworks/Converge Helper (GPU).app\n--prepared:/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app/Contents/Frameworks/Electron Framework.framework/Versions/Current/.\n--prepared:/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app/Contents/Frameworks/Electron Framework.framework/Versions/Current/Helpers/chrome_crashpad_handler\n--validated:/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app/Contents/Frameworks/Electron Framework.framework/Versions/Current/Helpers/chrome_crashpad_handler\n--validated:/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app/Contents/Frameworks/Electron Framework.framework/Versions/Current/.\n--prepared:/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app/Contents/Frameworks/Squirrel.framework/Versions/Current/.\n--prepared:/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app/Contents/Frameworks/Mantle.framework/Versions/Current/.\n--prepared:/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app/Contents/Frameworks/ReactiveObjC.framework/Versions/Current/.\n--validated:/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app/Contents/Frameworks/Mantle.framework/Versions/Current/.\n--validated:/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app/Contents/Frameworks/Squirrel.framework/Versions/Current/.\n--validated:/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app/Contents/Frameworks/ReactiveObjC.framework/Versions/Current/.\n--prepared:/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app/Contents/Frameworks/Converge Helper.app\n--validated:/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app/Contents/Frameworks/Converge Helper.app\n--prepared:/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app/Contents/Frameworks/Converge Helper (Renderer).app\n--prepared:/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app/Contents/Frameworks/Converge Helper (Plugin).app\n--validated:/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app/Contents/Frameworks/Converge Helper (Renderer).app\n--validated:/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app/Contents/Frameworks/Converge Helper (Plugin).app\n/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app: valid on disk\n/Users/runner/work/converge-desktop/converge-desktop/dist/mac-arm64/Converge.app: satisfies its Designated Requirement"
+    },
+    "binaries": [
+      {
+        "file": "Contents/Frameworks/Converge Helper (GPU).app/Contents/MacOS/Converge Helper (GPU)",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ],
+        "slices": [
+          {
+            "architecture": "arm64",
+            "fileType": 2,
+            "rpaths": [
+              "@executable_path/../../.."
+            ],
+            "dylibs": [
+              "@rpath/Electron Framework.framework/Electron Framework",
+              "/usr/lib/libsandbox.1.dylib",
+              "/usr/lib/libSystem.B.dylib"
+            ],
+            "codeSignaturePresent": true,
+            "minimumSystemVersions": [
+              "13.0.0"
+            ]
+          }
+        ],
+        "runtime": {
+          "fileType": 2,
+          "fileTypeName": "MH_EXECUTE",
+          "runtimeRole": "executable",
+          "executePermissionRequired": true
+        }
+      },
+      {
+        "file": "Contents/Frameworks/Converge Helper (Plugin).app/Contents/MacOS/Converge Helper (Plugin)",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ],
+        "slices": [
+          {
+            "architecture": "arm64",
+            "fileType": 2,
+            "rpaths": [
+              "@executable_path/../../.."
+            ],
+            "dylibs": [
+              "@rpath/Electron Framework.framework/Electron Framework",
+              "/usr/lib/libsandbox.1.dylib",
+              "/usr/lib/libSystem.B.dylib"
+            ],
+            "codeSignaturePresent": true,
+            "minimumSystemVersions": [
+              "13.0.0"
+            ]
+          }
+        ],
+        "runtime": {
+          "fileType": 2,
+          "fileTypeName": "MH_EXECUTE",
+          "runtimeRole": "executable",
+          "executePermissionRequired": true
+        }
+      },
+      {
+        "file": "Contents/Frameworks/Converge Helper (Renderer).app/Contents/MacOS/Converge Helper (Renderer)",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ],
+        "slices": [
+          {
+            "architecture": "arm64",
+            "fileType": 2,
+            "rpaths": [
+              "@executable_path/../../.."
+            ],
+            "dylibs": [
+              "@rpath/Electron Framework.framework/Electron Framework",
+              "/usr/lib/libsandbox.1.dylib",
+              "/usr/lib/libSystem.B.dylib"
+            ],
+            "codeSignaturePresent": true,
+            "minimumSystemVersions": [
+              "13.0.0"
+            ]
+          }
+        ],
+        "runtime": {
+          "fileType": 2,
+          "fileTypeName": "MH_EXECUTE",
+          "runtimeRole": "executable",
+          "executePermissionRequired": true
+        }
+      },
+      {
+        "file": "Contents/Frameworks/Converge Helper.app/Contents/MacOS/Converge Helper",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ],
+        "slices": [
+          {
+            "architecture": "arm64",
+            "fileType": 2,
+            "rpaths": [
+              "@executable_path/../../.."
+            ],
+            "dylibs": [
+              "@rpath/Electron Framework.framework/Electron Framework",
+              "/usr/lib/libsandbox.1.dylib",
+              "/usr/lib/libSystem.B.dylib"
+            ],
+            "codeSignaturePresent": true,
+            "minimumSystemVersions": [
+              "13.0.0"
+            ]
+          }
+        ],
+        "runtime": {
+          "fileType": 2,
+          "fileTypeName": "MH_EXECUTE",
+          "runtimeRole": "executable",
+          "executePermissionRequired": true
+        }
+      },
+      {
+        "file": "Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ],
+        "slices": [
+          {
+            "architecture": "arm64",
+            "fileType": 6,
+            "rpaths": [
+              "@loader_path/Libraries"
+            ],
+            "dylibs": [
+              "/System/Library/Frameworks/IOSurface.framework/Versions/A/IOSurface",
+              "/System/Library/Frameworks/AuthenticationServices.framework/Versions/A/AuthenticationServices",
+              "/System/Library/Frameworks/AVFoundation.framework/Versions/A/AVFoundation",
+              "/System/Library/Frameworks/AVFAudio.framework/Versions/A/AVFAudio",
+              "/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon",
+              "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices",
+              "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
+              "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
+              "/System/Library/Frameworks/CFNetwork.framework/Versions/A/CFNetwork",
+              "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+              "/usr/lib/libobjc.A.dylib",
+              "/System/Library/Frameworks/CoreText.framework/Versions/A/CoreText",
+              "/System/Library/Frameworks/LocalAuthentication.framework/Versions/A/LocalAuthentication",
+              "/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore",
+              "/System/Library/Frameworks/CoreImage.framework/Versions/A/CoreImage",
+              "/System/Library/Frameworks/CoreVideo.framework/Versions/A/CoreVideo",
+              "/System/Library/Frameworks/Quartz.framework/Versions/A/Quartz",
+              "/System/Library/Frameworks/QuickLookUI.framework/Versions/A/QuickLookUI",
+              "/System/Library/Frameworks/Security.framework/Versions/A/Security",
+              "/System/Library/Frameworks/SecurityInterface.framework/Versions/A/SecurityInterface",
+              "/System/Library/Frameworks/ServiceManagement.framework/Versions/A/ServiceManagement",
+              "/System/Library/Frameworks/StoreKit.framework/Versions/A/StoreKit",
+              "/System/Library/Frameworks/UserNotifications.framework/Versions/A/UserNotifications",
+              "@rpath/Squirrel.framework/Squirrel",
+              "@rpath/ReactiveObjC.framework/ReactiveObjC",
+              "@rpath/Mantle.framework/Mantle",
+              "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+              "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+              "/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit",
+              "/System/Library/Frameworks/OpenDirectory.framework/Versions/A/OpenDirectory",
+              "/System/Library/Frameworks/CryptoTokenKit.framework/Versions/A/CryptoTokenKit",
+              "/System/Library/Frameworks/Network.framework/Versions/A/Network",
+              "/System/Library/Frameworks/SystemConfiguration.framework/Versions/A/SystemConfiguration",
+              "/System/Library/Frameworks/UniformTypeIdentifiers.framework/Versions/A/UniformTypeIdentifiers",
+              "/System/Library/Frameworks/CoreMedia.framework/Versions/A/CoreMedia",
+              "/System/Library/Frameworks/Metal.framework/Versions/A/Metal",
+              "/System/Library/Frameworks/AudioToolbox.framework/Versions/A/AudioToolbox",
+              "/System/Library/Frameworks/CoreAudio.framework/Versions/A/CoreAudio",
+              "/System/Library/Frameworks/AudioUnit.framework/Versions/A/AudioUnit",
+              "/System/Library/Frameworks/ScreenCaptureKit.framework/Versions/A/ScreenCaptureKit",
+              "/System/Library/Frameworks/OpenGL.framework/Versions/A/OpenGL",
+              "/System/Library/Frameworks/Cocoa.framework/Versions/A/Cocoa",
+              "/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate",
+              "/System/Library/Frameworks/VideoToolbox.framework/Versions/A/VideoToolbox",
+              "/System/Library/Frameworks/CoreMediaIO.framework/Versions/A/CoreMediaIO",
+              "/System/Library/Frameworks/Accessibility.framework/Versions/A/Accessibility",
+              "/System/Library/Frameworks/MetalKit.framework/Versions/A/MetalKit",
+              "/System/Library/Frameworks/CoreBluetooth.framework/Versions/A/CoreBluetooth",
+              "/System/Library/Frameworks/IOBluetooth.framework/Versions/A/IOBluetooth",
+              "/System/Library/Frameworks/CoreMIDI.framework/Versions/A/CoreMIDI",
+              "/System/Library/Frameworks/MediaAccessibility.framework/Versions/A/MediaAccessibility",
+              "/System/Library/Frameworks/MediaPlayer.framework/Versions/A/MediaPlayer",
+              "/System/Library/Frameworks/CoreHaptics.framework/Versions/A/CoreHaptics",
+              "/System/Library/Frameworks/GameController.framework/Versions/A/GameController",
+              "/System/Library/Frameworks/ForceFeedback.framework/Versions/A/ForceFeedback",
+              "/System/Library/Frameworks/CoreWLAN.framework/Versions/A/CoreWLAN",
+              "/System/Library/Frameworks/CoreLocation.framework/Versions/A/CoreLocation",
+              "/System/Library/Frameworks/Vision.framework/Versions/A/Vision",
+              "/System/Library/Frameworks/CoreML.framework/Versions/A/CoreML",
+              "/System/Library/Frameworks/DiskArbitration.framework/Versions/A/DiskArbitration",
+              "/System/Library/Frameworks/QuickLookThumbnailing.framework/Versions/A/QuickLookThumbnailing",
+              "@rpath/libffmpeg.dylib",
+              "/usr/lib/libcups.2.dylib",
+              "/usr/lib/libbsm.0.dylib",
+              "/usr/lib/libpmenergy.dylib",
+              "/usr/lib/libpmsample.dylib",
+              "/usr/lib/libresolv.9.dylib",
+              "/usr/lib/libsandbox.1.dylib",
+              "/usr/lib/libSystem.B.dylib"
+            ],
+            "codeSignaturePresent": true,
+            "minimumSystemVersions": [
+              "13.0.0"
+            ]
+          }
+        ],
+        "runtime": {
+          "fileType": 6,
+          "fileTypeName": "MH_DYLIB",
+          "runtimeRole": "shared-library",
+          "executePermissionRequired": false
+        }
+      },
+      {
+        "file": "Contents/Frameworks/Electron Framework.framework/Versions/A/Helpers/chrome_crashpad_handler",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ],
+        "slices": [
+          {
+            "architecture": "arm64",
+            "fileType": 2,
+            "rpaths": [],
+            "dylibs": [
+              "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+              "/usr/lib/libobjc.A.dylib",
+              "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
+              "/System/Library/Frameworks/CoreText.framework/Versions/A/CoreText",
+              "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+              "/System/Library/Frameworks/Security.framework/Versions/A/Security",
+              "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices",
+              "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
+              "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+              "/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit",
+              "/System/Library/Frameworks/OpenDirectory.framework/Versions/A/OpenDirectory",
+              "/usr/lib/libbsm.0.dylib",
+              "/usr/lib/libpmenergy.dylib",
+              "/usr/lib/libpmsample.dylib",
+              "/usr/lib/libSystem.B.dylib"
+            ],
+            "codeSignaturePresent": true,
+            "minimumSystemVersions": [
+              "13.0.0"
+            ]
+          }
+        ],
+        "runtime": {
+          "fileType": 2,
+          "fileTypeName": "MH_EXECUTE",
+          "runtimeRole": "executable",
+          "executePermissionRequired": true
+        }
+      },
+      {
+        "file": "Contents/Frameworks/Electron Framework.framework/Versions/A/Libraries/libffmpeg.dylib",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ],
+        "slices": [
+          {
+            "architecture": "arm64",
+            "fileType": 6,
+            "rpaths": [],
+            "dylibs": [
+              "/usr/lib/libSystem.B.dylib"
+            ],
+            "codeSignaturePresent": true,
+            "minimumSystemVersions": [
+              "13.0.0"
+            ]
+          }
+        ],
+        "runtime": {
+          "fileType": 6,
+          "fileTypeName": "MH_DYLIB",
+          "runtimeRole": "shared-library",
+          "executePermissionRequired": false
+        }
+      },
+      {
+        "file": "Contents/Frameworks/Electron Framework.framework/Versions/A/Libraries/libvk_swiftshader.dylib",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ],
+        "slices": [
+          {
+            "architecture": "arm64",
+            "fileType": 6,
+            "rpaths": [],
+            "dylibs": [
+              "/System/Library/Frameworks/Metal.framework/Versions/A/Metal",
+              "/System/Library/Frameworks/Cocoa.framework/Versions/A/Cocoa",
+              "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+              "/usr/lib/libobjc.A.dylib",
+              "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+              "/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore",
+              "/usr/lib/libSystem.B.dylib"
+            ],
+            "codeSignaturePresent": true,
+            "minimumSystemVersions": [
+              "13.0.0"
+            ]
+          }
+        ],
+        "runtime": {
+          "fileType": 6,
+          "fileTypeName": "MH_DYLIB",
+          "runtimeRole": "shared-library",
+          "executePermissionRequired": false
+        }
+      },
+      {
+        "file": "Contents/Frameworks/Mantle.framework/Versions/A/Mantle",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ],
+        "slices": [
+          {
+            "architecture": "arm64",
+            "fileType": 6,
+            "rpaths": [],
+            "dylibs": [
+              "/System/Library/Frameworks/CoreData.framework/Versions/A/CoreData",
+              "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+              "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+              "/usr/lib/libobjc.A.dylib",
+              "/usr/lib/libSystem.B.dylib"
+            ],
+            "codeSignaturePresent": true,
+            "minimumSystemVersions": [
+              "13.0.0"
+            ]
+          }
+        ],
+        "runtime": {
+          "fileType": 6,
+          "fileTypeName": "MH_DYLIB",
+          "runtimeRole": "shared-library",
+          "executePermissionRequired": false
+        }
+      },
+      {
+        "file": "Contents/Frameworks/ReactiveObjC.framework/Versions/A/ReactiveObjC",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ],
+        "slices": [
+          {
+            "architecture": "arm64",
+            "fileType": 6,
+            "rpaths": [],
+            "dylibs": [
+              "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+              "/System/Library/Frameworks/CFNetwork.framework/Versions/A/CFNetwork",
+              "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+              "/usr/lib/libobjc.A.dylib",
+              "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+              "/usr/lib/libSystem.B.dylib"
+            ],
+            "codeSignaturePresent": true,
+            "minimumSystemVersions": [
+              "13.0.0"
+            ]
+          }
+        ],
+        "runtime": {
+          "fileType": 6,
+          "fileTypeName": "MH_DYLIB",
+          "runtimeRole": "shared-library",
+          "executePermissionRequired": false
+        }
+      },
+      {
+        "file": "Contents/Frameworks/Squirrel.framework/Versions/A/Resources/ShipIt",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ],
+        "slices": [
+          {
+            "architecture": "arm64",
+            "fileType": 2,
+            "rpaths": [
+              "@executable_path/../..",
+              "@executable_path/../../../.."
+            ],
+            "dylibs": [
+              "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+              "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+              "/usr/lib/libobjc.A.dylib",
+              "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+              "/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit",
+              "/System/Library/Frameworks/Security.framework/Versions/A/Security",
+              "@rpath/Mantle.framework/Mantle",
+              "@rpath/ReactiveObjC.framework/ReactiveObjC",
+              "/usr/lib/libSystem.B.dylib"
+            ],
+            "codeSignaturePresent": true,
+            "minimumSystemVersions": [
+              "13.0.0"
+            ]
+          }
+        ],
+        "runtime": {
+          "fileType": 2,
+          "fileTypeName": "MH_EXECUTE",
+          "runtimeRole": "executable",
+          "executePermissionRequired": true
+        }
+      },
+      {
+        "file": "Contents/Frameworks/Squirrel.framework/Versions/A/Squirrel",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ],
+        "slices": [
+          {
+            "architecture": "arm64",
+            "fileType": 6,
+            "rpaths": [],
+            "dylibs": [
+              "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+              "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
+              "/System/Library/Frameworks/CFNetwork.framework/Versions/A/CFNetwork",
+              "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+              "/usr/lib/libobjc.A.dylib",
+              "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+              "/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit",
+              "/System/Library/Frameworks/Security.framework/Versions/A/Security",
+              "/System/Library/Frameworks/ServiceManagement.framework/Versions/A/ServiceManagement",
+              "@rpath/Mantle.framework/Mantle",
+              "@rpath/ReactiveObjC.framework/ReactiveObjC",
+              "/usr/lib/libSystem.B.dylib"
+            ],
+            "codeSignaturePresent": true,
+            "minimumSystemVersions": [
+              "13.0.0"
+            ]
+          }
+        ],
+        "runtime": {
+          "fileType": 6,
+          "fileTypeName": "MH_DYLIB",
+          "runtimeRole": "shared-library",
+          "executePermissionRequired": false
+        }
+      },
+      {
+        "file": "Contents/MacOS/Converge",
+        "mode": "755",
+        "architectures": [
+          "arm64"
+        ],
+        "slices": [
+          {
+            "architecture": "arm64",
+            "fileType": 2,
+            "rpaths": [
+              "@executable_path/../Frameworks"
+            ],
+            "dylibs": [
+              "@rpath/Electron Framework.framework/Electron Framework",
+              "/usr/lib/libSystem.B.dylib"
+            ],
+            "codeSignaturePresent": true,
+            "minimumSystemVersions": [
+              "13.0.0"
+            ]
+          }
+        ],
+        "runtime": {
+          "fileType": 2,
+          "fileTypeName": "MH_EXECUTE",
+          "runtimeRole": "executable",
+          "executePermissionRequired": true
+        }
+      },
+      {
+        "file": "Contents/Resources/app.asar.unpacked/node_modules/@napi-rs/canvas-darwin-arm64/skia.darwin-arm64.node",
+        "mode": "644",
+        "architectures": [
+          "arm64"
+        ],
+        "slices": [
+          {
+            "architecture": "arm64",
+            "fileType": 6,
+            "rpaths": [],
+            "dylibs": [
+              "/usr/lib/libc++.1.dylib",
+              "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices",
+              "/usr/lib/libiconv.2.dylib",
+              "/usr/lib/libSystem.B.dylib",
+              "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+              "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
+              "/System/Library/Frameworks/CoreText.framework/Versions/A/CoreText"
+            ],
+            "codeSignaturePresent": true,
+            "minimumSystemVersions": [
+              "11.0.0"
+            ]
+          }
+        ],
+        "runtime": {
+          "fileType": 6,
+          "fileTypeName": "MH_DYLIB",
+          "runtimeRole": "shared-library",
+          "executePermissionRequired": false
+        }
+      }
+    ],
+    "symlinks": [
+      {
+        "file": "Contents/Frameworks/Electron Framework.framework/Electron Framework",
+        "target": "Versions/Current/Electron Framework"
+      },
+      {
+        "file": "Contents/Frameworks/Electron Framework.framework/Helpers",
+        "target": "Versions/Current/Helpers"
+      },
+      {
+        "file": "Contents/Frameworks/Electron Framework.framework/Libraries",
+        "target": "Versions/Current/Libraries"
+      },
+      {
+        "file": "Contents/Frameworks/Electron Framework.framework/Resources",
+        "target": "Versions/Current/Resources"
+      },
+      {
+        "file": "Contents/Frameworks/Electron Framework.framework/Versions/Current",
+        "target": "A"
+      },
+      {
+        "file": "Contents/Frameworks/Mantle.framework/Mantle",
+        "target": "Versions/Current/Mantle"
+      },
+      {
+        "file": "Contents/Frameworks/Mantle.framework/Resources",
+        "target": "Versions/Current/Resources"
+      },
+      {
+        "file": "Contents/Frameworks/Mantle.framework/Versions/Current",
+        "target": "A"
+      },
+      {
+        "file": "Contents/Frameworks/ReactiveObjC.framework/ReactiveObjC",
+        "target": "Versions/Current/ReactiveObjC"
+      },
+      {
+        "file": "Contents/Frameworks/ReactiveObjC.framework/Resources",
+        "target": "Versions/Current/Resources"
+      },
+      {
+        "file": "Contents/Frameworks/ReactiveObjC.framework/Versions/Current",
+        "target": "A"
+      },
+      {
+        "file": "Contents/Frameworks/Squirrel.framework/Resources",
+        "target": "Versions/Current/Resources"
+      },
+      {
+        "file": "Contents/Frameworks/Squirrel.framework/Squirrel",
+        "target": "Versions/Current/Squirrel"
+      },
+      {
+        "file": "Contents/Frameworks/Squirrel.framework/Versions/Current",
+        "target": "A"
+      }
+    ],
+    "sourceParity": [
+      {
+        "file": "desktop-main.js",
+        "bytes": 55280,
+        "sha256": "ee07902b708c7f94b1ddc10dc3f4a05ddb7e421d1965c9cdb359be64a603e69b"
+      },
+      {
+        "file": "desktop-preload.js",
+        "bytes": 2282,
+        "sha256": "00e02c50f25c81e6f4a413d2bb4264e116586e7523f8167b5669fc0999478b41"
+      },
+      {
+        "file": "src/platform/desktop-lifecycle.js",
+        "bytes": 2964,
+        "sha256": "7cb906dc488ebcb2d2190bb4b6060f16bb01d31c4a93f74c2d6cfe8d8f5cc28f"
+      },
+      {
+        "file": "src/platform/studio-desktop.js",
+        "bytes": 19979,
+        "sha256": "699d40196212e119f0b97ddf41c67bba3023f9195e3260481d414d34439146d6"
+      },
+      {
+        "file": "src/studio/workflow.js",
+        "bytes": 30543,
+        "sha256": "ecc3bd29b20cb8c668730538804de0c3066db82a127e99ab1a46061d85eb7bd2"
+      },
+      {
+        "file": "src/studio/document-design.js",
+        "bytes": 11087,
+        "sha256": "b1089435ba17a4be623e10fc1d419dee7ebdc07d4789aee277b3b0bbba473b05"
+      },
+      {
+        "file": "src/studio/project.js",
+        "bytes": 9267,
+        "sha256": "ed340d50d17dabdcd36865a774fdfbdc6e30396e4a5042cd0b897c3c3c64e7ea"
+      },
+      {
+        "file": "src/studio-services/index.js",
+        "bytes": 134,
+        "sha256": "7947108243ea63007a2a3fe5c49f2742a730be9d67175386ca912aa5502c5a34"
+      },
+      {
+        "file": "src/studio-services/identity.js",
+        "bytes": 4176,
+        "sha256": "4e8e48ecd9de607abb6d1a30d6db65a04030e7d247ca565838a5f396711aad56"
+      },
+      {
+        "file": "src/studio-services/archive.js",
+        "bytes": 17156,
+        "sha256": "7834188afe2ba40a614c842bbc2e80b7f715035aefe4a1cab75bb8d6a6b84bc4"
+      },
+      {
+        "file": "src/studio-services/project-store.js",
+        "bytes": 25748,
+        "sha256": "93273c90e10c6bb47975409a1abc96df63a5231b00a9e370dee57262bea0b405"
+      },
+      {
+        "file": "src/studio-services/process-runner.js",
+        "bytes": 2491,
+        "sha256": "d479b8c018161c8e4132c4f95f66b67292aa5d66530c185ff97fee1f7d0d699f"
+      },
+      {
+        "file": "src/studio-services/verification-lab.js",
+        "bytes": 19715,
+        "sha256": "9ac59b4c1b71e167d4f021ec4a8c1f5d7d4424b554e4065a14c9ee17fa0b1532"
+      },
+      {
+        "file": "src/studio-services/pdf-worker.js",
+        "bytes": 3850,
+        "sha256": "fb7f34990e6ac3c6a4326164dc3fabaf16d089bb0fd7345c344effbd4ad574cc"
+      },
+      {
+        "file": "src/studio-services/container-tests.js",
+        "bytes": 4819,
+        "sha256": "30df99b66e21b8635ed6165be308f8e6fac9be6d7ed153bf7b380bc5c9d048f7"
+      },
+      {
+        "file": "src/studio-services/delivery.js",
+        "bytes": 7968,
+        "sha256": "7ade3fa4ea0348dfa8fe7fdbe76e4052f635941402148d4dd1c816dccba98407"
+      },
+      {
+        "file": "src/browser/cookies.js",
+        "bytes": 7368,
+        "sha256": "20f79d39b92dfc16876a13251247940b515f929e599f7a1d089dbc8bbc7a30d7"
+      },
+      {
+        "file": "src/browser/files.js",
+        "bytes": 10263,
+        "sha256": "92687e4bd75bcf5f082fcf6a88f96f07d1f65509d89194e7024adc760623a37d"
+      },
+      {
+        "file": "src/browser/file-store.js",
+        "bytes": 15220,
+        "sha256": "e2d721a65488a2f0ee3e35b0422e04e5bb46ffdc478b774f2f659ef7c643d23e"
+      },
+      {
+        "file": "src/browser/upload-transport.js",
+        "bytes": 8202,
+        "sha256": "c8e9fea0faa3b65849d138d5d350047313e3e0f3c150fa40db6b18ed853030f3"
+      },
+      {
+        "file": "src/browser/downloads.js",
+        "bytes": 10904,
+        "sha256": "ee771d6a57a647376389a088a4d349b9966ee55526b9688b67913e1b9afc97ec"
+      },
+      {
+        "file": "src/browser/desktop-coordinator.js",
+        "bytes": 8285,
+        "sha256": "64efad8eadc5680e90ab978f0442a972d2688df404fcf4199eb72b0f041b9025"
+      },
+      {
+        "file": "src/browser/boss-coordinator.js",
+        "bytes": 157662,
+        "sha256": "6e7ff8f577abf5afcb3ad0840de35b6676e960a67e48411129dfa23968b49e39"
+      },
+      {
+        "file": "src/browser/recovery-policy.js",
+        "bytes": 832,
+        "sha256": "1131767828b0236f53cb8a07463dc1d796db50820c9cc06576a88cf8dc5ce69d"
+      },
+      {
+        "file": "src/browser/page-preload.js",
+        "bytes": 496033,
+        "sha256": "e0ec17d0cfa33092c8d1cb6b0328f4743658227c14b3f2630c4faf5104311188"
+      },
+      {
+        "file": "chrome-extension/background.js",
+        "bytes": 143784,
+        "sha256": "6ffcf5fb0189ffba1a96e880e4e6a1ab912806772f9a52a978595debbabc1742"
+      },
+      {
+        "file": "renderer/browser.html",
+        "bytes": 47136,
+        "sha256": "2d98637a8c514236fc7d0cba997d1c3d6f738581d32ada9d5c0eb6a4009c3427"
+      },
+      {
+        "file": "renderer/browser-app.js",
+        "bytes": 102130,
+        "sha256": "fbb054c5c7395ac69a6a423099b5b1074249014032f3cee28ba0967d15248836"
+      },
+      {
+        "file": "renderer/browser.css",
+        "bytes": 150857,
+        "sha256": "8ee263bdea3f60799593c775a3f77fa8ec40e26bc851e8cd65be56f6429ae6fe"
+      },
+      {
+        "file": "renderer/studio-ui.js",
+        "bytes": 48716,
+        "sha256": "ebd8f8a4fbcd6b6c3520de2a7a466722911292ced11e08dcb6251b7112fdd12d"
+      },
+      {
+        "file": "renderer/studio-ui.css",
+        "bytes": 24007,
+        "sha256": "8897ac0fbeae7a885191c7d7b8797b2fe40926e07fbdc0604dce649ca73d2d0a"
+      },
+      {
+        "file": "renderer/assets/fonts/Manrope-Variable.ttf",
+        "bytes": 164700,
+        "sha256": "3ae11c49db0455a3cc33e37d380f20fdb8c7f8b41dc07625c177e3d87a9d6ae6"
+      },
+      {
+        "file": "renderer/assets/fonts/Manrope-OFL.txt",
+        "bytes": 4387,
+        "sha256": "58172e0c0fac2cda8a37b348164bb55e44b0e69051e557e92b1d3f6910141f7b"
+      },
+      {
+        "file": "renderer/galaxy-scene.js",
+        "bytes": 26502,
+        "sha256": "ef5b85ca303f167c72a08a1f4d47a3da670fc1f99cb6914da7742034c4dc0720"
+      },
+      {
+        "file": "renderer/galaxy-scene.css",
+        "bytes": 647,
+        "sha256": "a2e168477702cd25cb11cccdfadbe68ebbfce6a0182766d9a13adcbf2845c55e"
+      },
+      {
+        "file": "renderer/star-ribbons.js",
+        "bytes": 26763,
+        "sha256": "c9724874cb9f58975eff08ac4af2bc75c9ea42b9ed38d630850e3c06888cde7d"
+      },
+      {
+        "file": "renderer/ghost-v2.png",
+        "bytes": 715076,
+        "sha256": "3416c160be60ad2aaebe23855db0654a7a73ac54dad6fc6ccbb853e073ba754d"
+      },
+      {
+        "file": "renderer/flower-blossom-v1.png",
+        "bytes": 1974791,
+        "sha256": "a644defaa480c166064921a22af8383f3f5e9b47f6f5af42feaa176849deb5d8"
+      },
+      {
+        "file": "assets/icon.ico",
+        "bytes": 90882,
+        "sha256": "ebc7920f6f2f66e120091b3155de80a6a59ace972f3a153e8cf62ffb7a78c88d"
+      },
+      {
+        "file": "assets/icon.png",
+        "bytes": 52551,
+        "sha256": "416e36aeb88fffd164fc99afb95304bdaaeb4de2bf995de6ce4cb8586528874d"
+      },
+      {
+        "file": "assets/icon.icns",
+        "bytes": 844841,
+        "sha256": "182f854e1ba9203d10d574207eeed0a00932d9e0862c6a013a53865dfd99c1ee"
+      }
+    ],
+    "dependencyParity": [
+      {
+        "file": "node_modules/pdfjs-dist/legacy/build/pdf.mjs",
+        "bytes": 1069549,
+        "sha256": "bc51f4874a66e3853189cb5d50aba4b3096afa83ed433b885d293a3d94583cdc"
+      },
+      {
+        "file": "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
+        "bytes": 2418244,
+        "sha256": "bb422f60804477de4a0b09091d8347a916a387755ed1cbad24ccaec1d09c78bf"
+      },
+      {
+        "file": "node_modules/@napi-rs/canvas/index.js",
+        "bytes": 5808,
+        "sha256": "bbdad32cab670261983ea56d4625fc7d07b1382f8bb7d6d31232bb2834861597"
+      },
+      {
+        "file": "node_modules/@napi-rs/canvas/js-binding.js",
+        "bytes": 12799,
+        "sha256": "be59c8d4888630cf88656f65b63dd150e60bdb1d5eab0ba5b47c0a6cb389533e"
+      }
+    ],
+    "dependencyMetadata": [
+      {
+        "file": "node_modules/pdfjs-dist/package.json",
+        "comparison": "semantic-runtime-metadata",
+        "builderVersion": "26.15.3",
+        "name": "pdfjs-dist",
+        "version": "6.4.299",
+        "removedFields": [
+          "keywords",
+          "bugs",
+          "scripts"
+        ],
+        "sourceBytes": 711,
+        "packagedBytes": 580,
+        "sourceSha256": "8103b756525a79ec119558e9796062228290acfd5178a6b7fc93e6979511f604",
+        "packagedSha256": "a51d41e2bb74d0eb3d4158791ce5163dc2e984e5b487c3c0edc3d2f21132c0b9",
+        "rawBytesMatched": false
+      },
+      {
+        "file": "node_modules/@napi-rs/canvas/package.json",
+        "comparison": "semantic-runtime-metadata",
+        "builderVersion": "26.15.3",
+        "name": "@napi-rs/canvas",
+        "version": "1.0.10",
+        "removedFields": [
+          "keywords",
+          "scripts",
+          "ava"
+        ],
+        "sourceBytes": 4845,
+        "packagedBytes": 3277,
+        "sourceSha256": "c466285520d5e8ded2d9c8cdff1cf8437964f28022283b5fdead42431d8ffe3b",
+        "packagedSha256": "7ddd919950519b579596be7b6e2e9023077e676c28cdba19157789c9e74ee7c3",
+        "rawBytesMatched": false
+      },
+      {
+        "file": "node_modules/@napi-rs/canvas-darwin-arm64/package.json",
+        "comparison": "semantic-runtime-metadata",
+        "builderVersion": "26.15.3",
+        "name": "@napi-rs/canvas-darwin-arm64",
+        "version": "1.0.10",
+        "removedFields": [
+          "keywords"
+        ],
+        "sourceBytes": 790,
+        "packagedBytes": 617,
+        "sourceSha256": "e8e6dfb891ce1b15965cae6c14274b763cde8cf99d47e94b3392cfa758e5032e",
+        "packagedSha256": "1838b54d396c32d667eefffc8cf167c018c24bfb251feca3ff70bbc20c9f89fe",
+        "rawBytesMatched": false
+      }
+    ],
+    "productionDependencies": {
+      "pdfjsVersion": "6.4.299",
+      "canvasVersion": "1.0.10",
+      "nativeCanvas": "darwin-arm64"
+    },
+    "asarSha256": "2b463ccd07a91b3cdacd105246c04a36cc05a32cba206b00d0a57eb92ab13d3b"
+  },
+  "zipStructure": {
+    "entries": 608,
+    "unixAttributesPreserved": true,
+    "symlinks": [
+      {
+        "fileName": "Converge.app/Contents/Frameworks/Electron Framework.framework/Electron Framework",
+        "mode": 41453,
+        "symlink": true,
+        "directory": false,
+        "resourceSidecar": false,
+        "target": "Versions/Current/Electron Framework"
+      },
+      {
+        "fileName": "Converge.app/Contents/Frameworks/Electron Framework.framework/Resources",
+        "mode": 41453,
+        "symlink": true,
+        "directory": false,
+        "resourceSidecar": false,
+        "target": "Versions/Current/Resources"
+      },
+      {
+        "fileName": "Converge.app/Contents/Frameworks/Electron Framework.framework/Versions/Current",
+        "mode": 41453,
+        "symlink": true,
+        "directory": false,
+        "resourceSidecar": false,
+        "target": "A"
+      },
+      {
+        "fileName": "Converge.app/Contents/Frameworks/Electron Framework.framework/Libraries",
+        "mode": 41453,
+        "symlink": true,
+        "directory": false,
+        "resourceSidecar": false,
+        "target": "Versions/Current/Libraries"
+      },
+      {
+        "fileName": "Converge.app/Contents/Frameworks/Electron Framework.framework/Helpers",
+        "mode": 41453,
+        "symlink": true,
+        "directory": false,
+        "resourceSidecar": false,
+        "target": "Versions/Current/Helpers"
+      },
+      {
+        "fileName": "Converge.app/Contents/Frameworks/ReactiveObjC.framework/Resources",
+        "mode": 41453,
+        "symlink": true,
+        "directory": false,
+        "resourceSidecar": false,
+        "target": "Versions/Current/Resources"
+      },
+      {
+        "fileName": "Converge.app/Contents/Frameworks/ReactiveObjC.framework/ReactiveObjC",
+        "mode": 41453,
+        "symlink": true,
+        "directory": false,
+        "resourceSidecar": false,
+        "target": "Versions/Current/ReactiveObjC"
+      },
+      {
+        "fileName": "Converge.app/Contents/Frameworks/ReactiveObjC.framework/Versions/Current",
+        "mode": 41453,
+        "symlink": true,
+        "directory": false,
+        "resourceSidecar": false,
+        "target": "A"
+      },
+      {
+        "fileName": "Converge.app/Contents/Frameworks/Squirrel.framework/Resources",
+        "mode": 41453,
+        "symlink": true,
+        "directory": false,
+        "resourceSidecar": false,
+        "target": "Versions/Current/Resources"
+      },
+      {
+        "fileName": "Converge.app/Contents/Frameworks/Squirrel.framework/Versions/Current",
+        "mode": 41453,
+        "symlink": true,
+        "directory": false,
+        "resourceSidecar": false,
+        "target": "A"
+      },
+      {
+        "fileName": "Converge.app/Contents/Frameworks/Squirrel.framework/Squirrel",
+        "mode": 41453,
+        "symlink": true,
+        "directory": false,
+        "resourceSidecar": false,
+        "target": "Versions/Current/Squirrel"
+      },
+      {
+        "fileName": "Converge.app/Contents/Frameworks/Mantle.framework/Mantle",
+        "mode": 41453,
+        "symlink": true,
+        "directory": false,
+        "resourceSidecar": false,
+        "target": "Versions/Current/Mantle"
+      },
+      {
+        "fileName": "Converge.app/Contents/Frameworks/Mantle.framework/Resources",
+        "mode": 41453,
+        "symlink": true,
+        "directory": false,
+        "resourceSidecar": false,
+        "target": "Versions/Current/Resources"
+      },
+      {
+        "fileName": "Converge.app/Contents/Frameworks/Mantle.framework/Versions/Current",
+        "mode": 41453,
+        "symlink": true,
+        "directory": false,
+        "resourceSidecar": false,
+        "target": "A"
+      }
+    ]
+  },
+  "archiveRoundTrips": {
+    "zip": {
+      "signatureVerified": true,
+      "sourceBytesMatched": true,
+      "permissionsAndSymlinksVerified": true
+    },
+    "dmg": {
+      "imageVerified": true,
+      "signatureVerified": true,
+      "sourceBytesMatched": true,
+      "applicationsShortcutVerified": true
+    }
+  },
+  "artifacts": [
+    {
+      "name": "Converge-1.9.9-macOS-arm64.zip",
+      "bytes": 153406761,
+      "sha256": "64fffa49276890c3a7b273110c8e30b43c1cb8907fd57fc78b7b27e2b41e784f"
+    },
+    {
+      "name": "Converge-1.9.9-macOS-arm64.dmg",
+      "bytes": 154092937,
+      "sha256": "b59efa943a34506115f8f3069e933567d190687478f86cc09a787074d0d4bc13"
+    }
+  ],
+  "scope": "Native ARM64 structural, byte-parity and ad-hoc signature verification, including the extracted ZIP and readonly mounted DMG. This does not claim Developer ID signing, Apple notarization, a physical MacBook M4 test or live provider access."
+}

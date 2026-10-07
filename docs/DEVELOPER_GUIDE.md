@@ -124,6 +124,8 @@ The workflow in `.github/workflows/macos-arm64.yml` requires a native ARM64 host
 
 See [Mac installation](MACOS_GUIDE.md) and the current release's verification report for status and remaining hardware checks. The [Mac 1.8.1 record](MACOS_1_8_1_VERIFICATION.md) and [1.7.0 record](MACOS_VERIFICATION.md) retain historical evidence.
 
+The current **1.9.9** native run is [GitHub Actions 37608181127](https://github.com/EhosanurRahmanRomi/converge-desktop/actions/runs/37608181127), using source commit `c43f95db6628f40b67d01340fb7bd3cd783c1bd0`. Native Apple Silicon verification passed **671 source tests, 25 packaged transport checks, 22 packaged boss checks and 17 packaged studio checks**, plus actual startup, native editing, Close/reopen and ZIP/DMG bundle verification. The Windows installer passed [its fresh-host release workflow](https://github.com/EhosanurRahmanRomi/converge-desktop/actions/runs/37602397106). Final documentation can use a later commit: all 41 production source hashes match the native builds and approved portable.
+
 The successful 1.8.1 run was [GitHub Actions 37348451621](https://github.com/EhosanurRahmanRomi/converge-desktop/actions/runs/37348451621), using source commit `3e1449046fc1b86a1a3f2960e6b94e61027f05cf`. Its actual packaged native editing passed on all five surfaces. The host was an Apple Silicon CI runner; no physical MacBook Air M4 test or authenticated live Mac task was performed.
 
 The shell, reviewer bridge, review engine, file transfer and animation assets are shared. `src/platform/desktop-lifecycle.js` handles menu roles and window lifecycle; the renderer chooses the Command shortcut on macOS. Keep platform adaptation separate from the shared review and file logic.

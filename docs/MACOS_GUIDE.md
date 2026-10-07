@@ -84,7 +84,7 @@ The app respects reduced motion and suspends decoration when hidden/minimized. T
 
 ## Verification status
 
-Native ARM64 packaging and verification for **1.9.9** are being completed. Use the release's **macos-verification.json** and **SHA256SUMS-macOS.txt** once published for the exact artifacts and results. Earlier successful Mac runs do not verify this version.
+**1.9.9 passed its native ARM64 release gates.** Native Apple Silicon verification passed **671 source tests, 25 packaged transport checks, 22 packaged boss checks and 17 packaged studio checks**, plus actual startup, native editing, Close/reopen and ZIP/DMG bundle verification. See the [Mac verification record](MACOS_1_9_9_VERIFICATION.md), [successful workflow](https://github.com/EhosanurRahmanRomi/converge-desktop/actions/runs/37608181127), **macos-verification.json** and **SHA256SUMS-macOS.txt** for exact artifacts and results.
 
 The release workflow checks the source suite, packaged boss/studio/transport paths, actual packaged startup and native editing/Close/reopen, signatures and source/runtime parity. A gate is passed only when the corresponding current-run evidence exists.
 

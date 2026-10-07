@@ -9,11 +9,11 @@ Verification records bind checks to specific source revisions and download hashe
 | Artifact | Record |
 |---|---|
 | Approved Windows portable | [Windows 1.9.9](WINDOWS_1_9_9_VERIFICATION.md) · [Public evidence](evidence/windows-1.9.9.json) |
-| Windows installer | [Windows installer 1.9.9](WINDOWS_INSTALLER_1_9_9_VERIFICATION.md) · clean-runner install, source parity, actual installed startup and uninstall |
-| Apple Silicon macOS DMG and ZIP | The release's Mac report records native ARM64 source tests, archive verification, packaged workflows and startup |
+| Windows installer | [Windows installer 1.9.9](WINDOWS_INSTALLER_1_9_9_VERIFICATION.md) · [Public evidence](evidence/windows-installer-1.9.9.json) · clean-runner install, actual installed startup and uninstall |
+| Apple Silicon macOS DMG and ZIP | [Mac 1.9.9](MACOS_1_9_9_VERIFICATION.md) · [Public evidence](evidence/macos-1.9.9.json) · native ARM64 tests, shipped archives and actual startup |
 | All downloads | [Artifact lengths and SHA-256](release-artifacts.json) · release `SHA256SUMS.txt` |
 
-The native installer and Mac gates are being run for publication. Their final reports identify the workflow run and source commit. Historical counts below belong only to their original artifacts.
+The native installer and Mac release gates passed. Their reports identify the workflow run, source commit and exact shipped artifacts. Historical counts below belong only to their original artifacts.
 
 ## What the checks establish
 

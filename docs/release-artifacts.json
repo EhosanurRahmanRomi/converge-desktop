@@ -1,22 +1,22 @@
 [
   {
-    "Name": "Converge-Setup-1.8.1-x64.exe",
-    "Bytes": 114924577,
-    "SHA256": "bf57f4a82c0178902a77522def99799e40e366fbd9382d773085d7a05aea9d57"
+    "Name": "Converge-Setup-1.9.9-x64.exe",
+    "Bytes": 131227707,
+    "SHA256": "fb2959977846a464a7a82082f96a06461a35b0adcf70c0795d5da7fd0593e300"
   },
   {
-    "Name": "Converge-Portable-1.8.1-x64.exe",
-    "Bytes": 114627556,
-    "SHA256": "1075eee5a08b17bf9b61f6099db06a550fbd4e0f27d060f91b0e92eb21d26f28"
+    "Name": "Converge-Portable-1.9.9-x64.exe",
+    "Bytes": 464091625,
+    "SHA256": "fa45e6ada1d071cffa86b56e7d496b5c0b5f6aae3bb9eeef65f5e9ff4d8e33e6"
   },
   {
-    "Name": "Converge-1.8.1-macOS-arm64.zip",
-    "Bytes": 132246619,
-    "SHA256": "d4f14533308bcab8c66ce69b703dc2a0ece17be052e06d1d32a32bead8d8c058"
+    "Name": "Converge-1.9.9-macOS-arm64.zip",
+    "Bytes": 153406761,
+    "SHA256": "64fffa49276890c3a7b273110c8e30b43c1cb8907fd57fc78b7b27e2b41e784f"
   },
   {
-    "Name": "Converge-1.8.1-macOS-arm64.dmg",
-    "Bytes": 132968917,
-    "SHA256": "421dd32dbb8532d34071fa7d06fef1f5d91218c61d3cb6e1a038dd759c0f6909"
+    "Name": "Converge-1.9.9-macOS-arm64.dmg",
+    "Bytes": 154092937,
+    "SHA256": "b59efa943a34506115f8f3069e933567d190687478f86cc09a787074d0d4bc13"
   }
 ]

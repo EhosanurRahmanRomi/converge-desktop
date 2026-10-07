@@ -2,7 +2,13 @@
 
 [← Project](../README.md) · [Verification](VERIFICATION.md)
 
-## 1.9.9 — Document design and visual review requirements
+## 1.9.9 — Project Studio for Windows and Apple Silicon
+
+The approved Windows portable is retained byte for byte. This release adds a verified Windows x64 installer and native Apple Silicon macOS DMG/ZIP, with full source and offline manuals. All four artifacts share the same 41 production files. The repository showcase includes current workspace and studio screenshots.
+
+The [Windows installer record](WINDOWS_INSTALLER_1_9_9_VERIFICATION.md) covers clean installation, actual installed startup and removal. Native Apple Silicon verification passed **671 source tests, 25 packaged transport checks, 22 packaged boss checks and 17 packaged studio checks**, plus actual startup, native editing, Close/reopen and ZIP/DMG bundle verification. See the [Mac record](MACOS_1_9_9_VERIFICATION.md) and [portable record](WINDOWS_1_9_9_VERIFICATION.md) for the separate evidence. Windows binaries are unsigned; Mac binaries are ad-hoc signed without notarization.
+
+### Document design and visual review requirements
 
 - Add Academic math notes, Match attached reference, Editorial report and Neutral document design profiles, with saved design notes.
 - Upload appearance references separately from content sources. Preserve exact reference identities and pending-upload roles without changing content scope or accidentally requesting a PDF output.

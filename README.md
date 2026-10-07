@@ -91,7 +91,9 @@ Large input files use bounded local reads and transfers. Service processing, acc
 
 [Windows 1.9.9 verification](docs/WINDOWS_1_9_9_VERIFICATION.md) records source tests, packaged workflow checks, file parity and actual portable startup/Close, with the tested artifact identity.
 
-**Mac 1.9.9:** native ARM64 packaging and verification are being completed for this release. The release's Mac verification attachment is authoritative once available; older Mac runs are historical evidence, not proof of 1.9.9. A physical MacBook Air M4 and a live authenticated Mac task have not been tested.
+[Windows installer verification](docs/WINDOWS_INSTALLER_1_9_9_VERIFICATION.md) records a clean installation, actual installed startup and uninstallation.
+
+**Mac 1.9.9:** Native Apple Silicon verification passed **671 source tests, 25 packaged transport checks, 22 packaged boss checks and 17 packaged studio checks**, plus actual startup, native editing, Close/reopen and ZIP/DMG bundle verification. See the [Mac verification record](docs/MACOS_1_9_9_VERIFICATION.md) for the exact run and download identities. A physical MacBook Air M4 and a live authenticated Mac task have not been tested.
 
 Local workflow tests use controlled provider replies. They check coordination, transfers, recovery and controls. They do not measure general answer quality or establish an authenticated 1.9.9 model run.
 

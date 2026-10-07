@@ -2,7 +2,7 @@
 
 Converge uses three conversations: a boss and two workers. You give the boss a task; it chooses separate instructions for the workers, reads their results, and directs the next round of work.
 
-This guide describes the **1.9.9 Windows portable**. See its [verification record](WINDOWS_1_9_9_VERIFICATION.md) for the exact build and completed checks, [document design guide](DOCUMENT_QUALITY.md) for presentation requirements, and [model error recovery](MODEL_ERROR_RECOVERY.md) for current reconnect, response-error and prompt-capacity behavior. Its installer and Mac build are deferred until the user verifies the Windows update. The published Apple Silicon Mac app is still **1.8.1**; see its [Mac guide](MACOS_GUIDE.md) for installation and Command shortcuts. Earlier verification records retain their own version's scope.
+This guide describes **Converge 1.9.9 for Windows x64 and Apple Silicon Mac**. The installer, approved portable and Mac archives share the same 41 production source files. See the [release verification index](VERIFICATION.md) for artifact-specific checks, [document design guide](DOCUMENT_QUALITY.md) for presentation requirements and [model error recovery](MODEL_ERROR_RECOVERY.md) for reconnect, response-error and prompt-capacity behavior. The [Mac guide](MACOS_GUIDE.md) covers installation and Command shortcuts. Earlier verification records retain their own version's scope.
 
 ## Connect and start
 

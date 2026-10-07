@@ -1,0 +1,273 @@
+{
+  "passed": true,
+  "version": "1.9.9",
+  "platform": "win32",
+  "architecture": "x64",
+  "checkedAt": "2026-10-07T09:44:06.732Z",
+  "sourceCommit": "c8d7d88c09e6cacbc7b1b3176cc037eab8a3a300",
+  "workflowRunId": "37602397106",
+  "installer": {
+    "name": "Converge-Setup-1.9.9-x64.exe",
+    "bytes": 131227707,
+    "sha256": "fb2959977846a464a7a82082f96a06461a35b0adcf70c0795d5da7fd0593e300",
+    "signing": "unsigned"
+  },
+  "installation": {
+    "isolatedRunnerTarget": true,
+    "installDirectory": "D:\\a\\_temp\\converge-installer-check-3a30b37f-7ece-415e-82dc-aa1d3c1801cf\\installed",
+    "silentInstallPassed": true,
+    "sourceParity": [
+      {
+        "file": "desktop-main.js",
+        "bytes": 55280,
+        "sha256": "ee07902b708c7f94b1ddc10dc3f4a05ddb7e421d1965c9cdb359be64a603e69b"
+      },
+      {
+        "file": "desktop-preload.js",
+        "bytes": 2282,
+        "sha256": "00e02c50f25c81e6f4a413d2bb4264e116586e7523f8167b5669fc0999478b41"
+      },
+      {
+        "file": "src/platform/desktop-lifecycle.js",
+        "bytes": 2964,
+        "sha256": "7cb906dc488ebcb2d2190bb4b6060f16bb01d31c4a93f74c2d6cfe8d8f5cc28f"
+      },
+      {
+        "file": "src/platform/studio-desktop.js",
+        "bytes": 19979,
+        "sha256": "699d40196212e119f0b97ddf41c67bba3023f9195e3260481d414d34439146d6"
+      },
+      {
+        "file": "src/studio/workflow.js",
+        "bytes": 30543,
+        "sha256": "ecc3bd29b20cb8c668730538804de0c3066db82a127e99ab1a46061d85eb7bd2"
+      },
+      {
+        "file": "src/studio/document-design.js",
+        "bytes": 11087,
+        "sha256": "b1089435ba17a4be623e10fc1d419dee7ebdc07d4789aee277b3b0bbba473b05"
+      },
+      {
+        "file": "src/studio/project.js",
+        "bytes": 9267,
+        "sha256": "ed340d50d17dabdcd36865a774fdfbdc6e30396e4a5042cd0b897c3c3c64e7ea"
+      },
+      {
+        "file": "src/studio-services/index.js",
+        "bytes": 134,
+        "sha256": "7947108243ea63007a2a3fe5c49f2742a730be9d67175386ca912aa5502c5a34"
+      },
+      {
+        "file": "src/studio-services/identity.js",
+        "bytes": 4176,
+        "sha256": "4e8e48ecd9de607abb6d1a30d6db65a04030e7d247ca565838a5f396711aad56"
+      },
+      {
+        "file": "src/studio-services/archive.js",
+        "bytes": 17156,
+        "sha256": "7834188afe2ba40a614c842bbc2e80b7f715035aefe4a1cab75bb8d6a6b84bc4"
+      },
+      {
+        "file": "src/studio-services/project-store.js",
+        "bytes": 25748,
+        "sha256": "93273c90e10c6bb47975409a1abc96df63a5231b00a9e370dee57262bea0b405"
+      },
+      {
+        "file": "src/studio-services/process-runner.js",
+        "bytes": 2491,
+        "sha256": "d479b8c018161c8e4132c4f95f66b67292aa5d66530c185ff97fee1f7d0d699f"
+      },
+      {
+        "file": "src/studio-services/verification-lab.js",
+        "bytes": 19715,
+        "sha256": "9ac59b4c1b71e167d4f021ec4a8c1f5d7d4424b554e4065a14c9ee17fa0b1532"
+      },
+      {
+        "file": "src/studio-services/pdf-worker.js",
+        "bytes": 3850,
+        "sha256": "fb7f34990e6ac3c6a4326164dc3fabaf16d089bb0fd7345c344effbd4ad574cc"
+      },
+      {
+        "file": "src/studio-services/container-tests.js",
+        "bytes": 4819,
+        "sha256": "30df99b66e21b8635ed6165be308f8e6fac9be6d7ed153bf7b380bc5c9d048f7"
+      },
+      {
+        "file": "src/studio-services/delivery.js",
+        "bytes": 7968,
+        "sha256": "7ade3fa4ea0348dfa8fe7fdbe76e4052f635941402148d4dd1c816dccba98407"
+      },
+      {
+        "file": "src/browser/cookies.js",
+        "bytes": 7368,
+        "sha256": "20f79d39b92dfc16876a13251247940b515f929e599f7a1d089dbc8bbc7a30d7"
+      },
+      {
+        "file": "src/browser/files.js",
+        "bytes": 10263,
+        "sha256": "92687e4bd75bcf5f082fcf6a88f96f07d1f65509d89194e7024adc760623a37d"
+      },
+      {
+        "file": "src/browser/file-store.js",
+        "bytes": 15220,
+        "sha256": "e2d721a65488a2f0ee3e35b0422e04e5bb46ffdc478b774f2f659ef7c643d23e"
+      },
+      {
+        "file": "src/browser/upload-transport.js",
+        "bytes": 8202,
+        "sha256": "c8e9fea0faa3b65849d138d5d350047313e3e0f3c150fa40db6b18ed853030f3"
+      },
+      {
+        "file": "src/browser/downloads.js",
+        "bytes": 10904,
+        "sha256": "ee771d6a57a647376389a088a4d349b9966ee55526b9688b67913e1b9afc97ec"
+      },
+      {
+        "file": "src/browser/desktop-coordinator.js",
+        "bytes": 8285,
+        "sha256": "64efad8eadc5680e90ab978f0442a972d2688df404fcf4199eb72b0f041b9025"
+      },
+      {
+        "file": "src/browser/boss-coordinator.js",
+        "bytes": 157662,
+        "sha256": "6e7ff8f577abf5afcb3ad0840de35b6676e960a67e48411129dfa23968b49e39"
+      },
+      {
+        "file": "src/browser/recovery-policy.js",
+        "bytes": 832,
+        "sha256": "1131767828b0236f53cb8a07463dc1d796db50820c9cc06576a88cf8dc5ce69d"
+      },
+      {
+        "file": "src/browser/page-preload.js",
+        "bytes": 496033,
+        "sha256": "e0ec17d0cfa33092c8d1cb6b0328f4743658227c14b3f2630c4faf5104311188"
+      },
+      {
+        "file": "chrome-extension/background.js",
+        "bytes": 143784,
+        "sha256": "6ffcf5fb0189ffba1a96e880e4e6a1ab912806772f9a52a978595debbabc1742"
+      },
+      {
+        "file": "renderer/browser.html",
+        "bytes": 47136,
+        "sha256": "2d98637a8c514236fc7d0cba997d1c3d6f738581d32ada9d5c0eb6a4009c3427"
+      },
+      {
+        "file": "renderer/browser-app.js",
+        "bytes": 102130,
+        "sha256": "fbb054c5c7395ac69a6a423099b5b1074249014032f3cee28ba0967d15248836"
+      },
+      {
+        "file": "renderer/browser.css",
+        "bytes": 150857,
+        "sha256": "8ee263bdea3f60799593c775a3f77fa8ec40e26bc851e8cd65be56f6429ae6fe"
+      },
+      {
+        "file": "renderer/studio-ui.js",
+        "bytes": 48716,
+        "sha256": "ebd8f8a4fbcd6b6c3520de2a7a466722911292ced11e08dcb6251b7112fdd12d"
+      },
+      {
+        "file": "renderer/studio-ui.css",
+        "bytes": 24007,
+        "sha256": "8897ac0fbeae7a885191c7d7b8797b2fe40926e07fbdc0604dce649ca73d2d0a"
+      },
+      {
+        "file": "renderer/assets/fonts/Manrope-Variable.ttf",
+        "bytes": 164700,
+        "sha256": "3ae11c49db0455a3cc33e37d380f20fdb8c7f8b41dc07625c177e3d87a9d6ae6"
+      },
+      {
+        "file": "renderer/assets/fonts/Manrope-OFL.txt",
+        "bytes": 4387,
+        "sha256": "58172e0c0fac2cda8a37b348164bb55e44b0e69051e557e92b1d3f6910141f7b"
+      },
+      {
+        "file": "renderer/galaxy-scene.js",
+        "bytes": 26502,
+        "sha256": "ef5b85ca303f167c72a08a1f4d47a3da670fc1f99cb6914da7742034c4dc0720"
+      },
+      {
+        "file": "renderer/galaxy-scene.css",
+        "bytes": 647,
+        "sha256": "a2e168477702cd25cb11cccdfadbe68ebbfce6a0182766d9a13adcbf2845c55e"
+      },
+      {
+        "file": "renderer/star-ribbons.js",
+        "bytes": 26763,
+        "sha256": "c9724874cb9f58975eff08ac4af2bc75c9ea42b9ed38d630850e3c06888cde7d"
+      },
+      {
+        "file": "renderer/ghost-v2.png",
+        "bytes": 715076,
+        "sha256": "3416c160be60ad2aaebe23855db0654a7a73ac54dad6fc6ccbb853e073ba754d"
+      },
+      {
+        "file": "renderer/flower-blossom-v1.png",
+        "bytes": 1974791,
+        "sha256": "a644defaa480c166064921a22af8383f3f5e9b47f6f5af42feaa176849deb5d8"
+      },
+      {
+        "file": "assets/icon.ico",
+        "bytes": 90882,
+        "sha256": "ebc7920f6f2f66e120091b3155de80a6a59ace972f3a153e8cf62ffb7a78c88d"
+      },
+      {
+        "file": "assets/icon.png",
+        "bytes": 52551,
+        "sha256": "416e36aeb88fffd164fc99afb95304bdaaeb4de2bf995de6ce4cb8586528874d"
+      },
+      {
+        "file": "assets/icon.icns",
+        "bytes": 844841,
+        "sha256": "182f854e1ba9203d10d574207eeed0a00932d9e0862c6a013a53865dfd99c1ee"
+      }
+    ],
+    "asarSha256": "bd92477e3d09adb40c8cdce78f236ae0d0d2379309dd5f959baac4d6b2b4934f",
+    "pdfjsVersion": "6.4.299"
+  },
+  "nativeStartup": {
+    "status": "PASS",
+    "platform": "win32",
+    "arch": "x64",
+    "packaged": true,
+    "visibleShell": true,
+    "firstPaint": true,
+    "embeddedViews": [
+      "left",
+      "right",
+      "boss"
+    ],
+    "sidebarToggleVerified": true,
+    "bossDrawerVerified": true,
+    "progressSectionVerified": true,
+    "didClose": true,
+    "embeddedViewsDisposed": true,
+    "closeCleanupCompleted": true,
+    "isolatedSession": true,
+    "providerScope": "Empty isolated session; no authentication, provider navigation or live model task",
+    "clipboardScope": "The Windows startup smoke does not access the clipboard",
+    "nonce": "33be410f-9c45-4417-a3fb-cd19bcbdcfb8",
+    "pid": 3208,
+    "version": "1.9.9",
+    "executable": "D:\\a\\_temp\\converge-installer-check-3a30b37f-7ece-415e-82dc-aa1d3c1801cf\\installed\\Converge.exe",
+    "portableExecutable": "",
+    "userData": "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\converge-native-smoke-3208-3aa70b66-1510-42a5-bf64-2d2fad148bf2",
+    "passed": true,
+    "checkedAt": "2026-10-07T09:44:05.076Z",
+    "launchPath": "D:\\a\\_temp\\converge-installer-check-3a30b37f-7ece-415e-82dc-aa1d3c1801cf\\installed\\Converge.exe",
+    "executableSha256": "9b70d9be65ea1550720c55e6bec0b995b4a502c3abd05f8907ba87799a158630",
+    "wrapperExit": {
+      "code": 0,
+      "signal": null
+    }
+  },
+  "uninstall": {
+    "passed": true,
+    "programFilesRemoved": true,
+    "remainingFiles": [],
+    "keepAppData": true,
+    "outsideOwnershipMarkerPreserved": true
+  },
+  "scope": "Official NSIS installer installed and uninstalled on a fresh GitHub Windows x64 runner. Installed ASAR source parity and actual installed application startup/first paint/native views/drawers/close cleanup were checked with isolated empty user data. No local user machine, existing account, live model conversation or installer UI interaction was tested."
+}

@@ -42,10 +42,10 @@ function inspectInstalledSource(installDirectory, sourceRoot, metadata, extractF
     assert.deepEqual(installed, source, `Installed source differs: ${filename}`);
     return { file: filename, bytes: installed.length, sha256: sha256(installed) };
   });
-  const parser = JSON.parse(extractFile(archive, 'node_modules/pdfjs-dist/package.json').toString('utf8'));
+  const parser = JSON.parse(extractFile(archive, path.normalize('node_modules/pdfjs-dist/package.json')).toString('utf8'));
   assert.equal(parser.version, metadata.dependencies['pdfjs-dist'], 'The installed production PDF parser version differs.');
   for (const filename of ['node_modules/pdfjs-dist/legacy/build/pdf.mjs', 'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs']) {
-    assert.ok(extractFile(archive, filename).length > 0, `Installed PDF runtime is missing ${filename}.`);
+    assert.ok(extractFile(archive, path.normalize(filename)).length > 0, `Installed PDF runtime is missing ${filename}.`);
   }
   return { parity, pdfjsVersion: parser.version };
 }

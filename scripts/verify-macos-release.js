@@ -8,6 +8,7 @@ const crypto = require('node:crypto');
 const zlib = require('node:zlib');
 const { spawnSync } = require('node:child_process');
 const { readMachO, isMachO, validateZipEntry, validateSymlinkTarget, readIcns, validateRuntimeCoverage } = require('./macos-package-lib');
+const { validateMachORuntime } = require('./macos-macho-runtime');
 
 const root = path.join(__dirname, '..');
 const metadata = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
@@ -79,13 +80,12 @@ function inspectBundle(application, label) {
       try { fs.readSync(descriptor, header, 0, 4, 0); } finally { fs.closeSync(descriptor); }
       if (!isMachO(header)) continue;
       const info = readMachO(fs.readFileSync(filename));
-      assert.deepEqual(info.architectures, ['arm64'], `${label}: non-ARM64 binary ${relative}`);
-      assert.ok((stat.mode & 0o111) !== 0, `${label}: executable permissions missing ${relative}`);
+      const runtime = validateMachORuntime(info, stat.mode, { label, file: relative,
+        requiresExecutable: /(?:^|\/)Contents\/MacOS\//.test(relative) });
       for (const slice of info.slices) {
-        assert.ok(slice.codeSignaturePresent, `${label}: embedded ARM64 signature is absent ${relative}`);
         for (const loadPath of slice.rpaths.concat(slice.dylibs)) assert.ok(!/^(?:[A-Za-z]:|\/Users\/|\/home\/|\/tmp\/|\/private\/var\/)/.test(loadPath), `${label}: build-machine path in ${relative}`);
       }
-      binaries.push({ file: relative, mode: (stat.mode & 0o777).toString(8), ...info });
+      binaries.push({ file: relative, mode: (stat.mode & 0o777).toString(8), ...info, runtime });
     }
   }
   assert.ok(binaries.some(item => item.file === `Contents/MacOS/${productName}`), `${label}: main executable was not inspected.`);

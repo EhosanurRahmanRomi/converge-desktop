@@ -31,11 +31,11 @@ if (!process.versions.electron) {
     window.convergeBrowser={bootstrap:async()=>({hasSession:true,version:'theme fixture',state:themeFixture.state}),setBounds:async()=>({ok:true}),onState:fn=>{themeFixture.listener=fn},onPage:()=>{},setEffectsPaused:async()=>({ok:true}),start:async()=>{themeFixture.starts++;return{ok:true}},stop:async()=>({ok:true})};`;
   const html = fs.readFileSync(path.join(root, 'renderer/browser.html'), 'utf8')
     .replace('<script defer src="browser-app.js"></script>', '<script src="theme-fixture.js"></script><script defer src="browser-app.js"></script>');
-  const assets = Object.fromEntries(['browser-app.js', 'browser.css', 'galaxy-scene.js', 'galaxy-scene.css', 'star-ribbons.js', 'ghost-v2.png', 'flower-blossom-v1.png'].map(name => [name, fs.readFileSync(path.join(root, 'renderer', name))]));
+  const assets = Object.fromEntries(['browser-app.js', 'browser.css', 'galaxy-scene.js', 'galaxy-scene.css', 'star-ribbons.js', 'ghost-v2.png', 'flower-blossom-v1.png', 'studio-ui.js', 'studio-ui.css', 'assets/fonts/Manrope-Variable.ttf'].map(name => [name, fs.readFileSync(path.join(root, 'renderer', name))]));
   const server = http.createServer((request, response) => {
     const name = request.url.slice(1);
     if (name === 'theme-fixture.js') { response.setHeader('Content-Type', 'text/javascript'); response.end(fixtureJs); }
-    else if (Object.hasOwn(assets, name)) { response.setHeader('Content-Type', name.endsWith('.png') ? 'image/png' : name.endsWith('.css') ? 'text/css' : 'text/javascript'); response.end(assets[name]); }
+    else if (Object.hasOwn(assets, name)) { response.setHeader('Content-Type', name.endsWith('.png') ? 'image/png' : name.endsWith('.css') ? 'text/css' : name.endsWith('.ttf') ? 'font/ttf' : 'text/javascript'); response.end(assets[name]); }
     else { response.setHeader('Content-Type', 'text/html'); response.end(html); }
   });
   async function run() {
@@ -57,7 +57,7 @@ if (!process.versions.electron) {
       assert.equal(await evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches"), false);
       assert.deepEqual(await evaluate("[...document.getElementById('animationTheme').options].map(option=>option.value)"), ['stars', 'ghost', 'flowers']);
       assert.ok(await evaluate("[...document.querySelectorAll('.reviewer-copy')].every(copy=>getComputedStyle(copy,'::before').content==='none'&&getComputedStyle(copy).backgroundColor==='rgba(0, 0, 0, 0)')"), 'Reviewer labels must have no black plates');
-      assert.ok(await evaluate("[...document.querySelectorAll('.reviewer h2,.reviewer p')].every(copy=>getComputedStyle(copy).textShadow!=='none')"), 'Reviewer text must retain its glow');
+      assert.ok(await evaluate("[...document.querySelectorAll('.reviewer-copy h2,.reviewer-copy p')].every(copy=>getComputedStyle(copy).textShadow==='none'&&parseFloat(getComputedStyle(copy).fontSize)>=11)"), 'Reviewer labels must use clear professional type at a readable size');
       assert.ok(await evaluate("[...document.querySelectorAll('.bot-mood-bubble')].every(bubble=>{const bounds=bubble.getBoundingClientRect();const stage=document.getElementById('reviewDeck').getBoundingClientRect();return bounds.width>=28&&bounds.width<=32&&bounds.top>=stage.top&&bounds.bottom<=stage.bottom})"), 'Larger desktop emoji must stay inside the animation stage');
       const originalTask = await task();
       for (const theme of ['stars', 'ghost', 'flowers']) {

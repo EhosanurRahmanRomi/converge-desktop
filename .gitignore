@@ -6,6 +6,7 @@ dist/
 .live-test/
 .design/
 .packaging/
+tmp/
 .video-review/
 .publish/
 .publish-content/

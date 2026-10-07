@@ -36,21 +36,26 @@
   ].join(',');
   const MAX_PROMPT_CHARS = 200000;
   const MAX_REPLY_CHARS = 300000;
-  const MAX_FILE_BYTES = 12 * 1024 * 1024;
-  const MAX_TOTAL_BYTES = 24 * 1024 * 1024;
+  const MAX_FILE_BYTES = 512 * 1024 * 1024;
+  const MAX_TOTAL_BYTES = 1024 * 1024 * 1024;
+  const MAX_INLINE_BYTES = 128 * 1024 * 1024;
+  // Keep the history cache small even though an individual transfer can be
+  // larger. Large files remain available in the coordinator's current result.
+  const MAX_SNAPSHOT_BYTES = 24 * 1024 * 1024;
   // Each native upload is limited to five files. A boss prompt may inspect
   // five original sources and both workers' five-file result bundles after
-  // those uploads have each been confirmed separately.
-  const MAX_ATTACHED_SOURCE_NAMES = 15;
+  // those uploads have each been confirmed separately, plus at most three
+  // host-created complete text replies when the inline context is too long.
+  const MAX_ATTACHED_SOURCE_NAMES = 18;
   const MIME_BY_EXTENSION = {
     png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif',
-    pdf: 'application/pdf', zip: 'application/zip', txt: 'text/plain', md: 'text/markdown', csv: 'text/csv', json: 'application/json',
+    pdf: 'application/pdf', zip: 'application/zip', txt: 'text/plain', md: 'text/markdown', csv: 'text/csv', tsv: 'text/tab-separated-values', json: 'application/json',
     mq5: 'text/plain', mqh: 'text/plain', mq4: 'text/plain', py: 'text/plain', js: 'text/plain', mjs: 'text/plain', cjs: 'text/plain', ts: 'text/plain',
     jsx: 'text/plain', tsx: 'text/plain', c: 'text/plain', cc: 'text/plain', cpp: 'text/plain',
     h: 'text/plain', hpp: 'text/plain', cs: 'text/plain', java: 'text/plain', rs: 'text/plain',
     go: 'text/plain', rb: 'text/plain', php: 'text/plain', sql: 'text/plain', html: 'text/plain', css: 'text/plain', xml: 'text/plain',
     yaml: 'text/plain', yml: 'text/plain', toml: 'text/plain', sh: 'text/plain', ps1: 'text/plain', r: 'text/plain',
-    swift: 'text/plain', kt: 'text/plain', kts: 'text/plain', ini: 'text/plain', cfg: 'text/plain', log: 'text/plain', set: 'text/plain',
+    swift: 'text/plain', kt: 'text/plain', kts: 'text/plain', ini: 'text/plain', cfg: 'text/plain', log: 'text/plain', set: 'text/plain', tex: 'text/plain',
     docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
@@ -58,7 +63,7 @@
   const ALLOWED_MIME = new Set([
     'image/png', 'image/jpeg', 'image/webp', 'image/gif',
     'application/pdf', 'application/zip', 'text/plain', 'text/markdown',
-    'text/csv', 'application/json',
+    'text/csv', 'text/tab-separated-values', 'application/json',
     MIME_BY_EXTENSION.docx, MIME_BY_EXTENSION.xlsx, MIME_BY_EXTENSION.pptx
   ]);
 
@@ -69,7 +74,7 @@
     const options = env.options || {};
     const settleMs = options.settleMs || 3000;
     const tickMs = options.tickMs || 400;
-    const replyTimeoutMs = options.replyTimeoutMs || 20 * 60 * 1000;
+    const replyTimeoutMs = options.replyTimeoutMs || 2 * 60 * 60 * 1000;
     const setupTimeoutMs = options.setupTimeoutMs || 6000;
     const sendSettleMs = options.sendSettleMs || 250;
     const now = options.now || (() => Date.now());
@@ -179,6 +184,90 @@
     }
 
     const uploadedFiles = new Map();
+    const uploadAttempts = new Map();
+    const interruptedTasks = new Map();
+    let stagedUpload = null;
+
+    function clearStagedUpload() {
+      if (stagedUpload) clearTimeout(stagedUpload.timer);
+      stagedUpload = null;
+    }
+    function renewStagedUpload() {
+      clearTimeout(stagedUpload.timer);
+      stagedUpload.timer = setTimeout(clearStagedUpload, 15 * 60 * 1000);
+    }
+    function stageFile(message) {
+      if (message.type === 'FILE_STAGE_BEGIN') {
+        if (stagedUpload || active || activeAttachment || generationBusy()) return { ok: false, error: 'A file transfer or response is already in progress.' };
+        if (typeof message.transferId !== 'string' || message.transferId.length > 200 || !message.transferId ||
+            !Array.isArray(message.files) || !message.files.length || message.files.length > 5 ||
+            message.runId && cancelledRuns.has(message.runId)) return { ok: false, error: 'Invalid staged file transfer.' };
+        let total = 0;
+        const names = new Set();
+        for (const file of message.files) {
+          if (!file || typeof file.name !== 'string' || !/^[^\\/\x00-\x1f]{1,180}$/.test(file.name) || names.has(file.name) ||
+              !ALLOWED_MIME.has(file.mimeType) || !Number.isSafeInteger(file.base64Length) || file.base64Length < 4 ||
+              file.base64Length % 4 || file.base64Length > Math.ceil(MAX_FILE_BYTES / 3) * 4) return { ok: false, error: 'Invalid staged file metadata.' };
+          if (file.byteLength !== undefined && (!Number.isSafeInteger(file.byteLength) || file.byteLength < 1 || file.byteLength > MAX_FILE_BYTES ||
+              Math.ceil(file.byteLength / 3) * 4 !== file.base64Length) ||
+              file.contentSha256 !== undefined && !/^[a-f0-9]{64}$/.test(file.contentSha256)) return { ok: false, error: 'Invalid staged file identity.' };
+          if (filenameMime(file.name) !== file.mimeType) return { ok: false, error: 'The attachment file type does not match its filename.' };
+          names.add(file.name); total += file.byteLength || file.base64Length / 4 * 3;
+        }
+        if (total > MAX_TOTAL_BYTES + 10) return { ok: false, error: 'File limit is 512 MB each and 1 GB total.' };
+        stagedUpload = { transferId: message.transferId, runId: message.runId || null,
+          files: message.files.map(file => ({ ...file, received: 0, receivedBytes: 0, parts: [], decoder: null })), timer: null };
+        renewStagedUpload();
+        return { ok: true };
+      }
+      const transfer = stagedUpload;
+      if (!transfer || transfer.transferId !== message.transferId) return { ok: false, error: 'The staged file transfer is no longer available.' };
+      if (message.type === 'FILE_STAGE_ABORT') { clearStagedUpload(); return { ok: true }; }
+      if (transfer.runId && cancelledRuns.has(transfer.runId)) { clearStagedUpload(); return { ok: false, error: 'This file transfer was canceled.' }; }
+      if (message.type === 'FILE_STAGE_CHUNK') {
+        const file = transfer.files[message.fileIndex];
+        if (!file || !Number.isInteger(message.fileIndex) || message.offset !== file.received ||
+            typeof message.data !== 'string' || !message.data.length || message.data.length > 1024 * 1024 ||
+            file.received + message.data.length > file.base64Length) { clearStagedUpload(); return { ok: false, error: 'The file chunk is missing, out of order or oversized.' }; }
+        try {
+          if (message.data.length % 4 || !/^[A-Za-z0-9+/]+={0,2}$/.test(message.data) ||
+              message.data.includes('=') && file.received + message.data.length !== file.base64Length) throw new Error('Invalid file chunk encoding.');
+          const bytes = decodeBase64(message.data);
+          if (encodeBase64(bytes) !== message.data) throw new Error('Invalid noncanonical file chunk.');
+          if (file.mimeType === 'text/plain' || file.mimeType === MIME_BY_EXTENSION.tsv) {
+            if (!file.decoder) {
+              const encoding = bytes[0] === 0xff && bytes[1] === 0xfe ? 'utf-16le' : bytes[0] === 0xfe && bytes[1] === 0xff ? 'utf-16be' : 'utf-8';
+              const Decoder = win.TextDecoder || globalThis.TextDecoder;
+              file.decoder = new Decoder(encoding, { fatal: true });
+            }
+            if (/[\x00-\x08\x0b\x0e-\x1f\x7f]/.test(file.decoder.decode(bytes, { stream: true }))) throw new Error('The source file contains binary data instead of readable text.');
+          }
+          // Blob parts move decoded bytes out of retained JavaScript strings.
+          // Never reconstruct one whole base64/binary string on commit.
+          file.parts.push(new win.Blob([bytes])); file.received += message.data.length; file.receivedBytes += bytes.length;
+          if (file.receivedBytes > MAX_FILE_BYTES || file.byteLength && file.receivedBytes > file.byteLength) throw new Error('The file chunk exceeds its declared size.');
+          renewStagedUpload();
+        } catch (error) { clearStagedUpload(); return { ok: false, error: error.message || 'Invalid file chunk.' }; }
+        return { ok: true };
+      }
+      if (message.type === 'FILE_STAGE_COMMIT') {
+        if (transfer.files.some(file => file.received !== file.base64Length || file.byteLength && file.receivedBytes !== file.byteLength) ||
+            transfer.files.reduce((total, file) => total + file.receivedBytes, 0) > MAX_TOTAL_BYTES) { clearStagedUpload(); return { ok: false, error: 'The complete file bytes have not arrived.' }; }
+        return (async () => {
+          try {
+            const prepared = transfer.files.map(file => {
+              if (file.decoder && /[\x00-\x08\x0b\x0e-\x1f\x7f]/.test(file.decoder.decode())) throw new Error('The source file contains binary data instead of readable text.');
+              return new win.File(file.parts, file.name, { type: file.mimeType });
+            });
+            for (const file of prepared) if (file.type === 'application/zip') await validateStagedZip(file, () => stagedUpload === transfer && (!transfer.runId || !cancelledRuns.has(transfer.runId)));
+            if (stagedUpload !== transfer) throw new Error('This file transfer was canceled.');
+            clearStagedUpload();
+            return uploadFiles({ ...message, type: 'UPLOAD_FILES', runId: transfer.runId, files: transfer.files.map(file => ({ name: file.name, mimeType: file.mimeType })) }, null, prepared);
+          } catch (error) { if (stagedUpload === transfer) clearStagedUpload(); return { ok: false, error: error.message || 'Invalid staged file.' }; }
+        })();
+      }
+      return { ok: false, error: 'Unknown staged transfer operation.' };
+    }
 
     function attachmentImageIdentity(element) {
       return String(element.currentSrc || element.src || element.getAttribute?.('src') || element.getAttribute?.('aria-label') || '');
@@ -362,13 +451,25 @@
       const composer = findComposer();
       const attachmentScope = currentAttachmentScope(composer);
       const attachmentError = attachmentFailure(attachmentScope);
-      const attachmentProcessing = attachmentsProcessing(attachmentScope);
+      const attachmentProcessing = Boolean(stagedUpload) || attachmentsProcessing(attachmentScope);
       const login = allVisible('button, a').some((element) => /^(log in|sign in)$/i.test(label(element)));
       const authenticated = login ? false : composer ? true : null;
       const privacy = privacyState();
       const work = workState();
       const workRestriction = chatMode === 'work' ? workAccessReason() : '';
-      const busy = Boolean(active || generationBusy() || composerText(composer).trim() || attachmentProcessing);
+      const generating = generationBusy();
+      const newestUser = active || interruptedTasks.size ? getTurns(USER_SELECTOR).at(-1) : null;
+      const currentTask = active || [...interruptedTasks.values()].reverse().find(task =>
+        newestUser && userMessageMatches(newestUser, task.text, task.requestId) && navigationValid(task));
+      // Inspection must be read-only: sameUserText can expand a bubble. During
+      // submission that could alter historical controls and invalidate the
+      // baseline before the new user turn exists. The observer owns expansion.
+      const requestOwned = Boolean(currentTask && !currentTask.confirmingIdentity && newestUser && userMessageMatches(newestUser, currentTask.text, currentTask.requestId) && navigationValid(currentTask));
+      const providerFailure = requestOwned && ownedProviderFailure(newestUser, currentTask);
+      const interrupted = requestOwned && ownedResponseInterrupted(newestUser, currentTask, providerFailure);
+      const connectionWarning = requestOwned && !providerFailure && !interrupted && ownedConnectionWarning(newestUser, currentTask);
+      const reconnecting = Boolean(connectionWarning);
+      const busy = Boolean(active || generating || composerText(composer).trim() || attachmentProcessing);
       // On a new ChatGPT page the Send control can be replaced by Voice until
       // text is entered. Check it after filling, not while the box is empty.
       const modeReady = chatMode === 'normal' ? work !== true : (chatMode === 'work' ? work === true && !workRestriction :
@@ -379,6 +480,8 @@
       else if (login) reason = 'Sign in to ChatGPT in this Chrome profile.';
       else if (attachmentError) reason = `An attachment failed to upload: ${attachmentError}. Remove the failed attachment and attach it again before starting.`;
       else if (attachmentProcessing) reason = 'This chat is uploading an attachment. Wait until its preview is ready.';
+      else if (interrupted) reason = `${providerFailure?.reason || 'The provider stopped this response before delivering a completed result.'}${generating ? ' Waiting for the provider to clear its active response control before recovery.' : ''}`;
+      else if (reconnecting) reason = `${connectionWarning} The current request is retained while ChatGPT reconnects; its partial answer is not a completed result.`;
       else if (busy) reason = 'This chat is generating a response or has an unsent draft.';
       else if (workRestriction) reason = workRestriction;
       else if (chatMode === 'work' && work !== true) reason = 'Work mode is not verified. Select Work in this page, then check the pages again.';
@@ -388,7 +491,11 @@
       else if (chatMode === 'temporary' && (privacy.temporary !== true || (requireUnpersonalized && privacy.unpersonalized !== true))) {
         reason = `The page does not expose enough state to verify Temporary${requireUnpersonalized ? ' and Unpersonalized' : ''}. Check the selected mode in ChatGPT before starting.`;
       }
-      return { ok: true, ready, authenticated, ...privacy, work, chatMode, busy, reason };
+      return { ok: true, ready, authenticated, ...privacy, work, chatMode, busy, reason, generating,
+        reconnecting,
+        interrupted, interruptionKind: interrupted ? (providerFailure?.kind || 'stopped-thinking') : '',
+        awaitingProviderIdle: Boolean(interrupted && generating),
+        requestOwned, activeRequestId: currentTask?.requestId || null };
     }
 
     function diagnostics() {
@@ -476,6 +583,45 @@
         copy.querySelectorAll?.('br').forEach((node) => node.replaceWith(doc.createTextNode('\n')));
         return String(copy.textContent || '');
       }).join('\n').replace(/\r\n/g, '\n').trim();
+    }
+
+    const NON_ANSWER_CONTENT = '[data-tool-result], [data-tool-call-id], [data-message-type="tool"], [data-testid*="tool-result"], [data-testid*="tool-response"], [data-testid*="thinking"], [data-testid*="reasoning"]';
+    function controlResponseText(element) {
+      // Control extraction is opt-in transport metadata, never inferred from
+      // prose or JSON-looking braces. A tool's structured output is not the
+      // model's final control answer, even inside the same assistant wrapper.
+      const explicitBodies = allVisible('[data-markdown-text-style="assistant-message"]', element)
+        .filter(body => !body.closest?.(NON_ANSWER_CONTENT));
+      const genericBodies = allVisible('.markdown, [data-testid="message-content"]', element)
+        .filter(body => !body.closest?.(NON_ANSWER_CONTENT));
+      const bodies = explicitBodies.length ? explicitBodies : genericBodies;
+      const outerBodies = bodies.filter(body => !bodies.some(other => other !== body && other.contains?.(body)));
+      const body = outerBodies.at(-1) || element;
+      const codes = allVisible('pre code, [data-markdown-copy="code-block"] code', body)
+        .filter(code => !code.closest?.(NON_ANSWER_CONTENT));
+      const jsonCodes = codes.filter(code => {
+        const containers = [...new Set([code.closest?.('[data-markdown-copy="code-block"]'), code.closest?.('pre')].filter(Boolean))];
+        if (!containers.length) return false;
+        const language = node => /^json$/i.test(String(node?.getAttribute?.('data-language') || node?.getAttribute?.('data-lang') || '').trim()) ||
+          /(?:^|\s)language-json(?:\s|$)/i.test(String(node?.getAttribute?.('class') || ''));
+        if (language(code) || containers.some(language)) return true;
+        // Current ChatGPT labels the fenced block in its excluded copy header
+        // rather than a language-json class. Only that header is a language
+        // affordance; a word "JSON" in answer prose is not one.
+        return containers.some(container => allVisible('[data-markdown-copy="exclude"]', container).some(header =>
+          /^json$/i.test(String(header.innerText ?? header.textContent ?? '').trim()) ||
+          allVisible('span', header).some(label => /^json$/i.test(String(label.innerText ?? label.textContent ?? '').trim()))));
+      });
+      if (jsonCodes.length === 1) return String(jsonCodes[0].textContent || '').replace(/\r\n/g, '\n').trim();
+      if (jsonCodes.length > 1) {
+        // Retain every explicit fence boundary. Flattening them into prose
+        // would let a downstream fallback accidentally pick one object.
+        return jsonCodes.map(code => `\`\`\`json\n${String(code.textContent || '')}\n\`\`\``).join('\n\n');
+      }
+      // Without an explicit JSON fence, preserve the
+      // complete final body for the strict control parser to reject or handle;
+      // do not repair escapes, scan for arbitrary objects, or pick a valid one.
+      return assistantText(body);
     }
 
     function normalizePageText(value) {
@@ -642,9 +788,49 @@
       if (bytes !== undefined) validateReadableSource(name, mimeType, bytes);
     }
 
+    async function validateStagedZip(file, current) {
+      // Validate the same inert container envelope as the inline path, using
+      // bounded Blob slices rather than loading the complete archive.
+      const invalid = () => { throw new Error('The ZIP file is malformed, incomplete, or uses unsupported multipart/ZIP64 structures.'); };
+      const read = async (offset, length) => {
+        if (!current()) throw new Error('This file transfer was canceled.');
+        if (offset < 0 || offset + length > file.size) invalid();
+        const data = new Uint8Array(await file.slice(offset, offset + length).arrayBuffer());
+        if (!current()) throw new Error('This file transfer was canceled.');
+        return new DataView(data.buffer, data.byteOffset, data.byteLength);
+      };
+      if (file.size < 22) invalid();
+      const first = await read(0, 4);
+      if (![0x04034b50, 0x06054b50, 0x08074b50].includes(first.getUint32(0, true))) invalid();
+      const tailStart = Math.max(0, file.size - 65_557), tail = await read(tailStart, file.size - tailStart);
+      let end = -1;
+      for (let offset = tail.byteLength - 22; offset >= 0; offset -= 1) {
+        if (tail.getUint32(offset, true) === 0x06054b50 && offset + 22 + tail.getUint16(offset + 20, true) === tail.byteLength) { end = offset; break; }
+      }
+      if (end < 0 || tail.getUint16(end + 4, true) || tail.getUint16(end + 6, true) || tail.getUint16(end + 8, true) !== tail.getUint16(end + 10, true)) invalid();
+      const entries = tail.getUint16(end + 10, true), size = tail.getUint32(end + 12, true), start = tail.getUint32(end + 16, true);
+      if (entries === 0xffff || size === 0xffffffff || start === 0xffffffff || start + size > tailStart + end) invalid();
+      if (!entries) { if (size) invalid(); return; }
+      let cursor = start;
+      for (let index = 0; index < entries; index += 1) {
+        if (cursor + 46 > start + size) invalid();
+        const header = await read(cursor, 46);
+        if (header.getUint32(0, true) !== 0x02014b50 || header.getUint16(34, true)) invalid();
+        const local = header.getUint32(42, true);
+        if (header.getUint32(20, true) === 0xffffffff || header.getUint32(24, true) === 0xffffffff || local === 0xffffffff || local + 30 > start) invalid();
+        if ((await read(local, 4)).getUint32(0, true) !== 0x04034b50) invalid();
+        cursor += 46 + header.getUint16(28, true) + header.getUint16(30, true) + header.getUint16(32, true);
+        if (cursor > start + size) invalid();
+      }
+      if (cursor !== start + size) invalid();
+    }
+
     function validateReadableSource(name, mimeType, bytes) {
-      if (mimeType !== 'text/plain') return;
-      if (filenameMime(name) !== 'text/plain') throw new Error('The text source file has an unsupported extension.');
+      if ((/\.tsv$/i.test(String(name || '')) || mimeType === MIME_BY_EXTENSION.tsv) && filenameMime(name) !== mimeType) {
+        throw new Error('The TSV file type does not match its filename.');
+      }
+      if (mimeType !== 'text/plain' && mimeType !== MIME_BY_EXTENSION.tsv) return;
+      if (filenameMime(name) !== mimeType) throw new Error('The text source file has an unsupported extension.');
       // MQL editors can save BOM-marked UTF-16. Decode solely to validate
       // readability; export and hash the untouched bytes in either encoding.
       const encoding = bytes[0] === 0xff && bytes[1] === 0xfe ? 'utf-16le'
@@ -868,6 +1054,20 @@
       return entries.map(({ id, name, mimeType, fingerprint }) => ({ id, name, mimeType, fingerprint }));
     }
 
+    function collectResponseMedia(nodes) {
+      const entries = [], fingerprints = new Set();
+      for (const responseNode of nodes) {
+        for (const entry of collectMedia(responseNode)) {
+          if (fingerprints.has(entry.fingerprint)) continue;
+          fingerprints.add(entry.fingerprint);
+          entries.push({ ...entry, responseNode, id: `media-${entries.length + 1}`,
+            ...(entry.kind === 'image' ? { name: `generated-image-${entries.length + 1}.png` } : {}) });
+          if (entries.length === 6) return entries;
+        }
+      }
+      return entries;
+    }
+
     function mediaSnapshotKey(message, entry) {
       return JSON.stringify([message.runId, message.requestId, entry.id, entry.name, entry.mimeType, entry.fingerprint]);
     }
@@ -875,7 +1075,7 @@
     function removeMediaSnapshot(key) {
       const snapshot = mediaSnapshots.get(key);
       if (!snapshot) return;
-      mediaSnapshotBytes -= snapshot.byteLength;
+      mediaSnapshotBytes -= snapshot.blobId ? 0 : snapshot.byteLength;
       mediaSnapshots.delete(key);
     }
 
@@ -890,22 +1090,25 @@
         // The cap counts verified decoded bytes, matching the export limit.
         // Evict by first capture order; a repeated review does not extend it.
         removeMediaSnapshot(snapshot.key);
-        while (mediaSnapshotBytes + snapshot.byteLength > MAX_TOTAL_BYTES && mediaSnapshots.size) {
+        if (!snapshot.blobId && snapshot.byteLength > MAX_SNAPSHOT_BYTES) continue;
+        const weight = snapshot.blobId ? 0 : snapshot.byteLength;
+        while ((mediaSnapshotBytes + weight > MAX_SNAPSHOT_BYTES || mediaSnapshots.size >= 200) && mediaSnapshots.size) {
           removeMediaSnapshot(mediaSnapshots.keys().next().value);
         }
         mediaSnapshots.set(snapshot.key, Object.freeze(snapshot));
-        mediaSnapshotBytes += snapshot.byteLength;
+        mediaSnapshotBytes += weight;
       }
     }
 
     function snapshotFile(snapshot) {
       // Never expose the cached descriptor object to a response recipient.
       return { id: snapshot.id, name: snapshot.name, mimeType: snapshot.mimeType,
-        fingerprint: snapshot.fingerprint, base64: snapshot.base64,
+        fingerprint: snapshot.fingerprint, ...(snapshot.blobId ? { blobId: snapshot.blobId } : { base64: snapshot.base64 }),
         contentSha256: snapshot.contentHash, byteLength: snapshot.byteLength };
     }
 
     function encodeBase64(bytes) {
+      if (typeof bytes.toBase64 === 'function') return bytes.toBase64();
       let binary = '';
       for (let offset = 0; offset < bytes.length; offset += 32768) {
         binary += String.fromCharCode(...bytes.subarray(offset, offset + 32768));
@@ -931,17 +1134,18 @@
       // will-download. Give each of the (at most five) sequential files its
       // broker deadline plus IPC/hash overhead; an earlier page abort would
       // release the broker and leave a late artifact at the default Save dialog.
-      const timeout = setTimeout(() => controller.abort('Media export timed out.'), Math.max(30_000, entries.length * 50_000));
+      const timeout = setTimeout(() => controller.abort('Media export timed out.'), entries.length * 35 * 60_000);
       const files = [];
       const verifiedSnapshots = [];
       let total = 0;
       const sameDownload = (entry) => {
+        const responseNode = entry.responseNode || record.node;
         if (entry.kind === 'native-button') {
-          const current = downloadableNamedButton(entry.element, record.node);
+          const current = downloadableNamedButton(entry.element, responseNode);
           return current && current.href === entry.source && current.name === entry.name && current.mimeType === entry.mimeType;
         }
         if (entry.kind === 'native-card') {
-          const current = downloadableCard(entry.element, record.node);
+          const current = downloadableCard(entry.element, responseNode);
           return current && current.card === entry.card && current.titleElement === entry.titleElement &&
             current.previewElement === entry.previewElement && current.href === entry.source &&
             current.name === entry.name && current.mimeType === entry.mimeType;
@@ -957,13 +1161,15 @@
           const snapshot = mediaSnapshots.get(snapshotKey);
           if (snapshot) {
             total += snapshot.byteLength;
-            if (total > MAX_TOTAL_BYTES) throw new Error('File limit is 12 MB each and 24 MB total; empty files cannot be relayed.');
+            if (total > MAX_TOTAL_BYTES) throw new Error('File limit is 512 MB each and 1 GB total; empty files cannot be relayed.');
             files.push(snapshotFile(snapshot));
             continue;
           }
-          if (!visible(record.node)) throw new Error('The completed media response is no longer available on this page.');
-          if (!visible(entry.element) || !record.node.contains?.(entry.element)) throw new Error('A media element is no longer in the completed response.');
+          const responseNode = entry.responseNode || record.node;
+          if (!visible(responseNode)) throw new Error('The completed media response is no longer available on this page.');
+          if (!visible(entry.element) || !responseNode.contains?.(entry.element)) throw new Error('A media element is no longer in the completed response.');
           let bytes;
+          let storedDownload = null;
           let nativeSourceCapturedAtClick = false;
           if (entry.kind === 'image') {
             if (!largeImage(entry.element) || imageSource(entry.element) !== entry.source) throw new Error('The rendered image changed before export.');
@@ -999,17 +1205,24 @@
                 downloaded = await Promise.race([env.downloadVisible({ element: entry.element, runId: message.runId, requestId: message.requestId,
                   id: entry.id, name: entry.name, mimeType: entry.mimeType, signal: controller.signal,
                   isCurrent: () => {
-                    sourceCheckedBeforeNativeClick = !controller.signal.aborted && !runCancelled() && visible(record.node) &&
-                      visible(entry.element) && record.node.contains?.(entry.element) && !entry.element.disabled &&
+                    sourceCheckedBeforeNativeClick = !controller.signal.aborted && !runCancelled() && visible(responseNode) &&
+                      visible(entry.element) && responseNode.contains?.(entry.element) && !entry.element.disabled &&
                       entry.element.getAttribute?.('aria-disabled') !== 'true' && !!sameDownload(entry);
                     return sourceCheckedBeforeNativeClick;
                   } }), aborted]);
               } finally { controller.signal.removeEventListener('abort', abortNative); }
               if (!downloaded?.ok) throw new Error(downloaded?.error || 'The visible file download did not complete.');
+              if (downloaded.blobId !== undefined) {
+                if (downloaded.mimeType !== entry.mimeType || typeof downloaded.blobId !== 'string' || !downloaded.blobId || downloaded.blobId.length > 200 ||
+                    !Number.isSafeInteger(downloaded.byteLength) || downloaded.byteLength < 1 || downloaded.byteLength > MAX_FILE_BYTES ||
+                    !/^[a-f0-9]{64}$/.test(downloaded.contentSha256)) throw new Error('The native download returned an invalid stored file identity.');
+                storedDownload = { blobId: downloaded.blobId, byteLength: downloaded.byteLength, contentSha256: downloaded.contentSha256 };
+              } else {
               if (downloaded.mimeType !== entry.mimeType || typeof downloaded.base64 !== 'string' ||
                   downloaded.base64.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(downloaded.base64) ||
-                  downloaded.base64.length > Math.ceil(MAX_FILE_BYTES / 3) * 4) throw new Error('The native download returned invalid or oversized file contents.');
+                  downloaded.base64.length > Math.ceil(MAX_INLINE_BYTES / 3) * 4) throw new Error('The native download returned invalid or oversized file contents.');
               bytes = decodeBase64(downloaded.base64);
+              }
               // The isolated preload acknowledges only its one click after
               // revalidating this exact captured source. The native broker
               // then binds filename/type/bytes to that action. React may
@@ -1022,7 +1235,7 @@
                 // card and controls; do not substitute a different card.
                 const settleDeadline = now() + 2000;
                 while (!sameDownload(entry) && now() < settleDeadline &&
-                    visible(record.node) && record.node.contains?.(entry.element) &&
+                    visible(responseNode) && responseNode.contains?.(entry.element) &&
                     !controller.signal.aborted && !runCancelled()) {
                   await new Promise((resolve) => setTimeout(resolve, 50));
                 }
@@ -1032,12 +1245,13 @@
             const response = await win.fetch(entry.source, { credentials: 'same-origin', signal: controller.signal, redirect: 'error' });
             if (!response.ok || response.type === 'opaque') throw new Error('The visible download link was unavailable or blocked by the browser.');
             const contentLength = Number(response.headers?.get?.('content-length'));
-            if (contentLength > MAX_FILE_BYTES) throw new Error('The download exceeds the 12 MB file limit.');
+            if (contentLength > MAX_INLINE_BYTES) throw new Error('Browser-only downloads have a 128 MB inline limit. Use the native desktop download for larger files.');
             const contentType = String(response.headers?.get?.('content-type') || '').split(';')[0].trim().toLowerCase();
             if (contentType && contentType !== entry.mimeType &&
                 !(entry.mimeType === 'application/zip' && contentType === 'application/x-zip-compressed') &&
                 !(contentType === 'application/zip' && entry.mimeType.includes('openxmlformats')) &&
                 !(contentType === 'text/x-python' && entry.mimeType === 'text/plain' && /\.py$/i.test(entry.name)) &&
+                !(contentType === 'text/plain' && entry.mimeType === MIME_BY_EXTENSION.tsv && /\.tsv$/i.test(entry.name)) &&
                 !['application/octet-stream', 'binary/octet-stream'].includes(contentType)) {
               throw new Error('The visible download returned an unexpected file type.');
             }
@@ -1050,7 +1264,7 @@
               if (done) break;
               if (controller.signal.aborted || runCancelled()) { await reader.cancel(); throw new Error('Media export was cancelled or timed out.'); }
               size += value.byteLength;
-              if (size > MAX_FILE_BYTES || total + size > MAX_TOTAL_BYTES) { await reader.cancel(); throw new Error('File limit is 12 MB each and 24 MB total.'); }
+              if (size > MAX_INLINE_BYTES || total + size > MAX_TOTAL_BYTES) { await reader.cancel(); throw new Error('Browser-only downloads have a 128 MB inline limit.'); }
               chunks.push(value);
             }
             bytes = new Uint8Array(size);
@@ -1058,28 +1272,33 @@
             for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
             }
           }
-          total += bytes.byteLength;
-          if (!bytes.byteLength || bytes.byteLength > MAX_FILE_BYTES || total > MAX_TOTAL_BYTES) throw new Error('File limit is 12 MB each and 24 MB total; empty files cannot be relayed.');
-          validateZipArchive(entry.name, entry.mimeType, bytes);
-          validateSettingsFile(entry.name, entry.mimeType, bytes);
-          validateReadableSource(entry.name, entry.mimeType, bytes);
+          const byteLength = storedDownload ? storedDownload.byteLength : bytes.byteLength;
+          total += byteLength;
+          if (!storedDownload && byteLength > MAX_INLINE_BYTES) throw new Error('Browser-only artifacts have a 128 MB inline limit. Use the native desktop download for larger files.');
+          if (!byteLength || byteLength > MAX_FILE_BYTES || total > MAX_TOTAL_BYTES) throw new Error('File limit is 512 MB each and 1 GB total; empty files cannot be relayed.');
+          validateZipArchive(entry.name, entry.mimeType, storedDownload ? undefined : bytes);
+          validateSettingsFile(entry.name, entry.mimeType, storedDownload ? undefined : bytes);
+          if (!storedDownload) validateReadableSource(entry.name, entry.mimeType, bytes);
           if (runCancelled()) throw new Error('This run was cancelled.');
-          if (!nativeSourceCapturedAtClick && (!visible(record.node) || !visible(entry.element) || !record.node.contains?.(entry.element) ||
+          if (!nativeSourceCapturedAtClick && (!visible(responseNode) || !visible(entry.element) || !responseNode.contains?.(entry.element) ||
               (entry.kind === 'image' ? imageSource(entry.element) !== entry.source : !sameDownload(entry)))) {
-            throw new Error(`The source media changed while exporting (response visible: ${visible(record.node)}, control visible: ${visible(entry.element)}, control in response: ${!!record.node.contains?.(entry.element)}, same output: ${entry.kind === 'image' ? imageSource(entry.element) === entry.source : !!sameDownload(entry)}).`);
+            throw new Error(`The source media changed while exporting (response visible: ${visible(responseNode)}, control visible: ${visible(entry.element)}, control in response: ${!!responseNode.contains?.(entry.element)}, same output: ${entry.kind === 'image' ? imageSource(entry.element) === entry.source : !!sameDownload(entry)}).`);
           }
-          const subtle = win.crypto?.subtle || globalThis.crypto?.subtle;
-          if (!subtle) throw new Error('This browser cannot verify generated file contents safely.');
-          const digest = new Uint8Array(await subtle.digest('SHA-256', bytes));
-          const contentHash = Array.from(digest, (byte) => byte.toString(16).padStart(2, '0')).join('');
+          let contentHash = storedDownload?.contentSha256;
+          if (!storedDownload) {
+            const subtle = win.crypto?.subtle || globalThis.crypto?.subtle;
+            if (!subtle) throw new Error('This browser cannot verify generated file contents safely.');
+            const digest = new Uint8Array(await subtle.digest('SHA-256', bytes));
+            contentHash = Array.from(digest, (byte) => byte.toString(16).padStart(2, '0')).join('');
+          }
           if (entry.contentHash && entry.contentHash !== contentHash) throw new Error('The generated file contents changed after their first export. Start a new run.');
           entry.contentHash = contentHash;
           if (controller.signal.aborted || runCancelled()) throw new Error('Media export was cancelled or timed out.');
-          const base64 = encodeBase64(bytes);
-          files.push({ id: entry.id, name: entry.name, mimeType: entry.mimeType, fingerprint: entry.fingerprint, base64,
-            contentSha256: contentHash, byteLength: bytes.byteLength });
+          const data = storedDownload ? { blobId: storedDownload.blobId } : { base64: encodeBase64(bytes) };
+          files.push({ id: entry.id, name: entry.name, mimeType: entry.mimeType, fingerprint: entry.fingerprint, ...data,
+            contentSha256: contentHash, byteLength });
           verifiedSnapshots.push({ key: snapshotKey, taskKey: taskKey(message), id: entry.id, name: entry.name,
-            mimeType: entry.mimeType, fingerprint: entry.fingerprint, base64, byteLength: bytes.byteLength, contentHash });
+            mimeType: entry.mimeType, fingerprint: entry.fingerprint, ...data, byteLength, contentHash });
         }
         if (controller.signal.aborted || runCancelled()) throw new Error('Media export was cancelled or timed out.');
         // Publish only a complete successful export. A canceled/partial export
@@ -1245,28 +1464,97 @@
       const text = String(value || '').replace(/\s+/g, ' ').trim();
       if (/^(?:the message you submitted was too long,?\s*please edit it and resubmit\.?|(?:your|the) message is too long\.?\s*(?:please (?:edit|shorten).{0,80})?)$/i.test(text)) return 'too-long';
       if (/^(?:there was an error generating (?:a|the) response\.?|an error occurred while generating (?:a|the) response\.?)(?:\s*(?:please )?try again\.?)?$/i.test(text)) return 'generation-error';
+      if (/^(?:resume stream (?:unavailable|is not available)|(?:the )?response stream (?:was |has been )?(?:interrupted|disconnected)|(?:the )?network connection (?:was |has been )?lost)(?:[.!])?(?:\s*(?:retry|try again)\.?)?$/i.test(text)) return 'stream-interrupted';
+      if (/^(?:(?:the |your )?request timed out|response timed out|request timeout|time ?out error|timed out)[.!]?(?:\s*(?:please )?(?:try again|retry)[.!]?)?$/i.test(text)) return 'timeout';
+      if (/^(?:(?:the )?message (?:delivery (?:failed|timed out)|failed to (?:send|deliver))|(?:failed|unable) to (?:send|deliver)(?: the| your)? message|message delivery error)[.!]?(?:\s*(?:please )?(?:try again|retry)[.!]?)?$/i.test(text)) return 'delivery-error';
+      if (/^(?:something went wrong|a server error occurred|internal server error)[.!]?(?:\s*(?:please )?(?:try again|retry)[.!]?)?$/i.test(text)) return 'server-error';
       return '';
     }
 
-    function ownedProviderRejection(lastUser, task) {
+    function connectionWaiting(value) {
+      return /^connection interrupted[.!]?\s*waiting for the complete answer(?:\u2026|\.{1,3})?$/i.test(String(value || '').replace(/\s+/g, ' ').trim());
+    }
+
+    function ownedConnectionWarning(lastUser, task) {
+      if (!lastUser || task.interruption) return '';
+      for (const element of allVisible(`${PROVIDER_REJECTION_SELECTOR}, [role="status"]`)) {
+        const raw = String(element.innerText ?? element.textContent ?? '');
+        if (raw.length > 300) continue;
+        const value = raw.replace(/\s+/g, ' ').trim();
+        if (!connectionWaiting(value) || task.baselineProviderRejections?.get(element) === value) continue;
+        if (element === lastUser || lastUser.contains?.(element) || element.contains?.(lastUser) ||
+            element.matches?.(ASSISTANT_SELECTOR) || element.querySelector?.('.markdown, [data-testid="message-content"], [data-markdown-text-style="assistant-message"], pre, code') ||
+            element.closest?.(`${USER_SELECTOR}, .markdown, [data-testid="message-content"], [data-markdown-text-style="assistant-message"], pre, code, form`)) continue;
+        if (!(lastUser.compareDocumentPosition?.(element) & 4)) continue;
+        const response = element.closest?.(ASSISTANT_SELECTOR);
+        if (response && (lastUser.compareDocumentPosition?.(response) & 4)) return value;
+        // Some renderers place the status beside the assistant wrapper inside
+        // its turn. A fresh explicit page alert is the only global fallback.
+        const turn = element.closest?.('article[data-testid^="conversation-turn"]');
+        if (turn && allVisible(ASSISTANT_SELECTOR, turn).some(reply => lastUser.compareDocumentPosition?.(reply) & 4) &&
+            !allVisible(USER_SELECTOR, turn).length) return value;
+        if (!turn && !response && (element.getAttribute?.('role') === 'alert' || element.getAttribute?.('role') === 'status' ||
+            element.closest?.('[role="alert"], [role="status"], [data-testid*="error"], [data-state="error"]'))) return value;
+      }
+      return '';
+    }
+
+    function ownedProviderFailure(lastUser, task) {
+      // A terminal error may unmount before a stale Stop control disappears.
+      // Keep its owned receipt so that the leftover partial body never turns
+      // into a successful result when the provider finally becomes idle.
+      if (task.interruption) return task.interruption;
       // Provider rejection can leave Stop/streaming markers visible forever.
       // Match the new error beside this exact submitted user turn before
       // consulting generationBusy. Prompt text, code and old turns are data.
       const failureFor = (element, globalAlert = false) => {
+        const quotedContent = 'pre, code, blockquote, [data-markdown-copy="code-block"], .markdown, [data-testid="message-content"], [data-markdown-text-style="assistant-message"]';
+        const unrelatedRegion = 'header, [role="banner"], [role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], nav, [role="navigation"], aside, [role="complementary"]';
         if (element === lastUser || lastUser.contains?.(element) || element.contains?.(lastUser) ||
-            element.closest?.('pre, code, [data-markdown-copy="code-block"]')) return '';
+            element.closest?.(quotedContent) || element.querySelector?.(quotedContent) ||
+            element.closest?.(unrelatedRegion) || element.querySelector?.(unrelatedRegion)) return '';
         const value = String(element.innerText ?? element.textContent ?? '').replace(/\s+/g, ' ').trim();
         if (!value || value.length > 300 || task.baselineProviderRejections?.get(element) === value) return '';
         const kind = providerRejectionKind(value);
         if (!kind) return '';
+        const terminal = ['generation-error', 'stream-interrupted', 'timeout', 'delivery-error', 'server-error'].includes(kind);
+        if (terminal && (element.closest?.(`form, ${USER_SELECTOR}`) || element.querySelector?.(`form, ${USER_SELECTOR}`))) return '';
         const assistant = element.closest?.(ASSISTANT_SELECTOR);
+        const turn = element.closest?.('article[data-testid^="conversation-turn"]');
+        const ownedTurn = lastUser.closest?.('article[data-testid^="conversation-turn"]');
+        const followsOwnedUser = node => {
+          const position = lastUser.compareDocumentPosition?.(node) || 0;
+          return Boolean(position & 4) && !(position & 1);
+        };
+        // A shared history container can retain an old assistant after its
+        // user bubble is virtualized away. Ordering is required in both the
+        // ancestor scan and the global fallback, regardless of DOM freshness.
+        if (assistant && !followsOwnedUser(assistant)) return '';
+        if (turn && turn !== ownedTurn && !followsOwnedUser(turn)) return '';
+        const errorSelector = '[role="alert"], [data-testid*="error"], [data-state="error"]';
+        const errorRoot = element.closest?.(errorSelector);
         const explicitError = element.getAttribute?.('role') === 'alert' ||
           /error/i.test(element.getAttribute?.('data-testid') || '') || element.getAttribute?.('data-state') === 'error' ||
-          Boolean(element.closest?.('[role="alert"], [data-testid*="error"], [data-state="error"]'));
-        if (assistant && (!explicitError || globalAlert)) return '';
+          Boolean(errorRoot);
+        if (assistant && !explicitError) return '';
         if (globalAlert && (!explicitError || element.closest?.(USER_SELECTOR))) return '';
-        if (kind === 'too-long') return 'ChatGPT rejected this submitted message because it was too long. The automatic exchange has stopped. Use a shorter review payload or fewer/smaller source files before starting a new run. The submitted chat was kept; no second submission was attempted.';
-        if (kind === 'generation-error' && explicitError) return 'ChatGPT reported an error generating the response to this submitted request. The automatic exchange has stopped. Inspect the provider error in this chat and start a new run when it is resolved. The submitted chat was kept; no automatic retry was attempted.';
+        if (kind === 'too-long') return task.interruption = { kind, reason: 'ChatGPT rejected this tracked message as too long. The boss must create a smaller focused continuation that preserves the task and retained files; the rejected prompt must not be resent unchanged.' };
+        if (terminal && explicitError && followsOwnedUser(element) && !element.closest?.(USER_SELECTOR)) {
+          const turnUsers = turn ? allVisible(USER_SELECTOR, turn) : [];
+          const exactOwnedTurn = turn && turn === ownedTurn && turn.contains?.(lastUser) &&
+            turnUsers.every(user => user === lastUser || lastUser.contains?.(user));
+          const ownedAssistantTurn = turn && !turnUsers.length &&
+            allVisible(ASSISTANT_SELECTOR, turn).some(followsOwnedUser);
+          // A root provider alert may be rendered beside the chat. Require an
+          // explicit root directly under body, after this exact owned user;
+          // nested panels without response/turn evidence remain ambiguous.
+          // Baseline wording also excludes a stale root recreated as a new node.
+          const baselineWording = [...(task.baselineProviderRejections?.values() || [])].includes(value);
+          const rootProviderAlert = !turn && !assistant && !baselineWording &&
+            errorRoot?.parentElement === doc.body && followsOwnedUser(errorRoot);
+          if (!assistant && !exactOwnedTurn && !ownedAssistantTurn && !rootProviderAlert) return '';
+          return task.interruption = { kind, reason: `ChatGPT reported ${value} for this request before its response completed. Its partial response is not a completed result.` };
+        }
         return '';
       };
       for (let scope = lastUser, depth = 0; scope && scope !== doc.body && depth < 8; scope = scope.parentElement, depth += 1) {
@@ -1277,15 +1565,49 @@
           if (failure) return failure;
         }
       }
-      // A provider can mount the rejection in a fresh alert outside all turn
-      // wrappers. It still belongs to the newest confirmed request: navigation
-      // and exact user identity were checked above, and preexisting alerts and
-      // any text inside earlier/user/assistant messages remain excluded.
+      // The same ownership rules apply to alerts outside the ancestor scan.
+      // An unrelated panel or rehydrated historical error cannot authorize
+      // recovery just because it appeared while this request was pending.
       for (const element of allVisible(PROVIDER_REJECTION_SELECTOR)) {
         const failure = failureFor(element, true);
         if (failure) return failure;
       }
       return '';
+    }
+
+    function ownedResponseInterrupted(lastUser, task, providerFailure) {
+      if (!lastUser) return false;
+      // A generation or stream failure can leave a partial markdown body and
+      // even a stale streaming marker. It is an explicit provider failure, not proof that
+      // the model finished. Retire it through supervision without relaying the
+      // partial answer or clicking Retry/Stop on another request.
+      const failureKind = (providerFailure === undefined ? ownedProviderFailure(lastUser, task) : providerFailure)?.kind;
+      if (['stream-interrupted', 'generation-error', 'timeout', 'delivery-error', 'server-error', 'too-long'].includes(failureKind)) return true;
+      if (generationBusy()) return false;
+      const markers = allVisible('span, p, div, button').filter(element => {
+        const value = label(element).replace(/\s+/g, ' ').trim();
+        return /^(?:stopped thinking|stopped generating|response interrupted)$/i.test(value) &&
+          task.baselineProviderRejections?.get(element) !== value &&
+          !element.closest?.(`${USER_SELECTOR}, .markdown, [data-testid="message-content"], [data-markdown-text-style="assistant-message"], pre, code, form`) &&
+          Boolean(lastUser.compareDocumentPosition(element) & 4);
+      });
+      if (!markers.length) return false;
+      const ordered = getTurns(`${USER_SELECTOR}, ${ASSISTANT_SELECTOR}`);
+      const newestReply = ordered.slice(ordered.indexOf(lastUser) + 1).filter(element => element.matches?.(ASSISTANT_SELECTOR)).at(-1);
+      // A user may stop the thinking phase while a final answer still arrives.
+      // A real answer body or delivered file wins over its old status heading;
+      // neither quoted status text nor historical headings trigger recovery.
+      if (newestReply) {
+        const bodies = allVisible('.markdown, [data-testid="message-content"], [data-markdown-text-style="assistant-message"]', newestReply);
+        if (bodies.some(body => String(body.innerText ?? body.textContent ?? '').trim()) || collectMedia(newestReply).length) return false;
+        const plainReply = newestReply.cloneNode(true);
+        plainReply.querySelectorAll('h4[data-conversation-role="assistant"], .sr-only, button, [role="button"], [role="toolbar"], [data-testid*="thinking"], [data-testid*="reasoning"], [hidden], [aria-hidden="true"]').forEach(element => element.remove());
+        for (const element of plainReply.querySelectorAll('span, p, div')) {
+          if (/^(?:stopped thinking|stopped generating|response interrupted)$/i.test(String(element.textContent || '').trim())) element.remove();
+        }
+        if (String(plainReply.textContent || '').trim()) return false;
+      }
+      return true;
     }
 
     async function observeReply(task, baseline, submittedUserCount) {
@@ -1294,7 +1616,23 @@
       let candidateSignature = '';
       let changedAt = 0;
       return waitFor(() => {
-        if (!navigationValid(task)) throw new Error('The chat navigated before the reply completed.');
+        if (!navigationValid(task)) {
+          // Model changes can briefly replace the route while React keeps the
+          // submitted turn. Do not read another conversation, stop generation,
+          // or resend. Allow this exact conversation to return first.
+          const newest = getTurns(USER_SELECTOR).at(-1);
+          const sameOrigin = new URL(win.location.href).origin === new URL(task.url).origin;
+          task.navigationDeadline ||= now() + (options.navigationGraceMs || 15000);
+          if (sameOrigin && (!newest || sameBaselineUser(newest, task) || sameUserText(newest, task.text, task.requestId)) &&
+              now() < task.navigationDeadline) {
+            candidateNode = null; candidateText = ''; candidateSignature = ''; changedAt = 0;
+            return null;
+          }
+          const error = new Error('The chat navigated before the reply completed.');
+          error.code = 'observation-lost';
+          throw error;
+        }
+        task.navigationDeadline = null;
         const users = getTurns(USER_SELECTOR);
         // The current renderer unmounts old history while adding a turn, then
         // can remount it later. Counts are only a fallback for legacy prompts
@@ -1303,6 +1641,10 @@
         const ordered = getTurns(`${USER_SELECTOR}, ${ASSISTANT_SELECTOR}`);
         const lastUser = users[users.length - 1];
         if (!sameUserText(lastUser, task.text, task.requestId)) {
+          // Virtualized long tool turns can temporarily unmount the owned
+          // user bubble. Keep waiting for its identity without accepting any
+          // reply until it returns. A new marked user message still interrupts.
+          if (!lastUser || sameBaselineUser(lastUser, task)) return null;
           // A hydration replacement can be collapsed again. Let only that
           // newest turn finish its Show more render before deciding it changed.
           if (lastUser && expandingUserTurns.has(lastUser)) {
@@ -1315,8 +1657,18 @@
         // React can replace the user message DOM node while preserving the
         // exact request. Reacquire it by content/marker, never object identity.
         task.submittedUser = lastUser;
-        const rejection = ownedProviderRejection(lastUser, task);
-        if (rejection) throw new Error(rejection);
+        const providerFailure = ownedProviderFailure(lastUser, task);
+        if (providerFailure && !['stream-interrupted', 'generation-error', 'timeout', 'delivery-error', 'server-error', 'too-long'].includes(providerFailure.kind)) throw new Error(providerFailure.reason);
+        // Hold a terminal provider status for the scheduled supervisor. It is
+        // not an answer and must not be accepted as a completed worker result.
+        if (ownedResponseInterrupted(lastUser, task, providerFailure)) return null;
+        if (ownedConnectionWarning(lastUser, task)) {
+          // This provider message promises a reconnect, not a terminal stop.
+          // Keep the observer even if Stop briefly unmounts, then require a
+          // fresh settling interval once the warning disappears.
+          candidateNode = null; candidateText = ''; candidateSignature = ''; changedAt = 0;
+          return null;
+        }
         const lastUserIndex = ordered.indexOf(lastUser);
         if (lastUserIndex < 0) return null;
         const fresh = ordered.slice(lastUserIndex + 1).filter((element) => element.matches?.(ASSISTANT_SELECTOR)).filter((element) => {
@@ -1325,21 +1677,24 @@
         });
         if (fresh.length === 0) {
           if (!generationBusy() && ownedGenerationFailure(lastUser)) {
-            throw new Error('ChatGPT reported "Image generation failed" for this request. No image was produced or relayed. Try the command again when image generation is available.');
+            throw Object.assign(new Error('ChatGPT reported "Image generation failed" for this request. No image was produced or relayed.'), { code: 'provider-interrupted', interruptionKind: 'image-generation' });
           }
           return null;
         }
         const node = fresh[fresh.length - 1];
-        const value = assistantText(node);
-        const outputImages = allVisible('img', node).filter(outputImageCandidate);
+        const value = task.responseFormat === 'control-json' ? controlResponseText(node) : assistantText(node);
+        const outputImages = fresh.flatMap(responseNode => allVisible('img', responseNode).filter(outputImageCandidate));
         const pendingImages = outputImages.some((image) => image.complete === false);
         if (pendingImages) return null;
         const brokenImages = outputImages.some((image) => image.complete !== false && (Number(image.naturalWidth) < 64 || Number(image.naturalHeight) < 64));
-        const entries = collectMedia(node);
-        const unsupportedDownloads = unsupportedGeneratedDownloads(node, entries, outputImages);
+        // Tools and the final answer can be separate assistant wrappers for
+        // one submitted user turn. Keep actual downloads from every owned
+        // wrapper, including files produced before the final summary text.
+        const entries = collectResponseMedia(fresh);
+        const unsupportedDownloads = fresh.flatMap(responseNode => unsupportedGeneratedDownloads(responseNode, entries, outputImages));
         if (!value && entries.length === 0 && !unsupportedDownloads.length && !brokenImages) return null;
         if (value.length > MAX_REPLY_CHARS) throw new Error('The reply is too large to relay safely.');
-        const signature = entries.map((entry) => entry.fingerprint).join('|');
+        const signature = JSON.stringify([fresh.map(responseNode => assistantText(responseNode)), entries.map(entry => entry.fingerprint)]);
         if (candidateNode !== node || candidateText !== value || candidateSignature !== signature) {
           candidateNode = node;
           candidateText = value;
@@ -1350,7 +1705,12 @@
         if (generationBusy() || now() - changedAt < settleMs) return null;
         if (brokenImages && (task.relayMedia || !value)) throw new Error('A generated image did not load at a usable resolution. It cannot be relayed.');
         if (task.relayMedia && entries.length > 5) throw new Error('This response contains more than five generated media files. Start a new run requesting at most five.');
-        if (task.relayMedia && unsupportedDownloads.length) throw new Error(`This response contains an unsupported generated download that cannot be shared safely: ${unsupportedDownloads.map((element) => label(element).slice(0, 180)).join(', ')}. Request a supported document/image or a plain-text source file (.txt, .mq5, .mqh, or another supported source extension), then start a new run. No unsupported file was transferred.`);
+        if (task.relayMedia && unsupportedDownloads.length) {
+          const names = unsupportedDownloads.map(element => downloadableCard(element, element.closest?.(ASSISTANT_SELECTOR) || node, false)?.name || actionFilename(element) || label(element));
+          const error = new Error(`This response contains an unsupported generated download that cannot be shared safely: ${names.map(name => name.slice(0, 180)).join(', ')}. Request a supported document/image or a plain-text source file (.txt, .mq5, .mqh, or another supported source extension). No unsupported file was transferred.`);
+          error.code = 'unsupported-output';
+          throw error;
+        }
         if (!value && !task.relayMedia) throw new Error('This response contains generated media without text. Enable generated media relay before starting a new run.');
         return { text: value, media: task.relayMedia ? storeMedia(task, node, entries) : [] };
       }, task.timeoutMs, task);
@@ -1393,13 +1753,21 @@
         acceptedLocalPath: null,
         submittedUser: null,
         text: message.text,
+        responseFormat: message.responseFormat === 'control-json' ? 'control-json' : 'text',
         relayMedia: message.relayMedia === true,
-        timeoutMs: Math.min(Math.max(Number(message.timeoutMs) || replyTimeoutMs, 15000), 30 * 60 * 1000)
+        timeoutMs: Math.min(Math.max(Number(message.timeoutMs) || replyTimeoutMs, 15000), 2 * 60 * 60 * 1000)
       };
       const baseline = new Map(getTurns(ASSISTANT_SELECTOR).map((element) => [element, assistantText(element)]));
       const baselineUsers = getTurns(USER_SELECTOR);
-      task.baselineProviderRejections = new Map(allVisible(PROVIDER_REJECTION_SELECTOR).map(element =>
-        [element, String(element.innerText ?? element.textContent ?? '').replace(/\s+/g, ' ').trim()]));
+      task.baselineProviderRejections = new Map(allVisible(`${PROVIDER_REJECTION_SELECTOR}, [role="status"]`).flatMap(element => {
+        // Preserve terminal markers, not copies of every nested historical
+        // answer/draft in a long chat. Those copies grow with PDF/tool output.
+        const raw = String(element.innerText ?? element.textContent ?? '');
+        if (raw.length > 600) return [];
+        const value = raw.replace(/\s+/g, ' ').trim();
+        return providerRejectionKind(value) || connectionWaiting(value) || /^(?:stopped thinking|stopped generating|response interrupted)$/i.test(value)
+          ? [[element, value]] : [];
+      }));
       const userCount = baselineUsers.length;
       task.trackingMarker = trackingMarker(task.text, task.requestId);
       if (task.trackingMarker && baselineUsers.some((element) => userMessageMatches(element, task.text, task.requestId))) {
@@ -1429,7 +1797,7 @@
         let stableButton = null;
         let controlsChangedAt = 0;
         const controls = await waitForStage(() => {
-          if (!navigationValid(task)) throw new Error('The chat navigated before submitting the prompt.');
+          if (!navigationValid(task)) throw Object.assign(new Error('The chat navigated before submitting the prompt.'), { code: 'observation-lost' });
           const users = getTurns(USER_SELECTOR);
           if (task.trackingMarker ? !sameBaselineUser(users.at(-1), task) : users.length !== userCount) {
             throw new Error('A user message appeared before the automatic prompt was submitted.');
@@ -1463,18 +1831,26 @@
           }
           task.submittedUser = submitted;
           recordSubmissionDiagnostic(task, 'submitted-turn-confirmed');
-          if (!navigationValid(task)) throw new Error('The chat navigated while submitting the prompt.');
+          if (!navigationValid(task)) throw Object.assign(new Error('The chat navigated while submitting the prompt.'), { code: 'observation-lost' });
           return true;
         }, 15000, task, () => `The page did not confirm the submitted prompt. ${containsFullPrompt(findComposer(), task.text) ? 'The full prompt is still in the composer.' : 'The composer changed or cleared.'} No second submission was attempted.`);
       } catch (error) {
         recordSubmissionDiagnostic(task, 'submission-error');
-        stopOwnedGeneration(task);
+        const observationLost = error.code === 'observation-lost' || error.message === 'Timed out waiting for the ChatGPT page.';
+        if (!observationLost) stopOwnedGeneration(task);
         if (active === task) active = null;
         remember(key, 'failed');
-        if (!task.controller.signal.aborted) await emit({ type: 'ERROR', runId: task.runId, requestId: task.requestId, error: error.message });
-        return { ok: false, error: error.message };
+        const details = observationLost ? { observationLost: true, observationUrl: task.acceptedUrl || task.url } : {};
+        if (!task.controller.signal.aborted) await emit({ type: 'ERROR', runId: task.runId, requestId: task.requestId, error: error.message, ...details });
+        return { ok: false, error: error.message, ...details };
       }
-      observeReply(task, baseline, getTurns(USER_SELECTOR).length).then(async (result) => {
+      startReplyObservation(task, baseline, getTurns(USER_SELECTOR).length);
+      return { ok: true, observationUrl: task.acceptedUrl || task.url };
+    }
+
+    function startReplyObservation(task, baseline, submittedUserCount) {
+      const key = taskKey(task);
+      const observeOwnedReply = () => observeReply(task, baseline, submittedUserCount).then(async (result) => {
         if (active !== task || task.controller.signal.aborted) return;
         active = null;
         recordSubmissionDiagnostic(task, 'reply-complete');
@@ -1485,18 +1861,113 @@
         publishStatus();
       }).catch(async (error) => {
         if (active !== task || task.controller.signal.aborted) return;
-        stopOwnedGeneration(task);
+        const outputFailure = error.code === 'unsupported-output';
+        const observationLost = error.code === 'observation-lost' || error.message === 'Timed out waiting for the ChatGPT page.';
+        const newest = getTurns(USER_SELECTOR).at(-1);
+        const owned = Boolean(task.submittedUser && newest && sameUserText(newest, task.text, task.requestId) && navigationValid(task));
+        const generating = generationBusy();
+        if (outputFailure && owned && (generating || ownedConnectionWarning(newest, task) || ownedProviderFailure(newest, task))) {
+          // The provider can resume between the settled output observation
+          // and this promise continuation. Keep observing the same request;
+          // a provisional file-format error never authorizes its Stop button.
+          return observeOwnedReply();
+        }
+        const providerInterrupted = error.code === 'provider-interrupted';
+        if (!outputFailure && !observationLost && !providerInterrupted) stopOwnedGeneration(task);
         recordSubmissionDiagnostic(task, 'reply-error');
         active = null;
         remember(key, 'failed');
-        await emit({ type: 'ERROR', runId: task.runId, requestId: task.requestId, error: error.message });
+        await emit({ type: 'ERROR', runId: task.runId, requestId: task.requestId, error: error.message,
+          ...(observationLost ? { observationLost: true, observationUrl: task.acceptedUrl || task.url } : {}),
+          ...(providerInterrupted && owned && !generating ? { interrupted: true, interruptionKind: error.interruptionKind,
+            owned: true, active: false, generationBusy: false, newerUserMessage: false } : {}),
+          ...(outputFailure && owned && !generating ? { recoverableOutputFailure: true, owned: true, active: false,
+            generationBusy: false, newerUserMessage: false } : {}) });
         publishStatus();
       });
-      return { ok: true };
+      observeOwnedReply();
+    }
+
+    async function resumeObservation(message) {
+      if (!validRequest(message) || typeof message.text !== 'string' || !message.text.trim() || message.text.length > MAX_PROMPT_CHARS ||
+          !trackingMarker(message.text, message.requestId)) return { ok: false, error: 'An exact tracked request is required to reconnect.' };
+      if (cancelledRuns.has(message.runId)) return { ok: false, error: 'This run was cancelled; observation will not resume.' };
+      const key = taskKey(message);
+      if (active && taskKey(active) === key) return { ok: true, pending: true, observationUrl: active.acceptedUrl || active.url };
+      if (active || activeAttachment || stagedUpload) return { ok: false, error: 'This page already owns another operation.' };
+      if (['complete', 'cancelled'].includes(recent.get(key))) return { ok: false, error: 'This request was already completed or cancelled.' };
+      let expected;
+      try { expected = new URL(message.observationUrl); } catch (_) { return { ok: false, error: 'The original conversation address is missing.' }; }
+      const current = new URL(win.location.href);
+      if (current.origin !== expected.origin || (current.pathname !== expected.pathname && expected.pathname !== '/')) {
+        return { ok: false, error: 'Return to the original conversation before reconnecting its request.' };
+      }
+      const task = { runId: message.runId, requestId: message.requestId, controller: new AbortController(),
+        url: message.observationUrl, acceptedUrl: null, acceptedLocalPath: null, submittedUser: null,
+        text: message.text, trackingMarker: trackingMarker(message.text, message.requestId), baselineLatestUserValues: [], confirmingIdentity: true,
+        responseFormat: message.responseFormat === 'control-json' ? 'control-json' : 'text', relayMedia: message.relayMedia === true,
+        timeoutMs: Math.min(Math.max(Number(message.timeoutMs) || replyTimeoutMs, 15000), 2 * 60 * 60 * 1000),
+        // Old failures before this user turn cannot authorize recovery. Current
+        // owned alerts must remain visible to the supervisor after reload.
+        baselineProviderRejections: new Map() };
+      active = task;
+      try {
+        await waitForStage(() => {
+          const users = getTurns(USER_SELECTOR);
+          const newest = users.at(-1);
+          if (!newest) return null;
+          sameUserText(newest, task.text, task.requestId); // expand a collapsed owned bubble
+          const fullText = normalizePageText(task.text);
+          const fullMatch = element => userTextValues(element).some(value => value === fullText || includesMessageText(value, fullText));
+          if (!fullMatch(newest)) return null;
+          // A duplicate historical turn may be collapsed with its tracking ID
+          // hidden. Expand only earlier bubbles sharing this prompt's prefix
+          // before counting identity matches; marker-only duplicates are also
+          // ambiguous even when their body differs.
+          for (const earlier of users.slice(0, -1)) {
+            const samePrefix = userTextValues(earlier).some(value => {
+              const prefix = value.split(/\s+\.{3}/)[0].trim();
+              return prefix.length >= 80 && fullText.startsWith(prefix);
+            });
+            if (!samePrefix || !userExpandControl(earlier)) continue;
+            sameUserText(earlier, task.text, task.requestId);
+            if (userExpandControl(earlier)) return null;
+          }
+          if (users.filter(element => userMessageMatches(element, task.text, task.requestId)).length !== 1) {
+            throw new Error('The tracked user turn is ambiguous; observation was not resumed.');
+          }
+          task.baselineUserCount = Math.max(0, users.length - 1);
+          task.submittedUser = newest;
+          if (!navigationValid(task)) throw new Error('This is a different conversation; observation was not resumed.');
+          return true;
+        }, options.resumeIdentityTimeoutMs || 15000, task, 'The newest user turn does not match the complete tracked request. No prompt was resent and no generation was stopped.');
+        if (cancelledRuns.has(task.runId)) throw new Error('This run was cancelled.');
+        const ordered = getTurns(`${USER_SELECTOR}, ${ASSISTANT_SELECTOR}`);
+        const index = ordered.indexOf(task.submittedUser);
+        if (index < 0) throw new Error('The owned user turn disappeared before observation could resume.');
+        const baseline = new Map(ordered.slice(0, index).filter(element => element.matches?.(ASSISTANT_SELECTOR))
+          .map(element => [element, assistantText(element)]));
+        if (mediaSnapshotRunId !== task.runId) { clearMediaSnapshots(); mediaSnapshotRunId = task.runId; }
+        recent.delete(key);
+        task.confirmingIdentity = false;
+        startReplyObservation(task, baseline, getTurns(USER_SELECTOR).length);
+        publishStatus();
+        return { ok: true, resumed: true, observationUrl: task.acceptedUrl || task.url };
+      } catch (error) {
+        if (active === task) active = null;
+        task.controller.abort('Observation could not reconnect.');
+        return { ok: false, error: error.message };
+      }
     }
 
     function cancel(message) {
-      if (typeof message.runId === 'string' && message.runId) {
+      // A supervisor retires one request; its delayed acknowledgement cannot
+      // cancel a freshly assigned request or a new attachment in the same run.
+      if (message.cancelRun === false && (!active || active.runId !== message.runId || active.requestId !== message.requestId)) {
+        return { ok: true, cancelled: false };
+      }
+      if (stagedUpload && (!message.runId || !stagedUpload.runId || message.runId === stagedUpload.runId)) clearStagedUpload();
+      if (message.cancelRun !== false && typeof message.runId === 'string' && message.runId) {
         cancelledRuns.add(message.runId);
         if (cancelledRuns.size > 100) cancelledRuns.delete(cancelledRuns.values().next().value);
       }
@@ -1514,6 +1985,37 @@
       if (message.stopGeneration !== false) stopOwnedGeneration(task);
       publishStatus();
       return { ok: true, cancelled: true };
+    }
+
+    function inspectProgress(message) {
+      const key = taskKey(message);
+      const task = active && taskKey(active) === key ? active : interruptedTasks.get(key);
+      const status = inspect();
+      const generating = generationBusy();
+      if (!task) return { ok: true, requestId: message.requestId, owned: false, active: Boolean(active), generating,
+        generationBusy: generating, interrupted: false, ready: status.ready, reason: status.reason };
+      const newest = getTurns(USER_SELECTOR).at(-1);
+      const owned = Boolean(!task.confirmingIdentity && newest && userMessageMatches(newest, task.text, task.requestId) && navigationValid(task));
+      const interrupted = owned && status.activeRequestId === task.requestId && status.interrupted;
+      const reconnecting = owned && status.activeRequestId === task.requestId && status.reconnecting === true;
+      // Preserve the observer while the native provider still advertises an
+      // active response. It keeps exact ownership and the terminal receipt;
+      // the next supervision check can retire it as soon as Stop clears.
+      if (interrupted && !generating && active === task) {
+        active = null;
+        interruptedTasks.set(key, task);
+        while (interruptedTasks.size > 12) interruptedTasks.delete(interruptedTasks.keys().next().value);
+        remember(key, 'interrupted');
+        task.controller.abort('The provider explicitly reported an interrupted response.');
+        publishStatus();
+      }
+      return { ok: true, requestId: task.requestId, owned, active: active === task, generating, generationBusy: generating,
+        reconnecting,
+        interrupted, interruptionKind: interrupted ? status.interruptionKind : '',
+        awaitingProviderIdle: Boolean(interrupted && generating),
+        newerUserMessage: Boolean(newest && !owned && !sameBaselineUser(newest, task)),
+        ready: inspect().ready, reason: status.reason,
+        visibleResult: interrupted ? 'No completed result was delivered for this request. The provider marked its work interrupted.' : '' };
     }
 
     function oneChoice(namePattern, predicate) {
@@ -1695,6 +2197,7 @@
     }
 
     function decodeBase64(base64) {
+      if (typeof Uint8Array.fromBase64 === 'function') return Uint8Array.fromBase64(base64);
       const binary = win.atob(base64);
       const bytes = new Uint8Array(binary.length);
       for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
@@ -1733,11 +2236,43 @@
     }
 
     function attachmentsProcessing(scope) {
-      return Boolean(scope && allVisible('[aria-busy="true"], [role="progressbar"], [data-upload-state="uploading"], [data-state="uploading"], [data-testid*="upload-progress"], .animate-spin', scope)
-        .some((element) => !element.closest?.(TURN_SELECTOR)));
+      if (!scope) return false;
+      const composer = findComposer();
+      const widgetSelector = '[data-testid*="attachment"], [data-testid*="file-preview"], [data-testid*="file-upload"], [data-file-name], [data-attachment-id], [data-upload-state]';
+      const hasLegacyPreview = (container) => {
+        if (container === composer || container.contains?.(composer) || composer?.contains?.(container)) return false;
+        if (allVisible('img, [role="img"]', container).some(node => !node.closest?.(TURN_SELECTOR))) return true;
+        const nodes = [container, ...allVisible('[title], [aria-label], [alt], span, button, a', container)]
+          .filter(node => !node.closest?.(TURN_SELECTOR));
+        return nodes.some(node => [label(node), node.getAttribute?.('title'), node.getAttribute?.('aria-label'), node.getAttribute?.('alt')]
+          .some(value => typeof value === 'string' && value.trim().length <= 180 && filenameMime(value.trim())));
+      };
+      return allVisible('[aria-busy="true"], [role="progressbar"], [data-upload-state="uploading"], [data-state="uploading"], [data-testid*="upload-progress"], .animate-spin', scope)
+        .some((element) => {
+          if (element.closest?.(TURN_SELECTOR)) return false;
+          // Explicit upload state is authoritative even before its filename
+          // renders. Generic spinners and aria-busy also serve model pickers,
+          // voice controls and new-page hydration, so they need file context.
+          if (element.getAttribute?.('data-upload-state') === 'uploading' || element.getAttribute?.('data-state') === 'uploading' ||
+              /upload-progress/i.test(element.getAttribute?.('data-testid') || '')) return true;
+          if (element === composer || element.contains?.(composer) || composer?.contains?.(element)) return false;
+          if (/\b(?:upload(?:ing)?|attachments?|file\s+(?:upload|processing))\b/i.test(label(element))) return true;
+          const widget = element.closest?.(widgetSelector);
+          if (widget && scope.contains?.(widget) && !widget.contains?.(composer)) return true;
+          if (allVisible(widgetSelector, element).some(candidate => !candidate.closest?.(TURN_SELECTOR))) return true;
+          // Older file cards expose only a plain name or image and a sibling
+          // Loading spinner. Stop before the editor's ancestor: a model/voice
+          // spinner elsewhere in the composer is unrelated to that file card.
+          for (let node = element, depth = 0; node && depth < 7; node = node.parentElement, depth += 1) {
+            if (node === composer || node.contains?.(composer) || scope.contains?.(node) === false) break;
+            if (hasLegacyPreview(node)) return true;
+            if (node === scope) break;
+          }
+          return false;
+        });
     }
 
-    async function uploadFiles(message, requestTask = null) {
+    async function uploadFiles(message, requestTask = null, preparedFiles = null) {
       if (!Array.isArray(message.files) || message.files.length === 0 || message.files.length > 5) {
         return { ok: false, error: 'Choose one to five supported files.' };
       }
@@ -1755,22 +2290,29 @@
       const names = new Set();
       for (const item of message.files) {
         if (!item || typeof item.name !== 'string' || !/^[^\\/\x00-\x1f]{1,180}$/.test(item.name) ||
-            typeof item.mimeType !== 'string' || !ALLOWED_MIME.has(item.mimeType) || typeof item.base64 !== 'string') {
+            typeof item.mimeType !== 'string' || !ALLOWED_MIME.has(item.mimeType) || !preparedFiles && typeof item.base64 !== 'string') {
           return { ok: false, error: 'Unsupported file name or type.' };
         }
         if (names.has(item.name)) return { ok: false, error: 'Attachment file names must be unique within a batch.' };
         names.add(item.name);
+        if (preparedFiles) {
+          const prepared = preparedFiles[transfer.files.length];
+          if (!prepared || prepared.name !== item.name || prepared.type !== item.mimeType || !prepared.size || prepared.size > MAX_FILE_BYTES) return { ok: false, error: 'Invalid prepared attachment.' };
+          total += prepared.size;
+          if (total > MAX_TOTAL_BYTES) return { ok: false, error: 'File limit is 512 MB each and 1 GB total.' };
+          transfer.items.add(prepared); continue;
+        }
         // Repeating four-character groups over a multi-MB base64 string can
         // exhaust V8's regexp stack. Bound size first; this single alphabet
         // repetition plus quartet length retains strict padding validation.
-        if (item.base64.length > Math.ceil(MAX_FILE_BYTES / 3) * 4 || item.base64.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(item.base64)) {
+        if (item.base64.length > Math.ceil(MAX_INLINE_BYTES / 3) * 4 || item.base64.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(item.base64)) {
           return { ok: false, error: 'Invalid or oversized file contents.' };
         }
         const bytes = decodeBase64(item.base64);
         if (encodeBase64(bytes) !== item.base64) return { ok: false, error: 'Invalid noncanonical file contents.' };
         total += bytes.byteLength;
-        if (!bytes.byteLength || bytes.byteLength > MAX_FILE_BYTES || total > MAX_TOTAL_BYTES) {
-          return { ok: false, error: 'File limit is 12 MB each and 24 MB total.' };
+        if (!bytes.byteLength || bytes.byteLength > MAX_INLINE_BYTES || total > MAX_TOTAL_BYTES) {
+          return { ok: false, error: 'Inline file limit is 128 MB each and 1 GB total; empty files cannot be attached.' };
         }
         try {
           validateZipArchive(item.name, item.mimeType, bytes);
@@ -1836,6 +2378,10 @@
         const input = await waitForStage(choosePicker, options.setupTimeoutMs || 6000, waitTask, () => pickerReason);
         try {
           input.files = transfer.files;
+          for (const item of message.files) uploadAttempts.set(item.name, {
+            namesBefore: namesBefore.get(item.name), previewsBefore, mimeType: item.mimeType
+          });
+          while (uploadAttempts.size > 40) uploadAttempts.delete(uploadAttempts.keys().next().value);
           input.dispatchEvent(new win.Event('change', { bubbles: true }));
         } catch (_) {
           return { ok: false, error: 'The page did not accept programmatic file selection.' };
@@ -1869,7 +2415,7 @@
           completedNames = observedNames;
           if (readyAt === null) readyAt = now();
           return now() - readyAt >= (options.attachmentSettleMs || 500);
-        }, options.uploadTimeoutMs || 20000, waitTask);
+        }, options.uploadTimeoutMs || 30 * 60 * 1000, waitTask);
         let imageIndex = 0;
         message.files.forEach((item) => {
           const element = item.mimeType.startsWith('image/') ? completedImages[imageIndex++] : null;
@@ -1882,8 +2428,31 @@
         if (waitTask.controller.signal.aborted) return { ok: false, error: String(waitTask.controller.signal.reason || 'Attachment upload was cancelled.') };
         if (error.message !== 'Timed out waiting for the ChatGPT page.') return { ok: false, error: error.message };
         return { ok: false, error: 'The page did not show a new preview for every image or a name for every document. Check the required attachments in this chat before starting.' };
-      } finally { if (activeAttachment === waitTask) activeAttachment = null; }
+      } finally {
+        if (activeAttachment === waitTask) activeAttachment = null;
+        publishStatus();
+      }
       return { ok: true, attached: message.files.length };
+    }
+
+    function checkAttachments(message) {
+      const names = message.names;
+      if (!Array.isArray(names) || !names.length || names.length > MAX_ATTACHED_SOURCE_NAMES || new Set(names).size !== names.length ||
+          names.some(name => typeof name !== 'string' || !/^[^\\/\x00-\x1f]{1,180}$/.test(name))) return { ok: false, error: 'Invalid attachment check.' };
+      const scope = currentAttachmentScope(findComposer());
+      if (!scope || active || activeAttachment || generationBusy() || attachmentsProcessing(scope)) return { ok: false, error: 'Attachments or a response are still processing. Wait, then check again.' };
+      const failure = attachmentFailure(scope);
+      if (failure) return { ok: false, error: `The page rejected an attachment: ${failure}` };
+      for (const name of names) {
+        if (uploadedFiles.has(name)) continue;
+        const attempt = uploadAttempts.get(name);
+        if (!attempt) return { ok: false, error: `No owned upload receipt exists for ${name}.` };
+        const fresh = [...attachmentNameEvidence(scope, name)].filter(([alias, count]) => count > (attempt.namesBefore?.get(alias) || 0));
+        if (fresh.length !== 1) return { ok: false, error: `The completed upload of ${name} is not confirmed. Check that attachment in this chat.` };
+        uploadedFiles.set(name, { observedName: fresh[0][0], previousCount: attempt.namesBefore?.get(fresh[0][0]) || 0, element: null, identity: null });
+      }
+      publishStatus();
+      return hasExpectedSources(findComposer(), names) ? { ok: true, attached: names.length } : { ok: false, error: 'A required attachment is no longer present in the composer.' };
     }
 
     function respond(result, sendResponse) {
@@ -1897,6 +2466,22 @@
         try { configureMode(message); } catch (error) { sendResponse({ ok: false, error: error.message }); return false; }
       }
       switch (message.type) {
+        case 'INSPECT_PROGRESS':
+          sendResponse(inspectProgress(message));
+          return false;
+        case 'FILE_STAGE_BEGIN':
+        case 'FILE_STAGE_CHUNK':
+        case 'FILE_STAGE_COMMIT':
+        case 'FILE_STAGE_ABORT':
+          return respond(stageFile(message), sendResponse);
+        case 'CHECK_ATTACHMENTS':
+          sendResponse(checkAttachments(message));
+          return false;
+        case 'RESUME_RUN':
+          if (typeof message.runId !== 'string' || !message.runId || message.runId.length > 200 || active || activeAttachment || stagedUpload || generationBusy()) {
+            sendResponse({ ok: false, error: 'Wait until the canceled response has stopped before continuing.' });
+          } else { cancelledRuns.delete(message.runId); sendResponse({ ok: true }); }
+          return false;
         case 'INSPECT':
           sendResponse(inspect());
           publishStatus();
@@ -1908,6 +2493,8 @@
           return respond(prepare(), sendResponse);
         case 'SEND_PROMPT':
           return respond(sendPrompt(message), sendResponse);
+        case 'RESUME_OBSERVATION':
+          return respond(resumeObservation(message), sendResponse);
         case 'CANCEL':
           sendResponse(cancel(message));
           return false;
@@ -1925,10 +2512,11 @@
     if (win.MutationObserver && (doc.documentElement || doc.body)) {
       statusObserver = new win.MutationObserver(scheduleStatus);
       statusObserver.observe(doc.documentElement || doc.body, { childList: true, characterData: true, subtree: true, attributes: true,
-        attributeFilter: ['aria-pressed', 'aria-checked', 'aria-selected', 'aria-current', 'data-state', 'data-is-streaming', 'hidden', 'aria-hidden', 'contenteditable', 'placeholder', 'aria-label'] });
+        attributeFilter: ['aria-pressed', 'aria-checked', 'aria-selected', 'aria-current', 'aria-busy', 'data-upload-state', 'data-state', 'data-is-streaming', 'hidden', 'aria-hidden', 'contenteditable', 'placeholder', 'aria-label'] });
     }
     doc.addEventListener?.('input', scheduleStatus, true);
     win.addEventListener?.('pagehide', () => {
+      clearStagedUpload();
       statusObserver?.disconnect();
       if (statusTimer !== null) clearTimeout(statusTimer);
       doc.removeEventListener?.('input', scheduleStatus, true);
@@ -1943,7 +2531,8 @@
       active = null;
       remember(taskKey(task), 'failed');
       task.controller.abort('The chat page closed or navigated.');
-      void emit({ type: 'ERROR', runId: task.runId, requestId: task.requestId, error: 'The chat page closed or navigated.' });
+      void emit({ type: 'ERROR', runId: task.runId, requestId: task.requestId, error: 'The chat page closed or navigated.',
+        observationLost: true, observationUrl: task.acceptedUrl || task.url });
     });
     // Send one initial status when the service worker is available.
     setTimeout(publishStatus, 0);

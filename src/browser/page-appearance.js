@@ -63,6 +63,12 @@
       background-color: transparent !important;
       background-image: none !important;
     }
+    html.${CLASS} body, html.${CLASS} :is(button, input, select, textarea, #prompt-textarea, [data-message-author-role]) {
+      font-family: 'Converge Manrope', 'Segoe UI Variable', 'Segoe UI', sans-serif !important;
+    }
+    html.${CLASS} main :is(pre, code, kbd, samp) {
+      font-family: ui-monospace, 'Cascadia Code', Consolas, monospace !important;
+    }
     html.${CLASS} main { color: #edf2ff; }
     html.${CLASS} main article[data-testid^="conversation-turn"] {
       background-color: rgba(5, 9, 25, .56) !important;

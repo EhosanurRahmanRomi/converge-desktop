@@ -52,11 +52,14 @@ async function harness() {
     setTimeout(callback, delay) { const id = ++nextTimer; timers.set(id, { at: now + delay, callback }); return id; },
     clearTimeout(id) { timers.delete(id); },
     require(name) {
-      if (name === 'electron') return { app: {}, BrowserWindow: Window, WebContentsView: View,
+      if (name === 'electron') return { app: { getPath: () => path.dirname(hostPath) }, BrowserWindow: Window, WebContentsView: View,
         screen: { getPrimaryDisplay: () => ({ workAreaSize: { width: 1600, height: 980 } }) },
         ipcMain, session: { fromPartition: () => browserSession }, dialog: {}, clipboard: {}, shell: {} };
       if (name === './src/browser/cookies') return { parseCookies() {} };
       if (name === './src/browser/files') return { MIME: {}, validateExport() {}, validateTextSource() {} };
+      if (name === './src/browser/upload-transport') return require('../src/browser/upload-transport');
+      if (name === './src/browser/file-store') return require('../src/browser/file-store');
+      if (name === './src/platform/studio-desktop') return { createStudioDesktop: () => ({ register() {}, getInfo: () => ({ status: 'unsaved' }), checkpoint() {}, verification() {}, dispose: async () => {} }) };
       if (name === './src/browser/downloads') return { createDownloadBroker: () => ({ dispose: async () => {} }) };
       if (name === './src/browser/desktop-coordinator') return { createDesktopCoordinator: () => ({ getState: async () => ({}), dispose() {} }) };
       if (name === './src/browser/boss-coordinator') return { createBossCoordinator: () => ({ getState: async () => ({}), dispose() {} }) };
@@ -76,6 +79,10 @@ async function harness() {
       const last = sent.findLast((item) => item.channel === 'converge:page-request');
       ipcMain.emit('converge:page-response', event, { id: last.payload.id, response });
     },
+    chunk(index, data) {
+      const last = sent.findLast(item => item.channel === 'converge:page-request');
+      ipcMain.emit('converge:page-response-chunk', event, { id: last.payload.id, index, data });
+    },
   };
 }
 
@@ -93,11 +100,32 @@ test('the IPC owner survives a five-file export past the old 35-second deadline 
 });
 
 test('a nonresponsive export still expires and ordinary page requests retain their shorter deadlines', async () => {
-  for (const [type, deadline] of [['EXPORT_MEDIA', 270_000], ['SEND_PROMPT', 60_000], ['PREPARE', 60_000], ['INSPECT', 35_000]]) {
+  for (const [type, deadline] of [['EXPORT_MEDIA', 3 * 60 * 60_000], ['UPLOAD_FILES', 35 * 60_000], ['FILE_STAGE_COMMIT', 35 * 60_000], ['SEND_PROMPT', 60_000], ['PREPARE', 60_000], ['INSPECT', 35_000]]) {
     const host = await harness();
     const pending = host.desktop.sendToPage('left', { type });
     const rejected = assert.rejects(pending, new RegExp(`did not acknowledge ${type}`));
     host.tick(deadline);
+    await rejected;
+  }
+});
+
+test('the host assembles bounded export response chunks without losing exact file bytes', async () => {
+  const host = await harness();
+  const waiting = host.desktop.sendToPage('left', { type: 'EXPORT_MEDIA' });
+  const response = { ok: true, files: [{ name: 'large.pdf', base64: Buffer.alloc(8 * 1024 * 1024, 91).toString('base64') }] };
+  const serialized = JSON.stringify(response); let index = 0;
+  for (let offset = 0; offset < serialized.length; offset += 1024 * 1024) host.chunk(index++, serialized.slice(offset, offset + 1024 * 1024));
+  host.respond({ chunked: true, totalChunks: index, totalLength: serialized.length });
+  assert.equal(JSON.stringify(await waiting), serialized);
+});
+
+test('missing or out of order response chunks fail rather than returning a partial artifact', async () => {
+  for (const mode of ['missing', 'reordered', 'empty']) {
+    const host = await harness();
+    const waiting = host.desktop.sendToPage('left', { type: 'EXPORT_MEDIA' });
+    const rejected = assert.rejects(waiting, /not received in full|Invalid or oversized/);
+    host.chunk(mode === 'reordered' ? 1 : 0, mode === 'empty' ? '' : '{"ok":true}');
+    host.respond({ chunked: true, totalChunks: 2, totalLength: 40 });
     await rejected;
   }
 });

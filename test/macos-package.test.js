@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { readMachO, validateZipEntry, validateSymlinkTarget, readIcns } = require('../scripts/macos-package-lib');
+const { readMachO, validateZipEntry, validateSymlinkTarget, readIcns, validateRuntimeCoverage, REQUIRED_RUNTIME_FILES } = require('../scripts/macos-package-lib');
 const { validateBuildConfiguration } = require('../scripts/build-macos-release');
 const { inspectZip, bundleContainsRealPath } = require('../scripts/verify-macos-release');
 const { validateNativeSmoke } = require('../scripts/qa-native-macos-startup');
@@ -121,6 +121,30 @@ test('Mac packaging cannot label a future build with a historical release versio
     const copy = structuredClone(metadata); alter(copy);
     assert.throws(() => validateBuildConfiguration(copy, 'darwin', 'arm64'), /current package version/);
   }
+});
+
+test('Mac release coverage cannot omit current studio, recovery, upload, font or PDF runtime support', () => {
+  assert.equal(validateRuntimeCoverage(metadata), REQUIRED_RUNTIME_FILES);
+  for (const filename of REQUIRED_RUNTIME_FILES) {
+    const incomplete = structuredClone(metadata); incomplete.build.files = incomplete.build.files.filter(file => file !== filename);
+    assert.throws(() => validateRuntimeCoverage(incomplete), /omits required runtime/);
+  }
+  for (const version of [undefined, '*', '^6.4.299']) {
+    const changed = structuredClone(metadata); changed.dependencies['pdfjs-dist'] = version;
+    assert.throws(() => validateRuntimeCoverage(changed), /exact version/);
+  }
+});
+
+test('Mac CI requires the full source and packaged studio gates before verified artifact upload', () => {
+  const workflow = fs.readFileSync(path.join(__dirname, '../.github/workflows/macos-arm64.yml'), 'utf8');
+  assert.match(workflow, /expected_version:/); assert.match(workflow, /EXPECTED_VERSION:/);
+  assert.match(workflow, /npm test -- --test-concurrency=1/);
+  assert.match(workflow, /node scripts\/qa-native-macos-startup\.js/);
+  assert.match(workflow, /npm run qa:boss:packaged/);
+  assert.match(workflow, /npm run qa:studio:packaged/);
+  assert.ok(workflow.indexOf('npm run qa:studio:packaged') < workflow.indexOf('Upload verified release files'));
+  assert.match(workflow, /studio-workspace-qa-packaged\/\*\.json/);
+  assert.match(workflow, /git diff --exit-code/);
 });
 test('actual app smoke must cover native editing, disposal and activation in the correct packaged binary', () => {
   const executable = path.resolve('fixture/Converge'), report = { status: 'PASS', platform: 'darwin', arch: 'arm64', packaged: true, version: metadata.version, executable, visibleShell: true, nativeKeyWindow: true, visibilityScope: 'Observed native show state and actual native key window after shell first paint', commandShortcutHint: true, nativeMenu: true,

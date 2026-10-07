@@ -1,163 +1,126 @@
 # Converge
 
-![Converge boss and two worker workspace](docs/images/windows-boss-team.png)
+![Converge: one boss, two workers, a result you can inspect](docs/images/converge-hero.svg)
 
-A desktop workspace where a **boss chat directs two worker chats**: it plans their tasks, reviews their results, requests improvements and checks the final candidate. The two workers remain visible; click the middle boss character to open its sliding chat panel and guide the team.
+**A desktop project studio for work that needs a second look.**
 
-**Converge 1.8.1 · Windows x64 · Native macOS ARM64 · MacBook Air M4**
+Give one boss chat a task. It directs two workers, compares their answers and files, requests useful revisions, and checks the selected result. Keep the workers visible, open the boss panel when you need it, and follow the evidence through to download.
 
-The same boss-and-two-workers workspace is available on both platforms, including file handoff, queued instructions, five chat backgrounds, three character styles and decorative animation controls.
+[Download 1.9.9](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.9.9) · [User guide](docs/USER_GUIDE.md) · [Project studio](docs/STUDIO_GUIDE.md) · [Mac setup](docs/MACOS_GUIDE.md) · [Developer guide](docs/DEVELOPER_GUIDE.md)
 
-[Download 1.8.1](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.8.1) · [Boss workspace guide](docs/BOSS_WORKSPACE.md) · [Mac installation](docs/MACOS_GUIDE.md) · [Boss architecture](docs/BOSS_ARCHITECTURE.md)
+## Download
 
-*Windows boss shell captured during controlled local verification. Embedded chat content is captured separately; this is not an authenticated conversation screenshot.*
+| Platform | Install | Other option |
+|---|---|---|
+| **Windows x64** | [Converge Setup 1.9.9](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.9.9/Converge-Setup-1.9.9-x64.exe) | [Portable EXE](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.9.9/Converge-Portable-1.9.9-x64.exe) |
+| **Apple Silicon Mac · macOS 13+** | [ARM64 DMG](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.9.9/Converge-1.9.9-macOS-arm64.dmg) | [ARM64 ZIP](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.9.9/Converge-1.9.9-macOS-arm64.zip) |
 
-| Platform | Release | Downloads | Verification |
-|---|---|---|---|
-| Windows x64 | **1.8.1** | [Installer](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.8.1/Converge-Setup-1.8.1-x64.exe) · [Portable](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.8.1/Converge-Portable-1.8.1-x64.exe) | [Windows evidence](docs/WINDOWS_1_8_1_VERIFICATION.md) |
-| macOS 13+, Apple Silicon, including MacBook Air M4 | **1.8.1** | [DMG](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.8.1/Converge-1.8.1-macOS-arm64.dmg) · [ZIP](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.8.1/Converge-1.8.1-macOS-arm64.zip) | [Mac evidence](docs/MACOS_1_8_1_VERIFICATION.md) |
+The Mac build targets Apple Silicon, including MacBook Air M4. Both platforms bundle their desktop runtime; end users do not need Node.js or Electron. Windows artifacts are unsigned. Mac artifacts use an ad-hoc signature and are not notarized; see the [Mac first-launch guide](docs/MACOS_GUIDE.md#if-macos-blocks-the-first-launch).
 
-Mac 1.8.1 runs natively on Apple Silicon and includes Command shortcuts, native app/Edit menus, Mac file dialogs and Dock behavior. Its source suite, actual packaged startup and both packaged workflow gates passed on a native Mac runner. Physical MacBook Air M4 and live authenticated Mac use have not been tested.
+Use the [release page](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.9.9) for checksums and verification attachments. Earlier versions and their original evidence remain in [release history](https://github.com/EhosanurRahmanRomi/converge-desktop/releases).
 
-![Actual Converge 1.8.1 Mac application at startup](docs/images/macos-1.8.1-native-startup.png)
+[Offline manuals ZIP](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.9.9/Converge-1.9.9-Manuals.zip) · [Full source ZIP](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.9.9/Converge-1.9.9-Source.zip) · [SHA-256 checksums](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.9.9/SHA256SUMS.txt) · [Release verification](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.9.9/Converge-1.9.9-Verification.json)
 
-*Actual packaged 1.8.1 Mac app with an empty session on the native ARM64 runner. This first-paint image shows the artwork; the separate native report verifies the rendered version and controls. Reduced motion reflects the host preference.*
+## The workspace
 
-![Converge's two-chat workspace with the controls hidden](docs/images/desktop-working.png)
-
-*Windows 1.6.5 interface preview using controlled fixture activity. These images show the shared layout; they are not Mac screenshots or screenshots of the authenticated verification run.*
-
-## Boss workspace on Windows and Mac
-
-- **A boss and two workers.** Give the boss your task. It writes the substantive worker instructions, receives both workers’ replies and chooses the next useful checks or improvements. Each of the three pages uses the model you select in its own menu.
-- **A sliding boss conversation.** Click the middle character to open the actual boss chat. Its instruction box starts a task, queues additional ideas during work and resumes the same task when the boss requests missing information.
-- **Two visible workers.** The left/right worker workspace retains its tall chat layout. Closing the boss panel restores both workers; progress and output files remain in the bottom band.
-- **Real file handoff.** Original source files go to the team. Generated files and images are captured and attached for further checks. Result identities and byte hashes bind final verification to the actual candidate files.
-- **A checked finish.** Improvement tasks use at least four work cycles; fixed-answer verification uses a shorter route. The host requires both workers to verify the selected candidate before the boss approves completion. Missing output files or unresolved findings prevent agreement. Stop and run limits remain available.
-- **Selectable appearance.** Night sky, Black horror, Alien, Cyberpunk and Anime backgrounds apply to the actual chat pages. Robots, Curious explorers and Wonder spirits change the three characters. Stars, Ghost and Flowers decorate the upper and lower strips; animations can be turned off while work continues. Chat backgrounds stay still to reduce rendering work.
-- **Reusable chats.** Start another task in the same team, or Reset to choose Temporary, Normal or Work mode for three fresh chats. Work mode depends on what the account exposes.
-
-Converge uses an imported ChatGPT browser session. The current desktop flow does not require an API key. It uses its own in-memory session and does not modify or log out your Chrome profile.
-
-## Start the team
-
-1. Download the Windows installer/portable or Apple Silicon DMG/ZIP from [release 1.8.1](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.8.1). Mac users should follow the [installation guide](docs/MACOS_GUIDE.md).
-2. Open **Import JSON file** and choose your current ChatGPT cookie export. Import begins immediately; pasting JSON is an optional alternative.
-3. Choose a chat type and press **Open the team**. Select the desired model in each worker page, then click the boss character to select its model.
-4. Attach source files before starting. Give your task through **Instruction to the boss**, or use **Brief the boss** in the controls drawer. Send team instructions through these app controls; typing directly into an embedded page does not start the coordinated workflow.
-5. Add instructions to the boss while the team works. Watch the progress band, inspect its review and limitations in the result drawer, and use **Save final files** when the checked result is accepted.
-
-See the [boss workspace guide](docs/BOSS_WORKSPACE.md) for queuing, blocked tasks, appearance settings and files. The [Windows](docs/WINDOWS_1_8_1_VERIFICATION.md) and [Mac](docs/MACOS_1_8_1_VERIFICATION.md) records document this release’s tests; historical results below belong to their stated versions.
-
-The Windows executables are unsigned. The actual 1.8.1 portable executable was opened and closed successfully. Installer installation and upgrade were not exercised.
-
-The Mac release uses an ad-hoc signature and has no Apple Developer ID signature or notarization. See the [Mac guide](docs/MACOS_GUIDE.md) for first-launch instructions and the [Mac verification record](docs/MACOS_1_8_1_VERIFICATION.md) for its test scope.
-
-![The slide-out controls and task brief](docs/images/desktop-controls.png)
-
-*Windows 1.6.5 controls preview. The panel is opaque for readability and slides away when a review starts; this image does not show the 1.8 boss controls.*
-
-## New chat themes in 1.8.1
-
-![Cyberpunk city chat background](docs/images/chat-theme-cyberpunk.png)
-
-![Anime twilight chat background](docs/images/chat-theme-anime.png)
-
-*Controlled Chromium previews. These backgrounds apply to the boss and both workers; they use local, still artwork with readable messages and file links.*
-
-## What was verified for Windows 1.8.1
-
-| Check | Recorded result |
+| Capability | What you can do |
 |---|---|
-| Complete automated suite | **425 / 425 passed** |
-| Packaged production workflows | **16 / 16 passed** |
-| Chromium attachment checks | **18 / 18 passed**, including a deliberately detached output pipe |
-| Actual portable executable | **v1.8.1** startup and Close passed |
-| Live GPT-5.6 Sol High team | **4 improvement cycles**, both workers accepted exact **C4** files |
-| Saved Python implementation and tests | Hashes matched C4; **28 / 28 tests passed** independently |
+| **Boss + two workers** | Send one task, queue follow-up ideas, watch independent work and inspect the boss's next plan |
+| **Project studio** | Keep the brief, acceptance checklist, revisions, findings, verification and saved projects together |
+| **Document design** | Choose academic, reference, editorial or neutral presentation; attach appearance examples separately from content |
+| **File handoffs** | Send original inputs to the whole team and pass captured generated files onward with their exact identities |
+| **Results & downloads** | Download one file, the current bundle or another completed draft during work and after recovery |
+| **Interruption recovery** | Observe owned requests, retain completed work and request focused repairs for supported interruptions |
+| **Local evidence** | Inspect actual byte, syntax, format and bounded PDF/image checks separately from model review |
+| **Your controls** | Stop the exchange, cancel an upload, continue a blocked task or reset to a fresh team |
+| **Selectable atmosphere** | Choose still chat backgrounds, three character crews, Stars/Ghost/Flowers, full motion, low power or Off |
 
-[Read the current evidence and limits →](docs/WINDOWS_1_8_1_VERIFICATION.md)
+### A visible team, with room to work
 
-## What was verified for Mac 1.8.1
+![Converge 1.9.9 workspace and results drawer](docs/images/converge-1.9.9-workspace.png)
 
-| Check | Recorded result |
+*Actual 1.9.9 renderer captured during controlled local verification. The pages and result are test fixtures; this is not an authenticated account or a model-quality demonstration.*
+
+Click the middle character to open **Boss chat**. Use **Instruction to the boss** for coordinated instructions. The native ChatGPT composer is a direct conversation and does not dispatch worker tasks.
+
+Improvement tasks use at least four work cycles. Recognized fixed-answer tasks can use two verification steps. The host requires checks of the same selected candidate before completion; unavailable tools, missing required files and unresolved requirements remain visible. More rounds do not guarantee a better or correct answer.
+
+## Start a task
+
+1. Open Converge and choose **Import JSON file** for your own current ChatGPT session export.
+2. Choose **Temporary**, **Normal** or **Work mode**, then **Open the team**. Availability depends on the account.
+3. Select a model independently in the boss and both worker pages.
+4. Attach content files. For documents, use **Add a design reference** for appearance examples and set **Project studio → Brief → Document design**.
+5. State the required output, scope and acceptance conditions through **Instruction to the boss** or **Brief the boss**.
+6. Watch the progress band. Open **Results & downloads** for files, the answer, review history and remaining issues.
+7. Save the project or export a delivery package. **Stop** stays available during work.
+
+The [user guide](docs/USER_GUIDE.md) covers uploads, long tasks, drafts, recovery, settings and troubleshooting.
+
+## A project, not just a transcript
+
+![Project studio with document design controls](docs/images/converge-1.9.9-studio-brief.png)
+
+*Controlled renderer fixture with generic sample data. No private source documents, account details or session credentials are included.*
+
+The studio has six sections: **Brief · Requirements · Revisions · Issues · Verification · Projects**.
+
+- **Brief:** choose a task preset and define inspectable acceptance conditions.
+- **Requirements:** see which conditions are met, failed or unverified, with the recorded evidence.
+- **Revisions:** compare written answers, inspect file hashes, preview files and return to an earlier candidate.
+- **Issues:** track a finding through assignment, a fix and a recheck.
+- **Verification:** separate executed local checks from model and manual assessments.
+- **Projects:** recover saved work, download past outputs and export task or delivery archives.
+
+Document design defaults to **Academic math notes**. **Match attached reference** sends the actual reference files to the team and asks for a rendered-page style comparison. Appearance references do not add topics to the task. The [document quality guide](docs/DOCUMENT_QUALITY.md) explains the layout and content gates.
+
+### Practical limits
+
+| Area | Application limit |
 |---|---|
-| Full suite on native Apple Silicon | **425 / 425 passed** |
-| Packaged boss and worker workflows | **16 / 16 passed**, complete captures |
-| Preserved file-format and transport workflows | **24 / 24 passed** |
-| Actual packaged app | Native startup, boss drawer, editing on **five surfaces**, Close and fresh activation passed |
-| ARM64 DMG and ZIP | Ad-hoc signatures, bundle permissions, framework links and **21 runtime files** verified |
+| Original inputs, including design references | **5 files total**, **512 MiB each**, **1 GiB combined** |
+| Image/spreadsheet input guards | **20 MiB images**, **50 MiB spreadsheets** |
+| Review controls | Up to **12 cycles**, a baseline **2 hours per response**, **24 hours per workflow** |
+| Local project storage | Up to **3 GiB of distinct retained file bytes**, **48 candidate revisions** |
+| Local text/image content checks | **16 MiB** per supported file; images also have a **50 megapixel** bound |
+| Local PDF checks | **64 MiB**, **1–1,000 pages**; rendering coverage is reported separately |
 
-[Read the native Mac evidence and limits →](docs/MACOS_1_8_1_VERIFICATION.md)
+Large input files use bounded local reads and transfers. Service processing, accepted formats, token limits and account quotas still apply. A 512 MiB local upload test does not establish ChatGPT acceptance. A large file can receive a verified hash while its content check remains unverified.
 
-## What was verified for macOS 1.7.0
+## Evidence and verification
 
-| Check | Recorded result |
+[Windows 1.9.9 verification](docs/WINDOWS_1_9_9_VERIFICATION.md) records source tests, packaged workflow checks, file parity and actual portable startup/Close, with the tested artifact identity.
+
+**Mac 1.9.9:** native ARM64 packaging and verification are being completed for this release. The release's Mac verification attachment is authoritative once available; older Mac runs are historical evidence, not proof of 1.9.9. A physical MacBook Air M4 and a live authenticated Mac task have not been tested.
+
+Local workflow tests use controlled provider replies. They check coordination, transfers, recovery and controls. They do not measure general answer quality or establish an authenticated 1.9.9 model run.
+
+Local verification establishes only the properties named in its report. PDF rasterization does not establish aesthetics or factual accuracy. A model's account of visually inspecting every page remains **Model review**. Optional generated-program tests require Docker and fixed local images; unavailable tooling is reported instead of counted as a pass.
+
+**Agreement is a review result. It is not a guarantee of correctness.**
+
+## Session and data
+
+Converge currently uses an imported ChatGPT web session in its own in-memory browser profile. It does not modify or sign out Chrome. The desktop flow does not require an API key; models and features depend on the account. This is an independent project, not an official OpenAI application.
+
+Session exports are credentials. Import them through setup, keep them private, and never include them in Git, screenshots or issue reports. Closing the workspace clears the imported session. Local project checkpoints retain task inputs and outputs for recovery, but exclude browser authentication and live request state. Inspect project and delivery archives before sharing.
+
+The browser adapter depends on the provider's visible interface; changes to that interface can require an update. See [session options](docs/AUTH_OPTIONS.md) and [recovery behavior](docs/MODEL_ERROR_RECOVERY.md).
+
+## Source, manuals and feedback
+
+| Resource | Purpose |
 |---|---|
-| Automated suite on the native Mac runner | **377 / 377 passed** |
-| Controlled workflows from the packaged archive | **24 / 24 passed** |
-| Actual packaged Mac app | **v1.7.0 startup, focused native window and app menu passed** |
-| Native editing | **Select All, Copy and Paste passed in the shell and both embedded views** |
-| Workspace Close and reopen | **Real Close disposed the views; automated activate opened a fresh setup window** |
-| DMG and ZIP | **ARM64, ad-hoc signatures, source parity, permissions and framework links verified** |
+| [User guide](docs/USER_GUIDE.md) | Installation, team setup, files, results and troubleshooting |
+| [Studio guide](docs/STUDIO_GUIDE.md) | Acceptance, document design, revisions, evidence and project recovery |
+| [Mac guide](docs/MACOS_GUIDE.md) | Apple Silicon installation, first launch and native shortcuts |
+| [Boss workflow](docs/BOSS_WORKSPACE.md) | Request ownership, cycles, final checks and continued work |
+| [Document quality](docs/DOCUMENT_QUALITY.md) | Content, mathematical typography and rendered-page review |
+| [Developer guide](docs/DEVELOPER_GUIDE.md) | Source layout, development, tests and packaging |
+| [Architecture](docs/BOSS_ARCHITECTURE.md) | Boss coordination and platform boundaries |
+| [Release notes](docs/RELEASE_NOTES.md) | Version history and recorded changes |
+| [Third-party notices](THIRD_PARTY_NOTICES.md) | Runtime, font and bundled dependency notices |
 
-The controlled workflow gate loads the packaged archive under a development Electron launcher with matching package metadata. The native startup gate separately launches **Converge.app's own executable**. Attach/Save fixture selections exercise real IPC and file bytes; physical file-picker interaction and live account review were not performed.
+For a [bug report](https://github.com/EhosanurRahmanRomi/converge-desktop/issues), include the app version, OS, mode, safe steps, expected behavior and observed failure. Redact account details and private task content. Never attach cookies or tokens.
 
-[Read the Mac evidence, artifact checksums and limits →](docs/MACOS_VERIFICATION.md)
-
-## What was verified for Windows 1.6.5
-
-| Check | Recorded result |
-|---|---|
-| Automated suite | **351 / 351 passed** |
-| Packaged workflows with controlled local replies | **24 / 24 passed** |
-| Source and packaged runtime parity | **18 runtime files plus metadata matched; 23 frozen inputs unchanged** |
-| Actual Windows built-app startup | Visible **v1.6.5**, custom header and Close observed |
-| Live GPT 5.6 High file review | **4 full rounds**, **2 actual candidate revisions**, both reviewers accepted **C3** |
-| Generated Python file capture, relay and Save | Native downloads completed; saved bytes exactly matched accepted C3 |
-| Independent audit of that saved file | **1,244 / 1,244 recorded checks passed** |
-
-[Read the evidence and its limits →](docs/VERIFICATION.md)
-
-Agreement is a review result, not a guarantee of correctness. The boss and workers can share a mistake. Repeated exchanges do not turn a model or reasoning setting into a stronger model, and important answers still need appropriate independent checks. The account's availability, upload rules and usage limits apply to every page; future ChatGPT page changes may require adapter updates.
-
-## Explore the project
-
-| Document | Contents |
-|---|---|
-| [Boss workspace guide](docs/BOSS_WORKSPACE.md) | Current team setup on both platforms, boss instructions, queues, files and appearance |
-| [Boss architecture](docs/BOSS_ARCHITECTURE.md) | Three-page orchestration, boss decisions, worker results and final-candidate checks |
-| [Windows 1.8.1 verification](docs/WINDOWS_1_8_1_VERIFICATION.md) | Windows build evidence, artifacts and testing limits |
-| [Earlier user guide](docs/USER_GUIDE.md) | Published two-reviewer setup, modes, files, results and troubleshooting |
-| [Mac guide](docs/MACOS_GUIDE.md) | Apple Silicon installation, Command shortcuts, Dock behavior and native file dialogs |
-| [Mac 1.8.1 verification](docs/MACOS_1_8_1_VERIFICATION.md) | Current native build gates, package identities and Mac evidence |
-| [Earlier Mac verification](docs/MACOS_VERIFICATION.md) | Historical 1.7.0 release evidence |
-| [Developer guide](docs/DEVELOPER_GUIDE.md) | Local setup, tests, Windows and Apple Silicon Mac builds, and source map |
-| [Architecture](docs/ARCHITECTURE.md) | Session boundaries, review lifecycle and file identity |
-| [Verification](docs/VERIFICATION.md) | Recorded tests, live review, artifact hashes and scope |
-| [Release notes](docs/RELEASE_NOTES.md) | Current Windows 1.8.1 fixes and previous release changes |
-| [Artwork](docs/ARTWORK.md) | Current visual assets and provenance |
-| [Historical documentation](docs/history/README.md) | Earlier development records, kept separate from current claims |
-
-## Develop
-
-```powershell
-npm ci
-npm test
-npm run qa:boss
-npm run qa:desktop
-npm start
-npm run build:win -- --publish never
-```
-
-The desktop runtime is Electron. **qa:boss** exercises the current three-chat workflow with controlled local pages; **qa:desktop** retains the earlier two-reviewer regression gate. The source also retains earlier extension/API experiments; these are not the current desktop connection path. See the [boss architecture](docs/BOSS_ARCHITECTURE.md) and [developer guide](docs/DEVELOPER_GUIDE.md) before changing the browser bridge or coordinator.
-
-The 1.8.1 DMG and ZIP were built and verified on native Apple Silicon. The release includes a full source ZIP, manuals and checksums; the repository contains the complete tracked source, tests and assets. See the [Mac build instructions](docs/DEVELOPER_GUIDE.md#build-apple-silicon-mac-artifacts) to build from source.
-
-## Session privacy and project status
-
-Treat cookie exports as account credentials. Never upload them to this repository, attach them to an issue, or paste them into a model conversation. The app reads the file you select, displays only its filename, clears the import input, and keeps its imported session in memory. Closing the app loses its session and exchange state. Generated files are saved only when you choose to save them; provider-side storage depends on the selected ChatGPT mode.
-
-On Mac, closing the window clears that workspace and its imported session. The app remains available in the Dock; opening it again creates a fresh setup window. Use **Command + Q** to quit, or minimize to keep the current review running.
-
-Converge is an independent project and is not an official OpenAI or ChatGPT application. Its own source remains **UNLICENSED**, as declared in `package.json`; public visibility does not grant reuse rights. Third-party notices are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Built by [Ehosanur Rahman Romi](https://github.com/EhosanurRahmanRomi).

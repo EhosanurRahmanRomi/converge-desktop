@@ -371,7 +371,7 @@
   const allowedTypes = Object.freeze({
     png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp',
     gif: 'image/gif', pdf: 'application/pdf', txt: 'text/plain',
-    md: 'text/markdown', csv: 'text/csv', json: 'application/json',
+    md: 'text/markdown', csv: 'text/csv', tsv: 'text/tab-separated-values', json: 'application/json',
     docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation'

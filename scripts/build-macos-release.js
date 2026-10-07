@@ -6,11 +6,12 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
-const { readIcns } = require('./macos-package-lib');
+const { readIcns, validateRuntimeCoverage } = require('./macos-package-lib');
 
 function validateBuildConfiguration(metadata, platform = process.platform, arch = process.arch) {
   assert.equal(platform, 'darwin', 'Build the macOS release on macOS so its bundle signatures can be verified.');
   assert.equal(arch, 'arm64', 'The MacBook Air M4 release must be built natively on Apple Silicon.');
+  validateRuntimeCoverage(metadata);
   assert.equal(metadata.license, 'UNLICENSED', 'The app source license changed unexpectedly.');
   assert.equal(metadata.build.mac.identity, '-', 'This development release uses an explicit ad-hoc identity.');
   assert.equal(metadata.build.mac.hardenedRuntime, false, 'No Developer ID hardened-runtime configuration is provided.');

@@ -2,7 +2,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createHash } = require('node:crypto');
-const { MIME, TEXT_SOURCE_EXTENSIONS, safeFilename, validateExport, validateTextSource, MAX_FILE_BYTES } = require('../src/browser/files');
+const { MIME, TEXT_SOURCE_EXTENSIONS, safeFilename, validateExport, validateTextSource, MAX_FILE_BYTES, MAX_TOTAL_BYTES, MAX_INLINE_FILE_BYTES, FILE_LIMIT_MESSAGE, providerUploadAdvice } = require('../src/browser/files');
 const archives = require('./fixtures/archive-bytes.json');
 
 const descriptor = { id: 'pdf-1', name: 'corrected.pdf', mimeType: 'application/pdf', fingerprint: 'dom:1234' };
@@ -45,12 +45,47 @@ test('rejects corrupt or oversized binary payloads before a save dialog', () => 
   for (const base64 of ['', 'YQ', 'YQ==junk', 'Y!==', 'YQ=\n', 'YR==']) {
     assert.throws(() => validateExport(media, { ok: true, files: [{ ...descriptor, base64 }] }));
   }
-  const oversized = Buffer.alloc(MAX_FILE_BYTES + 1).toString('base64');
+  const oversized = Buffer.alloc(MAX_INLINE_FILE_BYTES + 1).toString('base64');
   assert.throws(() => validateExport(media, { ok: true, files: [{ ...descriptor, base64: oversized }] }), /limit|exceeds/);
-  const many = Array.from({ length: 3 }, (_, i) => ({ ...descriptor, id: `pdf-${i}` }));
-  assert.throws(() => validateExport({ ...media, files: many }, { ok: true,
-    files: many.map((file) => ({ ...file, base64: Buffer.alloc(9 * 1024 * 1024).toString('base64') })),
-  }), /24 MB/);
+  assert.throws(() => validateExport(media, { ok: true, files: [{ ...descriptor,
+    blobId: 'unregistered-file', byteLength: MAX_FILE_BYTES, contentSha256: '0'.repeat(64),
+  }] }), /stored|unavailable|identity|registered|owned/i);
+});
+
+test('512 MB disk capacity retains the bounded 128 MB inline compatibility path', () => {
+  assert.equal(MAX_FILE_BYTES, 512 * 1024 * 1024);
+  assert.equal(MAX_TOTAL_BYTES, 1024 * 1024 * 1024);
+  assert.match(FILE_LIMIT_MESSAGE, /512 MB each and 1 GB total/);
+  for (const size of [100 * 1024 * 1024, MAX_INLINE_FILE_BYTES]) {
+    const bytes = Buffer.alloc(size, 65);
+    Buffer.from('%PDF-1.7\n').copy(bytes);
+    const fixture = textCandidate('large-reviewed.pdf', bytes, 'application/pdf');
+    const [file] = validateExport(fixture.candidate, fixture.response);
+    assert.equal(file.bytes.length, size);
+    assert.deepEqual(file.bytes, bytes);
+    assert.equal(createHash('sha256').update(file.bytes).digest('hex'), fixture.candidate.files[0].contentSha256);
+  }
+});
+
+test('provider format limits are distinguished from the workspace disk capacity', () => {
+  assert.equal(providerUploadAdvice('image.png', 'image/png', 20 * 1024 * 1024), '');
+  assert.throws(() => providerUploadAdvice('image.png', 'image/png', 20 * 1024 * 1024 + 1), /20 MB/);
+  assert.match(providerUploadAdvice('data.csv', 'text/csv', 51 * 1024 * 1024), /approximately 50 MB/);
+  assert.equal(providerUploadAdvice('document.pdf', 'application/pdf', MAX_FILE_BYTES), '');
+});
+
+test('the larger transport allowance does not permit substitutions or reordered large documents', () => {
+  const bytes = Buffer.alloc(24 * 1024 * 1024, 65);
+  const fixture = textCandidate('large-reviewed.pdf', bytes, 'application/pdf');
+  const substitute = Buffer.from(bytes); substitute[substitute.length - 1] ^= 1;
+  assert.throws(() => validateExport(fixture.candidate, { ok: true, files: [{
+    ...fixture.response.files[0], base64: substitute.toString('base64'),
+  }] }), /contents changed/);
+  const second = { ...fixture.candidate.files[0], id: 'source-2', name: 'other.pdf' };
+  const secondResponse = { ...fixture.response.files[0], ...second };
+  assert.throws(() => validateExport({ ...media, files: [...fixture.candidate.files, second] }, {
+    ok: true, files: [secondResponse, fixture.response.files[0]],
+  }), /candidate file changed/);
 });
 
 test('generated filenames cannot become Windows paths or device files', () => {
@@ -179,16 +214,14 @@ test('ZIP validation rejects truncated, spoofed, multipart and unsupported ZIP64
   }
 });
 
-test('ZIP output identity and the existing per-file and aggregate byte limits stay enforced', () => {
+test('ZIP output identity and bounded inline file data stay enforced', () => {
   const bytes = Buffer.from(archives.packageBase64, 'base64');
   const fixture = textCandidate('package.zip', bytes, 'application/zip');
   const changed = Buffer.from(bytes); changed[40] ^= 1;
   assert.throws(() => validateExport(fixture.candidate, {ok:true, files:[{...fixture.response.files[0], base64:changed.toString('base64') }]}), /contents changed/);
-  assert.throws(() => validateExport(fixture.candidate, {ok:true, files:[{...fixture.response.files[0], base64:Buffer.alloc(MAX_FILE_BYTES + 1).toString('base64') }]}), /12 MB|limit/);
-  // Use a valid empty ZIP with inert padding before its terminal EOCD; no member is read.
-  const large = Buffer.concat([Buffer.from(archives.emptyBase64, 'base64'), Buffer.alloc(9 * 1024 * 1024 - 44), Buffer.from(archives.emptyBase64, 'base64')]);
-  const files = Array.from({length:3}, (_, index) => ({id:`zip-${index}`, name:`package-${index}.zip`, mimeType:'application/zip', fingerprint:`dom:${index}`}));
-  assert.throws(() => validateExport({...media, files}, {ok:true, files:files.map(file => ({...file, base64:large.toString('base64')}))}), /24 MB/);
+  assert.throws(() => validateExport(fixture.candidate, {ok:true, files:[{...fixture.response.files[0], base64:Buffer.alloc(MAX_INLINE_FILE_BYTES + 3).toString('base64') }]}), /128 MB|limit/);
+  const files = Array.from({length:6}, (_, index) => ({id:`zip-${index}`, name:`package-${index}.zip`, mimeType:'application/zip', fingerprint:`dom:${index}`}));
+  assert.throws(() => validateExport({...media, files}, {ok:true, files:files.map(file => ({...file, base64:archives.emptyBase64}))}), /no supported/);
 });
 
 test('MT5 .set settings are readable inert text and retain UTF-8 or UTF-16 bytes and the canonical name', () => {

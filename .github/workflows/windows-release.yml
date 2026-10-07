@@ -1,0 +1,79 @@
+name: Native Windows installer release checks
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_version:
+        description: 'Require this exact package version (optional, for release dispatch)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: converge-windows-installer-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-install-and-verify:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Require the exact Windows release
+        env:
+          EXPECTED_VERSION: ${{ inputs.expected_version }}
+        run: |
+          node -e "const assert=require('node:assert/strict'),p=require('./package.json'); assert.equal(process.platform,'win32'); assert.equal(process.arch,'x64'); if(process.env.EXPECTED_VERSION) assert.equal(p.version,process.env.EXPECTED_VERSION);"
+      - name: Install exact build dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Run installer isolation and packaging tests
+        run: node --test test/windows-installer.test.js test/windows-native-startup.test.js test/macos-package.test.js
+      - name: Build the official NSIS installer
+        run: |
+          node scripts/build-page-preload.js
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npx --no-install electron-builder --win nsis --x64 --publish never
+      - name: Install, verify the installed app and uninstall in runner temporary storage
+        run: node scripts/qa-windows-installer.js
+      - name: Require unchanged production source
+        run: git diff --exit-code
+      - name: Record installer verification scope
+        run: |
+          @'
+          ## Converge Windows installer verification
+          The official NSIS installer is silently installed into a unique folder under RUNNER_TEMP. The installed ASAR must match the workflow source commit and current runtime modules. The installed Converge.exe must pass the actual packaged Windows startup, first paint, all three native views, sidebar/boss/progress controls and close cleanup gate with isolated empty user data. Silent uninstall must remove the test program files while keeping account/project data and the outside ownership marker.
+
+          The installer is unsigned. This runner check does not claim interactive installer UX, Microsoft signing, SmartScreen reputation or live account/model testing. No existing user machine or portable session is modified.
+          '@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+      - name: Upload the verified official installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Converge-Windows-x64-installer-release
+          if-no-files-found: error
+          compression-level: 0
+          path: |
+            dist/Converge-Setup-*-x64.exe
+            dist/windows-installer-verification.json
+            dist/SHA256SUMS-Windows-Installer.txt
+      - name: Upload isolated native installer evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Converge-Windows-x64-installer-verification
+          if-no-files-found: warn
+          include-hidden-files: true
+          path: |
+            .live-test/windows-installer-*/*.log
+            .live-test/windows-native-startup-*/*.json
+            .live-test/windows-native-startup-*/*.log
+            .live-test/windows-native-startup-*/*.png

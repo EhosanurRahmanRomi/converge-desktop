@@ -1,0 +1,322 @@
+{
+  "version": "1.9.9",
+  "checkedAt": "2026-10-07T06:18:35.265Z",
+  "artifact": {
+    "filename": "Converge-Portable-1.9.9-x64.exe",
+    "byteLength": 464091625,
+    "executableSha256": "fa45e6ada1d071cffa86b56e7d496b5c0b5f6aae3bb9eeef65f5e9ff4d8e33e6",
+    "archiveSha256": "bd92477e3d09adb40c8cdce78f236ae0d0d2379309dd5f959baac4d6b2b4934f"
+  },
+  "source": {
+    "total": 646,
+    "passed": 646,
+    "failed": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "packaged": {
+    "boss": {
+      "count": 22,
+      "tests": [
+        "Production Windows shell creates three sandboxed isolated native chat views and keeps its browser session in memory.",
+        "Import and Normal OK open exactly three distinct chats with the boss coordinator active.",
+        "A mixed text, valid PDF and PNG source selection reaches all three native file inputs; Reset clears the staged previews and retains the session.",
+        "One native file picker uploads the original source to the boss and both workers.",
+        "The boss writes distinct worker instructions, receives both results and exact generated files every cycle, then both workers verify one final candidate after four improvement cycles.",
+        "The real boss composer accepts an instruction during worker generation, delivers it in the next boss context, and completes the run with no queued message left behind.",
+        "Native Save downloads the actual accepted file and matches the coordinator SHA-256, with the requested corrected values.",
+        "The settings selector applies Horror, Alien, Night, Cyberpunk and Anime backgrounds to all three real chat views.",
+        "Robot, Explorer and Spirit character choices apply without changing the active chat run or its accepted files.",
+        "Clicking the center boss opens and closes its sliding native chat panel while preserving the worker workspace.",
+        "A follow-up reuses all three conversations; a new instruction while the boss generates is queued safely.",
+        "Stop cancels active boss generation and prevents queued instructions from restarting the stopped run.",
+        "Stop also cancels both workers during their concurrent generation, retaining each completed conversation.",
+        "Accelerated localhost-only supervision checks both real active worker bridges repeatedly without stopping or resending their healthy generation. Production keeps its five-minute interval.",
+        "Confirmed owned idle failure immediately starts a scoped boss repair while the native healthy worker keeps its request and is never stopped or resent.",
+        "A real resumed artifact is retained alongside the original healthy peer; a cycle counts only after both actual completed results arrive.",
+        "After genuine interruption recovery, both workers independently accept one exact final candidate; its actual boss answer, bottom answer, remaining limitation and exported monitoring report all match the completed run.",
+        "A live-shaped Download file card captures an actual TSV native download using its text/plain alias, preserves canonical TSV name, Unicode, bytes and SHA-256, and reaches the boss and both exact final reviewers.",
+        "A real native main-frame reload reconnects the exact active worker without another Send, Stop or deadline reset; its actual file reaches the boss and both final reviewers with matching bytes and SHA-256.",
+        "Reset clears all three chats without clearing the imported session; Work mode is verified on the fresh boss and worker pages.",
+        "Temporary mode is also verified on all three new chats through its visible page controls.",
+        "Unreadable boss control output receives one format repair, then stops safely without dispatching an invented worker task or clearing the session."
+      ]
+    },
+    "studio": {
+      "count": 17,
+      "tests": [
+        "Real production shell and sandboxed native chats use an empty in-memory account session.",
+        "The production Electron PDF worker parses and rasterizes a genuine one-page fixture with installed runtime dependencies; this gate uses the lab module directly.",
+        "The shell native source picker transfers the complete original JavaScript bytes to all three browser file inputs.",
+        "Four actual file revision cycles finish with native syntax checks, explicit criteria, and a newly opened worker final audit.",
+        "The real local report binds the candidate SHA-256, passes Node syntax parsing, and keeps unexecuted runtime coverage visibly unverified.",
+        "Native revision preview IPC resolves two identically named files to their distinct exact historical contents.",
+        "The real Studio drawer clears all three native view bounds; closing it restores tall, usable worker chats.",
+        "Shell IPC records found, assigned, fixed and rechecked issue evidence against the selected revision.",
+        "Real save/list/export dialogs persist the original and all four same-name revision byte identities in a portable ZIP without browser session state.",
+        "Native revision restoration selects the actual earlier bytes and invalidates prior final acceptance and tool authority.",
+        "Real manual verification and delivery dialogs export exact restored source bytes, matching report hashes, every content checksum and honest partial completion status.",
+        "Loading the disk project reconstructs original and revision bytes while requiring fresh chat ownership and verification.",
+        "Disconnected saved projects expose exact individual revision downloads and a saved-file ZIP through production preload IPC without opening remote chats.",
+        "Importing the real exported ZIP and reconnecting new native chats preserves the saved brief and selected revision without resuming stale requests.",
+        "Running project and revision downloads retain exact candidate bytes, live run identity and the original owned request without duplicate prompts or cancellation.",
+        "A native design-reference picker preserves real PDF bytes in all three chats and records appearance-only reference identities separately from content sources.",
+        "Automatic PDF production carries the exact reference design to the boss and workers, requires separate full-page model review gates, binds host-parsed page count, and downloads the original verified PDF bytes. The model review is offline fixture data, not a quality judgement."
+      ],
+      "documentQuality": {
+        "candidateId": "C4",
+        "candidateSha256": "1f222b2c042c812d32c22a1bc011c75ac27db842caf40592d38003c30e2139ed",
+        "requirements": [
+          {
+            "id": "task-complete",
+            "text": "Complete the task and preserve the requested deliverables.",
+            "gate": "review",
+            "status": "met",
+            "source": "model",
+            "evidence": [
+              {
+                "source": "model",
+                "status": "met",
+                "text": "Reviewed the requested one-page PDF scope and source coverage: the sole requested blue square is present in the delivered page.",
+                "candidateId": "C4",
+                "candidateSha256": "1f222b2c042c812d32c22a1bc011c75ac27db842caf40592d38003c30e2139ed",
+                "at": 1791353821922
+              },
+              {
+                "source": "model",
+                "status": "met",
+                "text": "Reviewed the requested one-page PDF scope and source coverage: the sole requested blue square is present in the delivered page.",
+                "candidateId": "C4",
+                "candidateSha256": "1f222b2c042c812d32c22a1bc011c75ac27db842caf40592d38003c30e2139ed",
+                "at": 1791353821929
+              }
+            ],
+            "revisionId": "R4"
+          },
+          {
+            "id": "document-content",
+            "text": "Review the requested content scope, source coverage and complete derivation or section sequence.",
+            "gate": "review",
+            "status": "met",
+            "source": "model",
+            "evidence": [
+              {
+                "source": "model",
+                "status": "met",
+                "text": "Reviewed the requested one-page PDF scope and source coverage: the sole requested blue square is present in the delivered page.",
+                "candidateId": "C4",
+                "candidateSha256": "1f222b2c042c812d32c22a1bc011c75ac27db842caf40592d38003c30e2139ed",
+                "at": 1791353821923
+              },
+              {
+                "source": "model",
+                "status": "met",
+                "text": "Reviewed the requested one-page PDF scope and source coverage: the sole requested blue square is present in the delivered page.",
+                "candidateId": "C4",
+                "candidateSha256": "1f222b2c042c812d32c22a1bc011c75ac27db842caf40592d38003c30e2139ed",
+                "at": 1791353821929
+              }
+            ],
+            "revisionId": "R4"
+          },
+          {
+            "id": "document-layout",
+            "text": "Visually inspect every rendered page of the exact document, including typography, spacing, mathematical notation and figures.",
+            "gate": "review",
+            "status": "met",
+            "source": "model",
+            "evidence": [
+              {
+                "source": "model",
+                "status": "unverified",
+                "text": "Reviewed the requested one-page PDF scope and source coverage: the sole requested blue square is present in the delivered page.",
+                "candidateId": "C4",
+                "candidateSha256": "1f222b2c042c812d32c22a1bc011c75ac27db842caf40592d38003c30e2139ed",
+                "at": 1791353821923
+              },
+              {
+                "source": "model",
+                "status": "met",
+                "text": "Model-reported visual review, not independently executed aesthetic verification. fixture-output.pdf (562ae7c90e37f07f479f053347a9460140938cff92be7cce82f261595a45d565): 1/1 pages reported inspected. typography: Offline fixture supplies no text; typography is not applicable to the square-only page.\nspacing: Offline fixture models a square at (10,10) within the 100 by 100 point page bounds.\nmathematics: No equations or derivations are requested in this one-square PDF test fixture.\nfigures: The fixture PDF contains the requested solid blue square without captions or textual labels.\nreferenceStyle: The offline reference style-reference.pdf supplies the same blue-square design and page size.",
+                "candidateId": "C4",
+                "candidateSha256": "1f222b2c042c812d32c22a1bc011c75ac27db842caf40592d38003c30e2139ed",
+                "at": 1791353821923
+              },
+              {
+                "source": "model",
+                "status": "unverified",
+                "text": "Reviewed the requested one-page PDF scope and source coverage: the sole requested blue square is present in the delivered page.",
+                "candidateId": "C4",
+                "candidateSha256": "1f222b2c042c812d32c22a1bc011c75ac27db842caf40592d38003c30e2139ed",
+                "at": 1791353821929
+              },
+              {
+                "source": "model",
+                "status": "met",
+                "text": "Model-reported visual review, not independently executed aesthetic verification. fixture-output.pdf (562ae7c90e37f07f479f053347a9460140938cff92be7cce82f261595a45d565): 1/1 pages reported inspected. typography: Offline fixture supplies no text; typography is not applicable to the square-only page.\nspacing: Offline fixture models a square at (10,10) within the 100 by 100 point page bounds.\nmathematics: No equations or derivations are requested in this one-square PDF test fixture.\nfigures: The fixture PDF contains the requested solid blue square without captions or textual labels.\nreferenceStyle: The offline reference style-reference.pdf supplies the same blue-square design and page size.",
+                "candidateId": "C4",
+                "candidateSha256": "1f222b2c042c812d32c22a1bc011c75ac27db842caf40592d38003c30e2139ed",
+                "at": 1791353821929
+              }
+            ],
+            "revisionId": "R4"
+          },
+          {
+            "id": "document-reference-style",
+            "text": "Compare the exact rendered document against the selected style references and document concrete design findings.",
+            "gate": "review",
+            "status": "met",
+            "source": "model",
+            "evidence": [
+              {
+                "source": "model",
+                "status": "unverified",
+                "text": "Reviewed the requested one-page PDF scope and source coverage: the sole requested blue square is present in the delivered page.",
+                "candidateId": "C4",
+                "candidateSha256": "1f222b2c042c812d32c22a1bc011c75ac27db842caf40592d38003c30e2139ed",
+                "at": 1791353821923
+              },
+              {
+                "source": "model",
+                "status": "met",
+                "text": "Model-reported visual review, not independently executed aesthetic verification. fixture-output.pdf (562ae7c90e37f07f479f053347a9460140938cff92be7cce82f261595a45d565): 1/1 pages reported inspected. typography: Offline fixture supplies no text; typography is not applicable to the square-only page.\nspacing: Offline fixture models a square at (10,10) within the 100 by 100 point page bounds.\nmathematics: No equations or derivations are requested in this one-square PDF test fixture.\nfigures: The fixture PDF contains the requested solid blue square without captions or textual labels.\nreferenceStyle: The offline reference style-reference.pdf supplies the same blue-square design and page size.",
+                "candidateId": "C4",
+                "candidateSha256": "1f222b2c042c812d32c22a1bc011c75ac27db842caf40592d38003c30e2139ed",
+                "at": 1791353821923
+              },
+              {
+                "source": "model",
+                "status": "unverified",
+                "text": "Reviewed the requested one-page PDF scope and source coverage: the sole requested blue square is present in the delivered page.",
+                "candidateId": "C4",
+                "candidateSha256": "1f222b2c042c812d32c22a1bc011c75ac27db842caf40592d38003c30e2139ed",
+                "at": 1791353821929
+              },
+              {
+                "source": "model",
+                "status": "met",
+                "text": "Model-reported visual review, not independently executed aesthetic verification. fixture-output.pdf (562ae7c90e37f07f479f053347a9460140938cff92be7cce82f261595a45d565): 1/1 pages reported inspected. typography: Offline fixture supplies no text; typography is not applicable to the square-only page.\nspacing: Offline fixture models a square at (10,10) within the 100 by 100 point page bounds.\nmathematics: No equations or derivations are requested in this one-square PDF test fixture.\nfigures: The fixture PDF contains the requested solid blue square without captions or textual labels.\nreferenceStyle: The offline reference style-reference.pdf supplies the same blue-square design and page size.",
+                "candidateId": "C4",
+                "candidateSha256": "1f222b2c042c812d32c22a1bc011c75ac27db842caf40592d38003c30e2139ed",
+                "at": 1791353821929
+              }
+            ],
+            "revisionId": "R4"
+          },
+          {
+            "id": "artifact-integrity",
+            "text": "Verify the delivered file bytes and format.",
+            "gate": "executed",
+            "status": "met",
+            "source": "executed",
+            "evidence": [
+              {
+                "source": "executed",
+                "status": "met",
+                "text": "Exact candidate identity: Recomputed candidate C4 SHA-256 1f222b2c042c812d32c22a1bc011c75ac27db842caf40592d38003c30e2139ed and 1 exact file identities. Disk-backed files were hashed incrementally.\nPDF page structure: 1 pages parsed. All bounded pages parsed for text and dimensions. Rendering coverage is reported separately.\nPDF rasterization (appearance not reviewed): Rendered 1 of 1 pages to PNG (pages 1; maximum 1,200 pixels per dimension). Rasterization succeeded. Aesthetic quality, clipping, content accuracy and unrendered pages were not reviewed.",
+                "candidateId": "C4",
+                "candidateSha256": "1f222b2c042c812d32c22a1bc011c75ac27db842caf40592d38003c30e2139ed",
+                "at": 1791353817395
+              }
+            ],
+            "revisionId": "R4"
+          }
+        ],
+        "hostPageCount": 1,
+        "downloadedSha256": "562ae7c90e37f07f479f053347a9460140938cff92be7cce82f261595a45d565",
+        "modelReviewIsOfflineFixture": true
+      }
+    },
+    "productionFilesCompared": [
+      "desktop-main.js",
+      "desktop-preload.js",
+      "src/platform/desktop-lifecycle.js",
+      "src/platform/studio-desktop.js",
+      "src/studio/workflow.js",
+      "src/studio/document-design.js",
+      "src/studio/project.js",
+      "src/studio-services/index.js",
+      "src/studio-services/identity.js",
+      "src/studio-services/archive.js",
+      "src/studio-services/project-store.js",
+      "src/studio-services/process-runner.js",
+      "src/studio-services/verification-lab.js",
+      "src/studio-services/pdf-worker.js",
+      "src/studio-services/container-tests.js",
+      "src/studio-services/delivery.js",
+      "src/browser/cookies.js",
+      "src/browser/files.js",
+      "src/browser/file-store.js",
+      "src/browser/upload-transport.js",
+      "src/browser/downloads.js",
+      "src/browser/desktop-coordinator.js",
+      "src/browser/boss-coordinator.js",
+      "src/browser/recovery-policy.js",
+      "src/browser/page-preload.js",
+      "chrome-extension/background.js",
+      "renderer/browser.html",
+      "renderer/browser-app.js",
+      "renderer/browser.css",
+      "renderer/studio-ui.js",
+      "renderer/studio-ui.css",
+      "renderer/assets/fonts/Manrope-Variable.ttf",
+      "renderer/assets/fonts/Manrope-OFL.txt",
+      "renderer/galaxy-scene.js",
+      "renderer/galaxy-scene.css",
+      "renderer/star-ribbons.js",
+      "renderer/ghost-v2.png",
+      "renderer/flower-blossom-v1.png",
+      "assets/icon.ico",
+      "assets/icon.png",
+      "assets/icon.icns"
+    ],
+    "localFixturesOnly": true
+  },
+  "nativeStartup": {
+    "status": "PASS",
+    "platform": "win32",
+    "arch": "x64",
+    "packaged": true,
+    "visibleShell": true,
+    "firstPaint": true,
+    "embeddedViews": [
+      "left",
+      "right",
+      "boss"
+    ],
+    "sidebarToggleVerified": true,
+    "bossDrawerVerified": true,
+    "progressSectionVerified": true,
+    "didClose": true,
+    "embeddedViewsDisposed": true,
+    "closeCleanupCompleted": true,
+    "isolatedSession": true,
+    "providerScope": "Empty isolated session; no authentication, provider navigation or live model task",
+    "clipboardScope": "The Windows startup smoke does not access the clipboard",
+    "nonce": "3ec0aa78-64ec-4ec8-872b-ba8e3e90679b",
+    "pid": 17144,
+    "version": "1.9.9",
+    "executable": "%USERPROFILE%\\AppData\\Local\\Temp\\3KM3UpXgWSoe4y7M3nvvs1ASyEz\\Converge.exe",
+    "portableExecutable": "%USERPROFILE%\\Desktop\\codex\\deliverables\\Converge-Windows-1.9.9\\Converge-Portable-1.9.9-x64.exe",
+    "userData": "%USERPROFILE%\\AppData\\Local\\Temp\\converge-native-smoke-17144-80aa32de-3080-4678-9d06-a9b5c00b531e",
+    "passed": true,
+    "checkedAt": "2026-10-07T06:16:00.057Z",
+    "launchPath": "%USERPROFILE%\\Desktop\\codex\\deliverables\\Converge-Windows-1.9.9\\Converge-Portable-1.9.9-x64.exe",
+    "executableSha256": "fa45e6ada1d071cffa86b56e7d496b5c0b5f6aae3bb9eeef65f5e9ff4d8e33e6",
+    "wrapperExit": null
+  },
+  "scope": {
+    "authenticatedModelDocumentGeneration": false,
+    "olderCEDDraftRewritten": false,
+    "completeCEDContentAccuracyReview": false,
+    "note": "Inspected rendered reference and recovered CED pages, font/object metadata and notation. Concrete layout defects and a figure/formula contradiction were found. The original PDFs were not modified. App tests establish reference transport, acceptance rules, persistence and exact download identity; offline model review fixtures do not establish the quality or correctness of an actual generated document."
+  },
+  "repairs": [
+    "Distinct saved document design profiles, notes and style-reference uploads.",
+    "Style references retain exact identity separately from content scope, including pending-upload recovery.",
+    "Document content and full-page layout requirements apply to document tasks, output criteria and actual generated PDF/DOCX candidates.",
+    "PDF acceptance requires exact identities, reported rendered/inspected pages and concrete typography, spacing, math, figure and reference findings.",
+    "Trusted exact-file PDF page counts constrain model-reported coverage when local parsing ran.",
+    "PDF rasterization is explicitly labelled as appearance not reviewed. Model reports cannot become executed aesthetic evidence."
+  ]
+}

@@ -1,104 +1,106 @@
-# Converge for macOS
+# Converge for Apple Silicon Mac
 
-[← Project](../README.md) · [Mac 1.8.1 verification](MACOS_1_8_1_VERIFICATION.md) · [Boss workflow](BOSS_WORKSPACE.md)
+**Version 1.9.9 · ARM64 · macOS 13+**
 
-**Version 1.8.1 · Apple Silicon ARM64 · MacBook Air M4**
+[← Project](../README.md) · [User guide](USER_GUIDE.md) · [Project studio](STUDIO_GUIDE.md)
 
-Converge shares its boss, two workers, file transfers, sliding controls, result views and artwork across Windows and Mac. The center boss character opens a separate chat panel. Mac integration adds Command shortcuts, system app and Edit menus, native file dialogs and normal Dock behavior.
+The Mac app shares the boss, two workers, project studio, file transport, results and appearance controls with Windows. Native integration adds Command shortcuts, app/Edit menus, Mac file dialogs and Dock behavior.
 
-Native Mac 1.8.1 verification passed on an Apple Silicon GitHub runner: **425 source tests**, **16 packaged boss workflows**, **24 legacy transport workflows**, and actual packaged startup, native editing and Close/reopen checks. Both ARM64 archives passed signature, bundle and runtime/source parity checks. The [verification record](MACOS_1_8_1_VERIFICATION.md) gives the build identity and exact scope. A physical MacBook Air M4 test and live authenticated Mac task have not been performed. The [1.7.0 record](MACOS_VERIFICATION.md) is historical evidence for the earlier two-reviewer app.
+This ARM64 build runs natively on Apple Silicon, including MacBook Air M4. A physical MacBook Air M4 and a live authenticated Mac task have not been tested.
 
 ## Requirements
 
-- An Apple Silicon Mac. This ARM64 build targets the MacBook Air M4 and runs natively without Rosetta.
-- **macOS 13 Ventura or later**, the [minimum supported by the bundled Electron 44 runtime](https://www.electronjs.org/blog/electron-44-0).
-- An internet connection and a current ChatGPT account session. Features and models depend on your account.
+- An Apple Silicon Mac.
+- **macOS 13 Ventura or later**, the minimum for the bundled [Electron 44 runtime](https://www.electronjs.org/blog/electron-44-0).
+- Internet access and a current ChatGPT account session.
+- Local disk space for the app, uploaded sources and saved project revisions.
 
-The downloaded app includes its desktop runtime. You do not need to install Node.js, npm or Electron to use it.
+Node.js, npm and Electron are bundled or unnecessary for end-user installation. Optional container program tests need a separate compatible Docker installation and prepared local images; see [Verification](STUDIO_GUIDE.md#verification-distinguish-local-checks-from-review).
 
 ## Install
 
-1. Open the [Converge 1.8.1 release](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.8.1).
-2. Download **[Converge-1.8.1-macOS-arm64.dmg](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.8.1/Converge-1.8.1-macOS-arm64.dmg)**.
-3. Double-click the DMG, then drag **Converge** into **Applications**.
-4. Eject the disk image. Open **Applications → Converge**.
+1. Open the [Converge 1.9.9 release](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.9.9).
+2. Download **[Converge-1.9.9-macOS-arm64.dmg](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.9.9/Converge-1.9.9-macOS-arm64.dmg)**.
+3. Open the DMG and drag **Converge** to **Applications**.
+4. Eject the disk image and open **Applications → Converge**.
 
-Alternatively, download **[Converge-1.8.1-macOS-arm64.zip](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.8.1/Converge-1.8.1-macOS-arm64.zip)**, extract it, and move **Converge.app** into **Applications** before opening it. Install one copy of the app.
+Alternatively, download the **[ARM64 ZIP](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/download/v1.9.9/Converge-1.9.9-macOS-arm64.zip)**, extract it and move Converge.app into Applications. Install one copy. Close an older Converge workspace before replacing the app.
+
+The Windows EXE is a different artifact. Use the DMG/ZIP on macOS.
 
 ### If macOS blocks the first launch
 
-This release uses an ad-hoc code signature. It has **no Apple Developer ID signature and no Apple notarization**, so macOS may block the first launch.
+The release uses an **ad-hoc signature**, with **no Developer ID signing or Apple notarization**.
 
-If you downloaded this exact release and choose to allow it, attempt to open **Converge.app**, then go to **Apple menu → System Settings → Privacy & Security**. Find the message about Converge, choose **Open Anyway**, and confirm the app name in the next dialog. See [Apple's instructions for opening an unnotarized app](https://support.apple.com/en-us/102445).
+If you obtained this exact release and choose to allow it, first attempt to open Converge. Then open **System Settings → Privacy & Security**, find the blocked-app message and use **Open Anyway**. Confirm the app name. Follow [Apple's first-launch guidance](https://support.apple.com/en-us/102445).
 
-If macOS reports that the app is damaged or will harm your computer, stop and download it again from the release page. Compare its checksum with the release record; report a continuing failure with the app version and macOS version. Keep the Mac's system security protections enabled.
+A damaged-app or malware warning should be checked against a fresh download and the release checksum. Report continuing failures with the artifact/version and macOS version. Keep system security protections enabled.
 
-## Start your first team task
+## Open your first team
 
-1. Open the controls drawer and click **Import JSON file**. Choose a current `.json` cookie export for your own ChatGPT account; import begins immediately.
-2. Choose **Temporary**, **Normal** or **Work mode**, then click **Open the team**. Work is available only when your account exposes it. Converge opens three distinct conversations.
-3. Select a model in each worker page. Click the **center boss character**, then select the boss page's model as well. Each of the three model selectors is independent; the app uses your selections.
-4. Attach source documents, images or code through the controls drawer or the boss panel's attachment button. Source files are supplied to the boss and both workers before the task begins.
-5. Enter the task in **Instruction to the boss**, then click **Send to boss** or press **Command + Enter**. You can also start through **Brief the boss** in the controls drawer.
-6. Watch the workers and the bottom progress bar. The boss assigns work, receives both results and generated files, and requests further checks. Open the result drawer to inspect the candidate and any remaining limitations.
-7. Use **Save final files** when available and choose destinations in the native Mac Save dialogs.
+1. Click **Import JSON file** and choose your own current ChatGPT cookie export.
+2. Choose **Temporary**, **Normal** or **Work mode**, then **Open the team**.
+3. Select a model in both worker pages. Click the middle boss character and select the boss model independently.
+4. Attach content sources. Use **Add a design reference** for appearance examples.
+5. Configure the task and document design in **Project studio → Brief** when needed.
+6. Enter the task through **Instruction to the boss**. Send with **Command + Enter** or the displayed action button.
+7. Inspect **Results & downloads** and save the project or delivery package.
 
-Use **Instruction to the boss** to guide the team. The ChatGPT composer above it is for direct conversation and does not control workers.
+The native ChatGPT composer is for direct conversation; use the app's instruction box to control the workers.
 
-### Add an idea or start another task
+The [user guide](USER_GUIDE.md) covers receipt-only upload rechecks, 512 MiB transport limits, drafts, continued work, settings and recovery. Provider acceptance and account limits remain separate.
 
-Send an additional instruction through the boss box while work continues. A busy model does not lose the instruction: the queue status shows it waiting, and the boss receives it before further assignments or completion.
+## Mac controls
 
-After the task finishes, a new boss instruction reuses the same conversations. **Stop** cancels the active exchange. **Reset** clears all three conversations and lets you choose the next chat type while keeping the imported session.
-
-The [boss workflow guide](BOSS_WORKSPACE.md) explains candidate checks, review limits, required files and stopping. Its Windows installation references apply only to Windows; use this page for Mac setup and shortcuts. Agreement is a review result, not a guarantee that every answer is correct.
-
-## Appearance
-
-Settings offer five still **Chat backgrounds**, applied to the boss and both worker pages: **Night sky**, **Black horror**, **Alien**, **Cyberpunk** and **Anime**.
-
-**Team characters** offers **Expressive robots**, **Curious explorers** and **Wonder spirits**, each with a boss in the middle. **Atmosphere** changes the upper and lower animation bands: **Glowing stars**, **Ghost** or **Flowers**. These choices do not change the models or the task.
-
-Turn **Animations** off in settings or use the header effects button to pause decoration. Chat backgrounds remain still; hidden or minimized windows suspend decorative animation. System reduced-motion preferences are respected.
-
-## Window controls and shortcuts
-
-| Action | Mac behavior |
+| Action | Control |
 |---|---|
-| Start a task or send a boss instruction | **Command + Enter** in the corresponding instruction box |
-| Copy, paste, cut, select all, undo and redo | Standard **Command** shortcuts; also available in **Edit** |
-| Hide the boss panel | Its Close button or **Escape**; the worker task continues |
-| Move the window | Drag a noninteractive area of the custom header |
-| Minimize | Use the header Minimize control; an active review continues |
-| Maximize or restore | Use the header Maximize/Restore control |
-| Close the window | Ends that workspace and clears its imported session and unsaved review state |
-| Open again from the Dock | Creates a fresh setup window; import the session again |
-| Quit Converge | **Command + Q** or **Converge → Quit Converge** |
+| Send an app task/instruction | **Command + Enter** in the app instruction box |
+| Copy, paste, cut, select all, undo/redo | Standard **Command** shortcuts and **Edit** menu |
+| Close boss panel or studio | Its Close control or **Escape** |
+| Move window | Drag a noninteractive header area |
+| Minimize / maximize | Header window controls |
+| Stop coordinated work | Header **Stop** |
+| Quit | **Command + Q** or **Converge → Quit Converge** |
 
-Save useful files before closing, quitting or resetting. Minimizing preserves the current workspace; decorative animation pauses while the window is minimized. Closing the window leaves the Mac app available in the Dock, but the closed workspace is not restored.
+Minimizing keeps the task open and suspends decoration. Closing ends that workspace and clears its imported in-memory session. On macOS the app can remain in the Dock; activating it opens a fresh setup window. Saved local projects remain available in **Project studio → Projects**, with retained downloads and historical status.
 
-## Your session and files
+To continue recovered work, import the session, open a new team and use **Continue task**. Browser sessions and interrupted remote requests are not restored or replayed automatically.
 
-Converge imports the selected cookie export into its own session in memory. It does not modify or sign out your Chrome profile. **Clear session** affects only Converge. Closing the workspace or quitting removes the imported session; reopening starts fresh.
+## Files and privacy
 
-Cookie exports can grant access to your account. Keep them private: do not add them to Git, attach them to an issue, or paste them into a model chat. The picker displays only the filename and clears its input after import. Supported exports are a nonempty cookie array or an object containing one; the file must be `.json` and at most **1 MiB**.
+Content sources and design references share an allowance of **five original inputs**, **512 MiB each / 1 GiB combined**. Images/spreadsheets have additional local guards. Files are sent in bounded chunks; service format/token/account limits can be lower. Project storage is separate and can retain **3 GiB of distinct file bytes**.
 
-Source selection accepts up to **five files**, **12 MB per file** and **24 MB combined**. Combined sources and worker outputs support up to **15 distinct attachments**, staged in batches of five files and 24 MB. Every expected receipt must appear before submission; provider limits or missing files stop the transfer visibly. Your account may impose a lower limit.
+Completed outputs are downloaded from their captured bytes through Mac Save dialogs. Drafts can be downloaded while review is pending or after recovery. A matching hash establishes identity, not correctness.
 
-Saved outputs use the candidate's actual captured bytes and filename. Converge does not provide a permanent local conversation archive. ChatGPT's own storage and retention depend on your selected mode and account settings.
+Converge does not modify or log out your Chrome profile. **Clear session** affects its own imported session. Cookie JSON must be at most **1 MiB** and follow the supported export shape. Never share it in a repository, screenshot or issue.
+
+Saved projects omit browser credentials but contain task sources and outputs. Review archives before sharing.
+
+## Appearance and battery use
+
+Choose the same backgrounds and crews as on Windows. **Motion detail → Low power** pauses background loops while keeping task activity; **Off** removes decorative animation. The still chat backgrounds do not animate.
+
+The app respects reduced motion and suspends decoration when hidden/minimized. The three provider pages still use resources. No measured battery-life or GPU-saving percentage is claimed.
+
+## Verification status
+
+Native ARM64 packaging and verification for **1.9.9** are being completed. Use the release's **macos-verification.json** and **SHA256SUMS-macOS.txt** once published for the exact artifacts and results. Earlier successful Mac runs do not verify this version.
+
+The release workflow checks the source suite, packaged boss/studio/transport paths, actual packaged startup and native editing/Close/reopen, signatures and source/runtime parity. A gate is passed only when the corresponding current-run evidence exists.
+
+Ad-hoc signature checks are not notarization. Controlled local workflow replies are not authenticated provider tests. Physical M4 hardware testing and a live authenticated Mac task remain unperformed.
 
 ## Troubleshooting
 
-| Symptom | What to check |
+| Symptom | Check |
 |---|---|
-| Mac says the developer cannot be verified | Follow the first-launch instructions above and Apple's linked guidance |
-| You downloaded an `.exe` | Use the ARM64 DMG or ZIP linked on this page |
-| No session after reopening from the Dock | Closing intentionally clears the session; import a current JSON export again |
-| Cookie import fails | Check the file shape, `.json` extension, 1 MiB limit, cookie expiry and any normal account verification |
-| Start is disabled | Open all three chats, wait for readiness, enter a task and resolve any upload errors or Temporary-mode confirmation |
-| The boss answers but workers do not start | Use **Instruction to the boss**, not the native ChatGPT composer above it |
-| Command + Enter does nothing | Use an app instruction box; check its shown error or disabled Send/Start reason |
-| No final file is available | Request the exact downloadable output and inspect the missing-file findings |
-| The Mac gets warm | Turn **Animations** Off; model work continues. The three provider pages still consume resources |
+| macOS blocks the developer | Use the first-launch instructions and Apple guidance above |
+| You downloaded an EXE | Choose the ARM64 DMG or ZIP |
+| Session is missing after Dock reopen | Import again; recover the local project separately |
+| Boss does not dispatch work | Use **Instruction to the boss**, not the page composer |
+| Upload is incomplete | Use **Check pending uploads**, then inspect the visible failure |
+| Final file is missing | Open **Results & downloads**, inspect other drafts and required-file findings |
+| Machine gets warm | Select Low power or Off; inspect whether provider work is still active |
+| Required test tooling is unavailable | Configure the optional local tools; a parser pass is not execution |
 
-For a bug report, include Converge version, macOS version, chip, chat mode, steps, expected result and observed result. Redact account details and private task content. Never share a cookie export or authentication token.
+Report the Converge/macOS versions, chip, mode, safe steps and observed error. Redact private task content and account details. Never attach cookies or authentication tokens.

@@ -15,10 +15,10 @@ const CHAT_MODES = new Set(['temporary', 'normal', 'work']);
 // Browser uploads use inert text aliases; candidate/export names stay intact.
 const TEXT_SOURCE_EXTENSIONS = new Set(['mq5', 'mqh', 'mq4', 'py', 'js', 'mjs', 'cjs', 'ts', 'tsx', 'jsx',
   'c', 'cc', 'cpp', 'h', 'hpp', 'cs', 'java', 'go', 'rs', 'rb', 'php', 'sql', 'html', 'css', 'xml',
-  'yaml', 'yml', 'toml', 'sh', 'ps1', 'r', 'swift', 'kt', 'kts', 'ini', 'cfg', 'log', 'set']);
+  'yaml', 'yml', 'toml', 'sh', 'ps1', 'r', 'swift', 'kt', 'kts', 'ini', 'cfg', 'log', 'set', 'tex']);
 const SUPPORTED_TYPES = new Set([
   'image/png', 'image/jpeg', 'image/webp', 'image/gif', 'application/pdf', 'application/zip',
-  'text/plain', 'text/markdown', 'text/csv', 'application/json',
+  'text/plain', 'text/markdown', 'text/csv', 'text/tab-separated-values', 'application/json',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation',
@@ -272,14 +272,46 @@ function sourceTaskProfile(question, sources = []) {
     }).join('\n');
   const mql5Task = sourceExtensions.some(ext => ['mq5', 'mqh'].includes(ext)) || /\b(?:MQL5|mq5|MT5\s+(?:EA|expert advisor))\b/i.test(question) ||
     /#\s*(?:include\s*[<"]Trade[\\/]Trade\.mqh|property\s+strict)|\b(?:CTrade|ENUM_TIMEFRAMES|OnTick)\b/.test(text);
-  const namedCode = sourceExtensions.some(ext => TEXT_SOURCE_EXTENSIONS.has(ext) && !['ini', 'cfg', 'log', 'set'].includes(ext));
+  const namedCode = sourceExtensions.some(ext => TEXT_SOURCE_EXTENSIONS.has(ext) && !['ini', 'cfg', 'log', 'set', 'tex'].includes(ext));
   const detectedCode = mql5Task || /(?:\b(?:def|function|class)\s+[A-Za-z_][\w]*\s*[(:{]|#\s*include\s*[<"]|\b(?:public|private)\s+(?:static\s+)?(?:void|int|string)\b)/.test(text);
   const codeTask = namedCode || detectedCode;
   const action = /\b(?:fix|repair|correct|improve|refine|refient|optimi[sz]e|rewrite|rebuild|modify|enhance|patch)\b/i.test(question) ||
     /\b(?:give|return|deliver|provide|make|create)\b[\s\S]{0,140}\b(?:algo(?:rithm)?|ea|expert advisor|code|implementation|source|script|program)\b/i.test(question);
   const analysisOnly = /\b(?:do not|don't|without)\s+(?:modify|change|rewrite|edit)(?:\s+(?:the|this|my))?\s+(?:code|source|file|ea|algo(?:rithm)?|program)\b|\b(?:explain|review|analy[sz]e)\s+only\b/i.test(question);
-  const outputExtension = mql5Task ? 'mq5' : sourceExtensions.find(ext => TEXT_SOURCE_EXTENSIONS.has(ext) && !['ini', 'cfg', 'log', 'set'].includes(ext)) || 'txt';
+  const outputExtension = mql5Task ? 'mq5' : sourceExtensions.find(ext => TEXT_SOURCE_EXTENSIONS.has(ext) && !['ini', 'cfg', 'log', 'set', 'tex'].includes(ext)) || 'txt';
   return { codeTask, mql5Task, codeOutputExtension: codeTask ? outputExtension : '', requireCodeFile: codeTask && action && !analysisOnly };
+}
+
+function requestedArtifacts(task, sources = []) {
+  const profile = sourceTaskProfile(task, sources);
+  const directions = String(task).replace(/\b(?:do not|don't|no need to)\s+(?:make|create|generate|return|deliver|provide|produce|convert|export|save|attach)\b[^.!?\n]{0,160}/gi, '');
+  // A delivery verb names the output before "from/using/of" names its input.
+  // Preserve dots inside filenames, but stop at sentence boundaries. Source
+  // PDF mentions must not turn "create summary.json from the PDF" into PDF
+  // output, and an explicit replacement format supersedes an inferred type.
+  // "using standard-library unittest" describes how an output is made, not
+  // an input source. Keep later items in that same deliverable list visible.
+  const outputDirections = directions.replace(/\busing\s+(?:(?:only|the)\s+)*(?:(?:Python|JavaScript|Node(?:\.js)?)\s+)?standard[- ]library\b/gi, 'with the standard library');
+  const delivery = /\b(?:make|create|generate|return|deliver|provide|produce|convert|export|save|attach|output)\b/gi;
+  const clauses = [...outputDirections.matchAll(delivery)].map(match => outputDirections.slice(match.index + match[0].length, match.index + match[0].length + 200)
+    .split(/[!?\n;]|\.(?=\s|$)|\b(?:from|using|of|based on|by reading|by auditing|by analyzing|by analysing)\b/i)[0]);
+  const namedFormat = '(?:json|csv|tsv|txt|md|docx|xlsx|pptx|png|jpe?g|webp|gif|zip|' + [...TEXT_SOURCE_EXTENSIONS].join('|') + ')';
+  const namedFile = new RegExp(`\\.${namedFormat}\\b`, 'i');
+  const isNonPdf = clause => [...clause.matchAll(/\b(?:json|csv|tsv|txt|text|markdown|md|docx|xlsx|pptx)\b|\.([a-z0-9]+)\b/gi)]
+    .some(match => !match[1] || namedFile.test(match[0]));
+  const nonPdf = clauses.some(isNonPdf) ||
+    /\b(?:as|in)\s+(?:an?\s+)?(?:json|csv|tsv|txt|plain text|text|markdown|docx|xlsx|pptx)\b/i.test(directions);
+  const deliveredPdf = clauses.some(clause => /\bpdf\b/i.test(clause) &&
+    !/\bpdf\b[\s\S]*\b(?:as|in)\s+(?:an?\s+)?(?:json|csv|tsv|txt|plain text|text|markdown|docx|xlsx|pptx)\b/i.test(clause));
+  const repairPdf = /\b(?:fix|correct|repair|rewrite|edit|improve|refine)\b[^.!?\n]{0,160}\bpdf\b/i.test(directions);
+  const pdf = deliveredPdf || (!nonPdf && repairPdf);
+  const files = pdf || clauses.some(clause => namedFile.test(clause)) || profile.requireCodeFile ||
+    /\b(?:downloadable|download|attach|export|output)\b[^.!?\n]{0,100}\b(?:files?|scripts?|programs?|code|pdfs?|documents?|spreadsheets?|slides?)\b/i.test(directions) ||
+    /\b(?:return|deliver|provide|produce|save)\b[^.!?\n]{0,120}\bas\s+(?:an?\s+)?(?:files?|pdfs?|documents?|spreadsheets?)\b/i.test(directions) ||
+    /\b(?:make|create|generate|return|deliver|provide|produce|save|attach|export)\b[^.!?\n]{0,120}\b(?:files?|scripts?|programs?|spreadsheets?|slides?)\b/i.test(directions);
+  return { profile, files, pdf, nonPdf, pdfFallback: !nonPdf && !profile.codeTask && sources.some(file => /\.pdf$/i.test(file.name)),
+    images: requiresImageOutput(directions, sources.map(file => file.name)) &&
+      (!nonPdf || clauses.some(clause => /\b(?:images?|pictures?|photos?|pics?|illustrations?|posters?|logos?)\b/i.test(clause))) };
 }
 
 function requiredTaskWork(question, profile) {
@@ -860,6 +892,13 @@ function normalizePage(response) {
     unpersonalized: typeof value.unpersonalized === 'boolean' ? value.unpersonalized : null,
     work: typeof value.work === 'boolean' ? value.work : null,
     busy: typeof value.busy === 'boolean' ? value.busy : null,
+    ...(typeof value.interrupted === 'boolean' ? { interrupted: value.interrupted } : {}),
+    ...(typeof value.reconnecting === 'boolean' ? { reconnecting: value.reconnecting } : {}),
+    ...(typeof value.generating === 'boolean' ? { generating: value.generating } : {}),
+    ...(typeof value.requestOwned === 'boolean' ? { requestOwned: value.requestOwned } : {}),
+    ...(typeof value.awaitingProviderIdle === 'boolean' ? { awaitingProviderIdle: value.awaitingProviderIdle } : {}),
+    ...(typeof value.activeRequestId === 'string' && value.activeRequestId.length <= 200 ? { activeRequestId: value.activeRequestId } : {}),
+    ...(['stream-interrupted', 'stopped-thinking'].includes(value.interruptionKind) ? { interruptionKind: value.interruptionKind } : {}),
     reason: String(value.reason || value.error || ''),
   };
 }
@@ -1349,8 +1388,9 @@ function installCoordinator(chrome) {
       throw new Error('Original task source data is no longer available in this app session. Reattach the original files before starting.');
     }
     const question = trimText(message.question, 'Question', 20_000);
-    const profile = sourceTaskProfile(question, current.attachments?.status === 'attached' ? pendingSources.files : []);
-    if ((message.requireFiles === true || profile.requireCodeFile) && message.relayMedia !== true) {
+    const outputs = requestedArtifacts(question, current.attachments?.status === 'attached' ? pendingSources.files : []);
+    const profile = outputs.profile;
+    if ((message.requireFiles === true || outputs.files || outputs.images) && message.relayMedia !== true) {
       throw new Error('Enable file and image exchange when requiring a corrected output file. This source-code revision needs the actual downloadable program.');
     }
     const protocol = typeof message.protocol === 'string' ? message.protocol.trim() : '';
@@ -1373,13 +1413,13 @@ function installCoordinator(chrome) {
     state.codeTask = profile.codeTask;
     state.mql5Task = profile.mql5Task;
     state.codeOutputExtension = profile.codeOutputExtension;
-    state.requireFiles = message.requireFiles === true || profile.requireCodeFile;
+    state.requireFiles = message.requireFiles === true || outputs.files;
     state.requiredWork = requiredTaskWork(question, profile);
     state.workEvidence = {};
     state.sourceReadbacksBySide = {};
     state.lastTransfer = null;
-    state.requirePdf = state.requireFiles && !state.codeTask && (/\bpdf\b/i.test(question) || (state.attachments?.names || []).some((name) => /\.pdf$/i.test(name)));
-    state.requireImages = state.relayMedia && requiresImageOutput(question, state.attachments?.names || []);
+    state.requirePdf = outputs.pdf || (state.requireFiles && outputs.pdfFallback);
+    state.requireImages = state.relayMedia && outputs.images;
     state.transcript = [];
     state.candidate = null;
     state.answer = '';
@@ -1698,7 +1738,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     installCoordinator,
     initialState, normalizePage, validateStartPages, parseDraft, parseReview,
-    draftPrompt, draftOutputPrompt, reviewPrompt, reviewPolicy, requiresImageOutput, sourceTaskProfile, requiredTaskWork,
+    draftPrompt, draftOutputPrompt, reviewPrompt, reviewPolicy, requiresImageOutput, sourceTaskProfile, requestedArtifacts, requiredTaskWork,
     peerUploadName, sourceTextSnapshots, readableSourceJson, compactCodeReviewPrompt, encodeSourceSnapshots, completedWorkEvidence, improvementInstructions, formattingRepairPrompt, substantiveCorrectionPrompt, setCandidate, applyReview, hasAgreement, stateFingerprint,
     replyMedia, draftWithMedia, reviewWithMedia, seedDraftUncertainties, mediaFingerprint, mediaContentFingerprint,
     hasRequiredFiles, requiredReplacementMissing, needsSubstantiveCorrection,

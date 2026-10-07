@@ -1,135 +1,48 @@
-# Converge 1.6.5 verification
+# Release verification
 
-[← Project](../README.md) · [Release notes](RELEASE_NOTES.md)
+[Project](../README.md) · [Developer guide](DEVELOPER_GUIDE.md) · [Release notes](RELEASE_NOTES.md)
 
-**Recorded on 2 October 2026 · Asia/Dhaka · Windows x64**
+## Current release: 1.9.9
 
-This public record summarizes completed checks without publishing authentication material, account screenshots, private provider traces or machine-specific paths. Controlled fixtures, actual native observations, authenticated provider behavior and independent artifact checks have separate scopes.
+Verification records bind checks to specific source revisions and download hashes. They distinguish controlled model fixtures, native application checks and authenticated provider use.
 
-The numbers below describe the recorded release gates. For public source, a historical live parser excerpt was replaced by a synthetic fixture, and its test title/comment was updated without changing assertions. Runtime/build files are unchanged. Private live-session logs remain excluded; source-publication checks are recorded separately from these release checks.
+| Artifact | Record |
+|---|---|
+| Approved Windows portable | [Windows 1.9.9](WINDOWS_1_9_9_VERIFICATION.md) · [Public evidence](evidence/windows-1.9.9.json) |
+| Windows installer | The release's Windows installer report records clean-runner install, source parity, actual installed startup and uninstall |
+| Apple Silicon macOS DMG and ZIP | The release's Mac report records native ARM64 source tests, archive verification, packaged workflows and startup |
+| All downloads | [Artifact lengths and SHA-256](release-artifacts.json) · release `SHA256SUMS.txt` |
 
-## Summary
+The native installer and Mac gates are being run for publication. Their final reports identify the workflow run and source commit. Historical counts below belong only to their original artifacts.
 
-| Check | Result | Scope |
-|---|---|---|
-| Final automated suite | **351 / 351 passed** | App/shared-engine tests; no failures, cancellations, skips or todos |
-| Frozen input audit | **23 inputs unchanged** | No source drift during the final gates |
-| Windows build | **Passed** | Installer and portable artifacts produced; no automatic publishing |
-| Archive/source parity | **18 runtime files plus metadata matched** | Built runtime matches frozen source |
-| Packaged workflows | **24 / 24 passed** | Actual archive with controlled local replies |
-| Windows version resources | **1.6.5** | Read-only executable metadata check |
-| Actual unpacked executable | **Visible v1.6.5 startup and Close passed** | Built native shell, not development launcher |
-| Live GPT 5.6 High file task | **Agreed at round 4 on C3** | Fresh authenticated Normal chats; exact files relayed |
-| Native Save | **Byte-identical to accepted C3** | Actual Windows Save dialog and output comparison |
-| Independent final Python audit | **1,244 / 1,244 passed** | Exact accepted/saved file, recorded cases |
-| Fresh installer installation | **Not performed** | No installation claim |
-| Portable wrapper startup | **Not performed** | No wrapper-startup claim |
+## What the checks establish
 
-## Automated and packaged checks
+- **Source tests:** exercised behavior and regression cases.
+- **Runtime/source parity:** packaged production bytes and dependency metadata match the identified source.
+- **Controlled workflow checks:** the current production shell and bridge exchange synthetic replies/files correctly.
+- **Native startup:** the actual packaged executable renders and its native controls/lifecycle work in an isolated test session.
+- **Installer roundtrip:** the exact tested setup installs and removes its program files on a clean Windows runner.
+- **Mac archive checks:** the shipped ZIP and DMG contain verified ARM64 bundles with intact ad-hoc signatures.
 
-The final suite ran **10:29:19.289–10:30:20.042 Asia/Dhaka**, taking **60.752 seconds**, with exit code 0. All 351 tests passed and all 23 frozen production inputs remained unchanged.
+These checks do not guarantee model accuracy, provider availability, aesthetic quality or uninterrupted long remote tasks. Local PDF parsing/rasterization is separate from visual review. A model's reported review is labelled model evidence.
 
-The final preload/build/parity/packaged sequence ran **10:30:39.215–10:39:19.237 Asia/Dhaka**, taking **520.021 seconds**. Each process exited 0:
+The current release does not claim a physical MacBook Air M4 test or a fresh authenticated Mac conversation. Platform reports explain their specific remaining limits.
 
-| Stage | Elapsed |
-|---|---:|
-| Generate production page preload | 0.178 s |
-| Build Windows installer and portable | 131.774 s |
-| Compare archive source and artifact identities | 10.625 s |
-| Packaged controlled desktop fixture | 377.363 s |
+## Historical evidence
 
-The package identified version 1.6.5. All 24 workflow checks passed with no frozen-input drift. Covered workflows include mode setup, bounded errors, uploads, review progression, candidate/file requirements, cancellation/reset, session recovery and desktop geometry.
+- [Windows 1.9.8](WINDOWS_1_9_8_VERIFICATION.md)
+- [Windows 1.9.7](WINDOWS_1_9_7_VERIFICATION.md)
+- [Windows 1.9.6](WINDOWS_1_9_6_VERIFICATION.md)
+- [Windows 1.9.5](WINDOWS_1_9_5_VERIFICATION.md)
+- [Windows 1.9.4](WINDOWS_1_9_4_VERIFICATION.md)
+- [Windows 1.9.3](WINDOWS_1_9_3_VERIFICATION.md)
+- [Windows 1.9.2](WINDOWS_1_9_2_VERIFICATION.md)
+- [Windows 1.9.1](WINDOWS_1_9_1_VERIFICATION.md)
+- [Windows 1.9.0](WINDOWS_1_9_0_VERIFICATION.md)
+- [Windows 1.8.2](WINDOWS_1_8_2_VERIFICATION.md)
+- [Windows 1.8.1](WINDOWS_1_8_1_VERIFICATION.md)
+- [Mac 1.8.1](MACOS_1_8_1_VERIFICATION.md)
+- [Mac 1.7.0](MACOS_VERIFICATION.md)
+- [Windows 1.6.5](WINDOWS_1_6_5_VERIFICATION.md)
 
-The fixture generated shell screenshots. Two requests to capture embedded native pages returned `UnknownVizError`; those missing images are **not** counted as passed native-page visual evidence. Separate physical observation establishes the actual built shell's visible startup.
-
-The public screenshots under `docs/images` are sanitized layout fixtures with sample activity. They do not demonstrate an authenticated review by themselves.
-
-## Live discovery and the Python fix
-
-An initial authenticated arithmetic check answered **4 + 6 = 10**, with two independent drafts followed by two verification steps. Both reviewers accepted unchanged C1, with no issues or error. This check occurred **before** the final Python-download fix and is retained as separate evidence, not a post-fix file-flow test.
-
-The initial live Python task exposed an actual defect: a native `.py` download used MIME type `text/x-python`, while the capture broker expected the app's canonical `text/plain` representation. That initial run was not counted as a successful file review.
-
-The fix in `src/browser/downloads.js` accepts `text/x-python` **only** for a selected `.py` file whose declared app representation is `text/plain`. Owner/request identity, filename, size, readable Unicode, HTML rejection, cancellation and cleanup checks remain. Three regression tests reproduced the defect before the fix; all **18 targeted download tests** passed after it. The final full suite then passed 351 tests.
-
-## Fresh authenticated file review
-
-After the fix, the approved session export was imported through the actual Windows JSON picker into a new app-owned session. Two fresh **Normal** chats opened. Their visible model menus both selected **GPT 5.6 High**; Pro was not used.
-
-The synthetic task repaired a Python interval-merging function. It required sorted merged outputs, correct containment and touching behavior, empty and single-pass input support, invalid-input rejection, no input mutation, a complete downloadable `.py` file and at least four full improvement rounds.
-
-The run started at **10:36:27.241** and reached agreement at **10:55:45.690 Asia/Dhaka**: **19 minutes 18.449 seconds**.
-
-| Measure | Observed |
-|---|---:|
-| Independent drafts | 2 |
-| Ordinary peer checks | 8 |
-| Full review rounds | 4 |
-| Extra revised-file production turn | 1 |
-| Total transcript turns | 11 |
-| Actual candidate revisions | 2 |
-| Accepted final candidate | C3, accepted by both reviewers |
-| Unresolved findings / pending requests / final errors | 0 / 0 / 0 |
-
-Nine post-draft transcript entries use the review role. One is the bounded revised-file production turn, so it is not counted as a ninth ordinary peer check. A missing-replacement finding was resolved. Both pages finished authenticated, ready and idle.
-
-### Candidate changes
-
-| Candidate | File bytes | Recorded change |
-|---|---:|---|
-| C1 | 1,585 | First complete corrected Python candidate |
-| C2 | 1,530 | Removes an unnecessary slice allocation |
-| C3 | 1,643 | Clarifies documentation and exported-file metadata; behavior remains the same as C2 |
-
-The C3 documentation revision is not described as a new algorithmic improvement. Four native Python downloads completed, including the two drafts and the replacements. Captured candidate files were verified and sent to the peer reviews.
-
-### Exact Save and independent audit
-
-The actual bottom Save control opened **Save final reviewed file**. The app saved `merge_busy_windows.py` and displayed success. A direct byte comparison confirmed the native-saved output equaled archived C3 and the final candidate metadata:
-
-```text
-File: merge_busy_windows.py
-Bytes: 1643
-SHA-256: eccd79bfb3efba84ce9685b77d56a66e61153817300f899e682153a078bf3a2b
-```
-
-An independent audit of those exact bytes passed **1,244 required checks** under **Python 3.14.2**. It included **1,200 seeded randomized cases** against a separate **O(n²) overlap/touch graph connected-components oracle**, plus fixed/invalid-input cases covering containment, touching, duplicate and zero-length intervals, extreme numbers, immutable inputs and single-pass iterables. The randomized seed was `16520261002`.
-
-Source inspection supports **O(n log n)** time and **O(n)** auxiliary space. These bounds were reviewed structurally; they were not proven by a timing benchmark. Passing the recorded cases does not prove every possible input.
-
-The authenticated run used the final frozen source through the development launcher. Package parity establishes the built runtime uses that same source. It does not mean the authenticated run occurred inside the separate built-app startup smoke test.
-
-## Native window observations
-
-The source app showed no blue native caption, a transparent custom header and the redesigned opaque drawer. Maximize/Restore changed their accessible labels, Minimize was confirmed and the live run continued after restoration. Closing the owned earlier test window removed that window without touching Chrome.
-
-The actual final **unpacked built executable** was separately launched in an isolated test profile. Its visible badge read **v1.6.5**. The transparent header, taller chat regions, opaque drawer and direct Import JSON file control were observed. Its custom Close removed only that built window; the source live window and Chrome remained.
-
-This confirms visible unpacked built-app startup and Close. It does not confirm a fresh installer installation, portable-wrapper startup or authenticated provider use inside that built-window smoke check.
-
-## Release artifact identities
-
-| Artifact | Bytes | SHA-256 |
-|---|---:|---|
-| `Converge-Setup-1.6.5-x64.exe` | 114,325,118 | `495965b9d78cd717947a5b1ad9e2fb1c3e27bf1b47192c187367618a674ddc05` |
-| `Converge-Portable-1.6.5-x64.exe` | 114,028,112 | `c5e371d596311f1f7f7534bf36b26a87d3e64960433505974ad8efbc93cf0994` |
-| `resources/app.asar` | 3,416,571 | `71080e5c7d6a349c15577b16d891b531f5b448366e6217b6d0fe8c8ebaefb55e` |
-
-Windows FileVersion is 1.6.5 on the Setup, Portable and unpacked executables. ProductVersion is 1.6.5 on the two wrappers and 1.6.5.0 on the unpacked executable. The wrappers are unsigned.
-
-To check a downloaded wrapper on Windows:
-
-```powershell
-Get-FileHash -Algorithm SHA256 .\Converge-Setup-1.6.5-x64.exe
-Get-FileHash -Algorithm SHA256 .\Converge-Portable-1.6.5-x64.exe
-```
-
-## Practical limits
-
-- Controlled replies establish app behavior within the fixture's scope; they are separate from live provider checks.
-- Two reviewers agreeing is not a proof of 100% correctness or profitability.
-- The provider can change its page structure, authentication, upload rules and model availability.
-- Both pages share the account's service limits.
-- Native trading compilation/backtests and six-month profitability are not established by this Python verification. The earlier trading-performance target remains unfinished.
-- The animation engine was retained in 1.6.5. No new GPU saving was measured or claimed.
-- Historical release records describe their own builds and should not be pooled into the current result.
+Raw cookie exports, account traces and private project inputs are excluded from the public repository. Public evidence substitutes neutral user-directory prefixes while retaining artifact hashes and the original scope.

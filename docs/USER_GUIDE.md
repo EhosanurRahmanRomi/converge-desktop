@@ -1,163 +1,216 @@
-# User guide
+# Converge user guide
 
-**Current Windows and Mac 1.8.1 boss workspace:** follow the [three-chat guide](BOSS_WORKSPACE.md) and [Mac setup](MACOS_GUIDE.md). The sections below describe the previous two-reviewer releases, including macOS 1.7.
+**Version 1.9.9 · Windows x64 and Apple Silicon Mac**
 
-[← Project](../README.md) · [Verification](VERIFICATION.md)
+[← Project](../README.md) · [Project studio](STUDIO_GUIDE.md) · [Mac installation](MACOS_GUIDE.md) · [Recovery details](MODEL_ERROR_RECOVERY.md)
 
-## 1. Open Converge
+## 1. Install or open the app
 
-Choose the Windows x64 installer or portable application from the [1.6.5 release](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.6.5). For a MacBook Air M4 or another Apple Silicon Mac, use the ARM64 Mac build and follow the [Mac guide](MACOS_GUIDE.md).
+Get the files from the [1.9.9 release](https://github.com/EhosanurRahmanRomi/converge-desktop/releases/tag/v1.9.9).
 
-- **Installer:** follow the setup wizard and open Converge from its shortcut.
-- **Portable:** open the portable executable without running an installation wizard.
+- **Windows Setup:** run Converge-Setup-1.9.9-x64.exe and follow the installation wizard.
+- **Windows Portable:** open Converge-Portable-1.9.9-x64.exe. A portable executable still saves recovery projects and preferences in local app data.
+- **Apple Silicon Mac:** use the ARM64 DMG or ZIP and follow the [Mac guide](MACOS_GUIDE.md). Windows EXEs do not run natively on macOS.
 
-The release files are unsigned. Recorded verification includes the actual unpacked executable's visible startup, but not a fresh installation or portable-wrapper startup.
+Close an older Converge window before switching versions. Its running process stays on the old version even after a newer file is downloaded. Check the version in the header.
 
-The window has its own Minimize, Maximize/Restore and Close controls. Drag the noninteractive header area to move it. Use the top-left menu to show or hide **Review controls**. The drawer hides when a review begins, giving the two chats the full workspace width.
+The release bundles the desktop runtime. Windows files are unsigned; Mac files use an ad-hoc signature without notarization. The [Windows verification record](WINDOWS_1_9_9_VERIFICATION.md) identifies the tested portable. A passed startup check does not establish installation or upgrade testing.
 
-## 2. Import your session
+Use the top-left menu to show or hide **Review controls**. The middle character opens the sliding boss panel. **Project studio** opens the task library and review tools. **Results & downloads** in the bottom bar opens the answer and files.
 
-1. In **Session**, click **Import JSON file**.
-2. Select a current cookie export for your own ChatGPT account from your PC.
-3. Wait for the imported session status. No second import click is required.
+## 2. Import your own session
 
-Supported JSON shapes are a nonempty cookie array or an object containing a nonempty `cookies` array. The selected file must be `.json` and at most **1 MiB**. You can instead expand **Or paste cookie JSON** and use **Import pasted JSON**.
+1. Open the controls drawer and choose **Import JSON file**.
+2. Select a current ChatGPT cookie export belonging to your own account.
+3. Wait for the import status. Import starts immediately; there is no second import click.
 
-The file label displays only the filename. Import inputs clear after an attempt. Invalid JSON, empty exports, oversized files and read failures show an error; an invalid replacement does not remove a previously imported session. Cancelling the picker keeps the current state.
+The file must be JSON, at most **1 MiB**, and contain a nonempty cookie array or an object with a nonempty cookies array. **Or paste cookie JSON** is an alternative.
 
-The imported session belongs to Converge's in-memory browser profile. It does not clear, modify or sign out Chrome. **Clear session** affects only Converge. Closing Converge loses this imported session, so import again when reopening the app.
+Only the filename is displayed. Import inputs clear after an attempt. Cancelling the picker keeps the current state, and an invalid replacement does not remove a valid imported session.
 
-**Keep cookie exports private.** They can grant account access. Never include them in screenshots, issue reports, shared folders or this repository. The app does not bypass a sign-in or verification challenge. An expired or rejected session needs a current valid export and any normal provider verification.
+Converge imports the session into its own in-memory profile. It does not change, clear or log out Chrome. **Clear session** affects only Converge. Closing the workspace clears its imported session; local saved projects remain.
 
-## 3. Choose two chats
+Keep exports private. They can grant access to the account. Do not upload one as a source file, paste it into a model conversation, commit it to Git or attach it to an issue. An expired session or normal provider verification still needs your attention.
 
-| Mode | Behavior |
+## 3. Open the team
+
+| Mode | What opens |
 |---|---|
-| **Temporary** | Opens two Temporary chats. Unpersonalized mode is not a separate requirement. |
-| **Normal** | Opens two regular ChatGPT chats. |
-| **Work mode** | Opens two Work chats only when the account exposes that mode and both pages visibly select it. |
+| **Temporary** | Three distinct Temporary conversations |
+| **Normal** | Three distinct regular conversations |
+| **Work mode** | Three Work conversations when the account exposes and confirms that mode |
 
-Press **Open both chats** after selecting the mode. Both pages must be ready before Start becomes available. Choose the model in **each ChatGPT page**; Converge does not assume the two menus select the same model.
+Choose the mode, then press **Open the team**. The boss and both workers must be ready before starting. If Temporary state cannot be read, confirm the mode on all three visible pages when requested. A visibly unavailable mode remains blocked; Work does not silently fall back to Normal.
 
-If Temporary state cannot be read, the app may ask you to confirm it on both visible pages. A visibly disabled Temporary mode still blocks starting. Work does not silently fall back to Normal.
+Select the desired model **in each page's own menu**. The boss, worker A and worker B have independent selections. Models and tools depend on the account; Converge does not provide an extra model tier or remove usage limits.
 
-The provider controls how chats are retained and which account features are available. Converge's local in-memory session does not mean Normal or Work conversations are deleted from the provider.
+Use the app controls for coordinated tasks. Typing into the native ChatGPT composer opens a direct conversation; it does not dispatch work to the other pages.
 
-## 4. Describe the task
+## 4. Write a useful brief
 
-Use **Task brief → Your task** to state what should be solved, created or improved. Include the required output format, constraints and any checks that matter. The task field permits up to **20,000 characters**.
+Enter the task in **Instruction to the boss**, or use **Brief the boss** in Review controls. State:
 
-Examples:
+- What you want created, corrected or answered.
+- Which source files define the scope.
+- The exact output format and filenames when they matter.
+- Constraints that must be preserved.
+- Acceptance conditions and any checks that must actually run.
 
-> Review this Python function. Fix containment, touching intervals and empty input; do not mutate my inputs. Produce a complete downloadable `.py` file, explain each useful change, and test adversarial cases.
+For example:
 
-> Correct the attached PDF. Preserve its section order, cover every original question, check the calculations and return the corrected PDF.
+> Improve the attached Python function without mutating its inputs. Cover empty input, touching intervals and containment. Deliver the complete corrected Python file and a test file. Record which tests actually ran and any missing tools.
 
-Open **Preferences & review rules** to add an optional **Review direction**. Good directions request evidence, edge cases or output inspection. They should not ask the reviewers to invent objections or assert certainty.
+For a document:
 
-### Review approaches
+> Expand every topic in the attached source into a readable PDF, in the original order. Show intermediate derivation steps, define new terms and include labelled figures where useful. Keep a source-coverage checklist. Use the attached design reference for appearance only. Report any content or layout that you could not verify.
 
-| Approach | Minimum review |
+The main task field allows **20,000 characters**. Optional **Boss instructions** allow **10,000 characters**. Avoid asking the team to invent objections, compete for confidence or claim absolute certainty.
+
+### Choose the review route
+
+| Route | Minimum |
 |---|---|
-| **Auto** | At least four full improvement rounds for general, creative and file tasks. Recognized simple arithmetic uses two verification steps. |
-| **Improve** | At least four full rounds. |
-| **Verify** | Two verification steps: a fresh check by each reviewer. |
+| **Auto** | Four improvement cycles for general, creative and file work; recognized simple fixed arithmetic uses two verification steps |
+| **Improve** | Four improvement cycles |
+| **Verify** | Two verification steps |
 
-A full round includes a peer check from **both** reviewers. Both pages first create independent drafts; those drafts are separate from the review rounds. A revision can require another check of the replacement's exact identity before agreement.
+The boss decides the substantive assignments and next useful changes. Minimum cycles are a workflow rule, not an answer-quality guarantee. The default maximum is six; settings allow up to 12.
 
-The default maximum is **six rounds**. Improvement mode cannot set a maximum below four. The app caps review rounds at **12**, each reply at **30 minutes**, and the entire run at **two hours**. Provider limits can end a task earlier.
+Open **Project studio → Brief** for task presets, acceptance criteria, document design, local verification and a fresh final audit. Use **Apply to this task** to commit changes to an idle task.
 
-## 5. Attach source files
+## 5. Attach content and appearance references
 
-Click **Attach files, images or code** before starting. The app sends the source attachments to both reviewers.
+Open the team before attaching files.
 
-| Limit | Value |
+- **Attach files, images or code** adds content sources.
+- **Add a design reference** adds appearance examples separately.
+- Both kinds are delivered to the boss and workers. They share the original-input allowance.
+
+| Local input limit | Value |
 |---|---:|
-| Files per selection | Up to **5** |
-| One file | Up to **12 MB** |
-| Total selected bytes | Up to **24 MB** |
+| Content files + design references retained for the task | **5 total** |
+| One file | **512 MiB** |
+| Combined original input bytes | **1 GiB** |
+| Image input guard | **20 MiB** |
+| Spreadsheet input guard | **50 MiB** |
 
-Supported sources include PNG, JPEG, WebP, GIF, PDF, TXT, Markdown, CSV, JSON, DOCX, XLSX and PPTX; readable source code such as Python, JavaScript, TypeScript, C/C++, C#, Java, Go, Rust, MQ5/MQH/MQ4; and readable MT5 `.set` files. The provider's own accepted formats and upload limits also apply.
+The service can impose lower format, token, processing or account limits. These are app transport/guard limits, not a promise that every file is accepted by the provider.
 
-Readable text is checked for UTF-8 or BOM-marked UTF-16. Code can be uploaded as a readable `.txt` alias, while its original filename and byte identity remain part of the task. This convention does not rename the final saved output.
+Common supported sources include PDF, images, text, Markdown, CSV/TSV, JSON, DOCX, XLSX, PPTX and readable programming source. Text must use supported UTF-8 or BOM-marked UTF-16. Some code uploads use a readable TXT alias while retaining their original name and byte identity. That alias does not change the final output's canonical filename.
 
-Standard single-disk ZIP packages are relayed as unchanged opaque bytes after container-header checks. The app does not extract, execute or certify their contents. Multipart and ZIP64 containers are unsupported. Standalone executables, compiled programs and unknown binary formats are unsupported.
+Standard supported single-disk ZIP inputs are relayed as unchanged bytes after container-header checks. Converge does not extract, run or certify their contents. Multipart/ZIP64 inputs and unsupported executable or binary formats are rejected.
 
-Upload errors block Start and show the failure. A request to repair or deliver uploaded code automatically requires a complete corrected downloadable file. A description of a patch does not substitute for that file. **Require a revised file** also turns on for PDF correction work; turn it off when the task only needs analysis or a summary.
+### Follow the upload state
 
-### Original source and candidate
+Large files are read and transferred in bounded chunks. The panel reports actual bytes during local reading/sending; provider processing is shown as processing, without an invented percentage.
 
-- **Original source** is the input you attached at the start of the task.
-- **Candidate C1, C2, C3…** is a generated answer or output under review.
-- A renamed file with identical verified contents does not count as a file improvement.
-- The current candidate's file bytes, ID and SHA-256 accompany peer handoffs.
+Starting remains blocked until all three pages confirm the expected attachments. If an upload is partial or times out, use **Check pending uploads**. It checks existing receipts without uploading the same selection again. Resolve that batch before adding another.
 
-For large code tasks the app preserves the complete original assignment and uses bounded full source readbacks. It stops if a complete request cannot fit its limits; it does not silently truncate a source into a supposedly complete program. Provider message limits can still reject a request.
+Use **Cancel upload** or the header **Stop** while a transfer is pending. A stopped or failed upload is not counted as a delivered source.
 
-## 6. Run and supervise
+### Original source versus candidate
 
-Press **Start automatic exchange**, or **Ctrl + Enter** in the task panel.
+- **Original source:** a file you supplied as content.
+- **Design reference:** a supplied appearance example; it does not expand the content scope.
+- **Candidate C1, C2…:** a generated result under review.
+- **Worker checkpoint W1, W2…:** a completed worker result that may not be the boss-selected candidate.
 
-1. Both pages draft independently.
-2. A current candidate is sent to the other reviewer with the task, relevant source context and actual supported files.
-3. The reviewers check correctness, useful alternatives, evidence and deliverables. Worthwhile replacements become new candidates.
-4. A replacement must be checked as the same current candidate by both reviewers.
+Generated files are transferred with their actual captured bytes and identities. Describing a new file does not count as delivering it. Required file work must provide the requested downloadable artifact; analysis-only tasks can leave **Require a revised file** off.
 
-The lower band shows the current action, round and available output files. Expand it to inspect the **Answer**, **Activity** and **Findings** views. The candidate trail records replacements, reported benefits and whether both reviewers checked that replacement. It retains the first draft for comparison. Cosmetic bot expressions do not represent confidence or measured answer quality.
+## 6. Run, guide and stop
 
-Use **Stop** at any time. It remains available in the upper header when the controls drawer is hidden.
+Start through the app instruction box. **Ctrl + Enter** on Windows or **Command + Enter** on Mac sends the instruction.
 
-### How a run ends
+The boss plans, both workers work, completed replies/files return to the boss, and the team revises or verifies the current candidate. The bottom band shows the present action, cycle and available files.
 
-| State | Meaning |
+You can send text additions through **Instruction to the boss** while work continues. Busy requests keep their ownership; the queue shows that your instruction is waiting. The boss receives it before later assignments or completion. New attachments must wait until the active task is idle.
+
+### Long tasks and interruptions
+
+The host checks owned requests every **five minutes** and reacts to supported observed interruptions. Slow, healthy analysis is allowed to continue. Baseline safeguards are **two hours per response** and **24 hours per workflow**, with separate file-transfer handling.
+
+For recoverable failures, the boss requests a focused repair from retained work. A healthy teammate and completed files are preserved. Recovery is bounded; repeated failures, authentication, account limits or unavailable prerequisites can still leave the task blocked. The app cannot force the provider to finish a terminated response.
+
+**Stop** remains in the header during work, even with the controls hidden. It retires active coordinated requests; a late reply or verification result cannot turn the stopped task into a completed one. Page cancellation still depends on the provider responding to its normal stop control.
+
+### Read the outcome
+
+| Outcome | Meaning |
 |---|---|
-| **Agreed** | Both reviewers accept the same candidate, the minimum review is met, unresolved findings are empty and required deliverables are present. |
-| **Stopped** | You cancelled the exchange. Inspect and save the useful current candidate. |
-| **Limit reached / unfinished** | The task did not meet completion requirements within a limit, or essential work remained unavailable. |
-| **Error** | A page, upload, download or request failed. Read the shown reason before restarting. |
+| **Final reviewed result** | The selected candidate met the app's required checks and the boss approved it |
+| **Current draft** | Work is running or required acceptance is still incomplete |
+| **Stopped** | You cancelled the exchange; completed drafts can still be useful |
+| **Blocked / limit reached** | A prerequisite, repeated failure or safeguard prevented completion |
+| **Error** | Inspect the shown page, upload, delivery or request failure |
 
-The app does not replace required files with prose. If a required file is missing, it makes one bounded creation request for that response before stopping with an explanation. Expired, inaccessible or changed outputs also stop rather than masquerade as successful transfers.
+A green result applies to the exact current candidate and recorded evidence. It does not prove universal accuracy, profitability or the truth of every model claim.
 
-If a task explicitly requires native compilation or an MT5 backtest, removing uncertainty or agreeing that the tool is unavailable does not complete that requirement. Report presence and model-reported evidence are checked, but the app does not independently authenticate a native run or establish profitability.
+## 7. Find your answer and download files
 
-## 7. Save and continue
+Open **Results & downloads** in the bottom bar. The files appear before the long answer.
 
-Use **Save final files** after agreement, or **Save current files** after an unfinished or stopped run. Choose the destination in the Windows dialog. Save writes captured candidate bytes and preserves the output's actual filename.
+- Use **Download** beside one file.
+- Use **Download all final files** or **Download all draft files** for the current selection.
+- Open **Other completed drafts** for completed worker outputs, including a newer result that the boss has not selected.
+- Read the answer, full exchange, remaining issues and reported limitations.
 
-Save useful output **before closing or resetting**. The app is not a durable local conversation archive. Closing it loses its exchange state; original attachments and private file bytes are cleared at task completion/Stop/Reset as appropriate. Outputs still visible in the provider's page follow that service's retention rules.
+Downloads use the captured file identity. They remain available during work and after opening a saved project; reconnecting a chat is not required to download retained bytes. Saving a draft does not approve it.
 
-For a follow-up, enter another task and use **Send next command to both**. The same pair of chats keeps its conversation context. A new command clears retained source attachments for the previous task, so attach them again when needed.
+If a task produced only text, use **Copy** or **Export .md**. If you required a PDF or another downloadable format and none was retrieved, inspect the missing-file finding. The app cannot turn a prose claim into an actual provider file.
 
-To start a fresh pair, use **Reset chats & choose type**. Reset closes both pages, returns to the three mode choices and retains the imported app session.
+**Previous workflow status** is saved history, including a stopping reason when available. It is not live progress. Older projects may not have that history.
 
-## 8. Appearance
+## 8. Save projects and continue
 
-In **Preferences & review rules → Appearance**:
+Open **Project studio → Projects**.
 
-- Choose **Glowing stars**, **Ghost** or **Flowers**.
-- Switch **Animations** On/Off without stopping the reviewers.
-- **Pause effects / Resume effects** in the header controls the same setting.
+| Action | Purpose |
+|---|---|
+| **Save project** | Save the committed brief, sources, revisions and review history locally |
+| **Download saved files** | Retrieve a saved project's outputs without replacing the active task |
+| **Open project** | Restore a saved task to continue its review |
+| **Export project** | Back up or move the complete bounded project archive |
+| **Export delivery package** | Share the selected result with its evidence, issues, limitations and hash manifest |
 
-Movement is concentrated in the upper reviewer stage and lower progress band. The center backdrop stays still. Stars and Flowers are capped at 30 frames per second; Ghost at 24. Shared cached sprites bound the rendering work. Decoration suspends while the window is hidden/minimized and respects the system's reduced-motion preference. No new GPU saving over the previous animation engine was measured for 1.6.5.
+Automatic recovery checkpoints retain committed task data. A visible save failure means you should retry; unsubmitted editor drafts are retained only in the current window. Use explicit Save/export for important work.
 
-![Compact controls](images/compact-controls.png)
+A recovered project starts disconnected. Import the session, open the team and use **Continue task** with a focused instruction. Retained sources are reattached, and continued work needs fresh acceptance. Interrupted remote prompts are not replayed automatically.
 
-*Compact interface preview; sample state only.*
+After completion, another boss instruction starts a new task in the same conversations. **Reset** opens a fresh team and returns to the mode choices while keeping the imported app session. Preserve useful projects/files before replacing a task.
+
+Project archives use Converge's ZIP STORE format, retain up to **3 GiB of distinct file bytes**, and support up to **48 candidate revisions**. They exclude browser credentials and live requests, but contain your private task inputs/outputs. Inspect them before sharing.
+
+## 9. Appearance and performance
+
+Open **Preferences & review rules → Appearance**.
+
+| Setting | Options |
+|---|---|
+| Atmosphere | Glowing stars, Ghost, Flowers |
+| Chat backgrounds | Night sky, Black horror, Alien world, Cyberpunk city, Anime twilight |
+| Team characters | Expressive robots, Curious explorers, Wonder spirits |
+| Motion detail | Full motion, Low power · task activity only, Off |
+
+The chat backgrounds stay still. Decorative motion is concentrated in the upper and lower bands. Low power keeps task-related activity while pausing background loops; Off removes decorative animation. **Pause effects / Resume effects** controls the same animation preference.
+
+Hidden/minimized windows suspend decoration, and system reduced-motion preferences are respected. These features bound decorative work; no exact GPU-saving percentage is claimed. Three provider pages can still consume memory, CPU and GPU resources.
 
 ## Troubleshooting
 
-| Symptom | Check |
+| Symptom | Next step |
 |---|---|
-| Start is disabled | Import a valid session, open both pages, wait for readiness, enter a task and resolve upload/mode errors. |
-| Work mode is unavailable | Confirm the account offers Work. Choose another mode if it does not. |
-| Cookie import fails | Check `.json`, supported shape, size, expiry and normal provider verification. Do not share the export in an issue. |
-| A page is still generating or has a draft | Wait for the existing work to finish or clear the draft yourself before starting an exchange. |
-| No final file is available | Request the exact downloadable format. Inspect missing-deliverable findings; the app cannot invent a provider download. |
-| Output download expires or changes | Preserve the current result, ask for a fresh output and restart the bounded task. |
-| A request is too long | Reduce attachments or task size while preserving the requirements. The app reports a size rejection instead of waiting forever. |
-| Decoration uses too many resources | Turn Animations Off. Chat work continues. |
-| A future ChatGPT layout breaks the bridge | Report the visible failure and safe diagnostics; the browser adapter may need an update. |
+| Start is disabled | Check session, all three pages, task text, mode confirmation and upload status |
+| Boss answers but workers stay idle | Send through **Instruction to the boss**, not the native page composer |
+| Upload is partial or timed out | **Check pending uploads** before choosing the files again |
+| Model stopped thinking or delivery failed | Inspect the recovery/activity log; wait for confirmed idle and the bounded repair. For a blocker, resolve the shown cause and use **Continue task** |
+| Boss cannot repair an account/model limit | Select an available model or wait for the account limit; continue explicitly |
+| No final file | Check **Results & downloads**, other drafts and required-file findings; ask for the exact downloadable format |
+| Chats are disconnected after recovery | Download retained files directly, or reconnect the team before continuing |
+| PDF structure passed but layout looks poor | Inspect the full PDF; record a layout issue and continue. Rasterization is not aesthetic approval |
+| A required program test is unavailable | Configure the optional local runtime or record the missing tool; parsing is not execution |
+| App gets warm | Use Low power or Off; healthy task work continues |
+| Provider layout changed | Capture safe diagnostics and report the broken control/receipt detection |
 
-For a bug report, include version, chat mode, review approach, steps, expected/observed behavior and **Copy safe page diagnostics** if appropriate. Redact account details and private task content. Never submit cookie exports or authentication tokens.
+For a [bug report](https://github.com/EhosanurRahmanRomi/converge-desktop/issues), include the app version, operating system, chat mode, safe reproduction steps, expected result and observed error. Use **Copy safe page diagnostics** when useful, then inspect/redact it. Never submit session exports, tokens or private source documents.
 
-Two reviewers can still agree on a wrong answer. Independent tests, source checks or appropriate expert review remain necessary for important work.
+See [Project studio](STUDIO_GUIDE.md) for detailed evidence and [model error recovery](MODEL_ERROR_RECOVERY.md) for supported failure categories.

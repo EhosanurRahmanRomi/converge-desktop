@@ -7,6 +7,12 @@ on:
       - 'docs/**'
       - 'README.md'
   workflow_dispatch:
+    inputs:
+      expected_version:
+        description: 'Require this exact package version (optional, for release dispatch)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -29,9 +35,17 @@ jobs:
           node-version: '24'
           cache: npm
       - name: Require a native Apple Silicon host
+        id: release
+        env:
+          EXPECTED_VERSION: ${{ inputs.expected_version }}
         run: |
           test "$(uname -m)" = arm64
-          node -e "require('node:assert/strict').equal(process.arch, 'arm64'); require('node:assert/strict').equal(process.platform, 'darwin')"
+          node <<'NODE'
+          const assert = require('node:assert/strict'), fs = require('node:fs'), metadata = require('./package.json');
+          assert.equal(process.arch, 'arm64'); assert.equal(process.platform, 'darwin');
+          if (process.env.EXPECTED_VERSION) assert.equal(metadata.version, process.env.EXPECTED_VERSION, 'The workflow ref has the wrong release version.');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${metadata.version}\n`);
+          NODE
           mkdir -p .live-test
       - name: Install exact dependencies
         run: npm ci --no-audit --no-fund
@@ -53,16 +67,23 @@ jobs:
         env:
           CONVERGE_PACKAGED_ASAR: dist/mac-arm64/Converge.app/Contents/Resources/app.asar
         run: npm run qa:boss:packaged 2>&1 | tee .live-test/macos-boss-qa.log
+      - name: Verify packaged project storage, downloads, recovery and document review
+        env:
+          CONVERGE_PACKAGED_ASAR: dist/mac-arm64/Converge.app/Contents/Resources/app.asar
+        run: |
+          npm run qa:studio:packaged 2>&1 | tee .live-test/macos-studio-qa.log
+          node -e "const assert=require('node:assert/strict'),r=require('./.live-test/studio-workspace-qa-packaged/packaged-result.json'),p=require('./package.json'); assert.equal(r.passed,true); assert.equal(r.localFixturesOnly,true); assert.ok(r.tests.length>=17); assert.equal(r.packageVersion,p.version); assert.equal(r.launcherVersion,p.version); assert.equal(r.bootstrapVersion,p.version); assert.equal(r.generatedProgramExecuted,false)"
       - name: Require a clean source tree after all build gates
         run: git diff --exit-code
       - name: Record verification scope
         run: |
           cat >> "$GITHUB_STEP_SUMMARY" <<'SUMMARY'
           ## Converge Apple Silicon verification
-          Native ARM64 source tests, offline packaged boss and legacy integration tests, actual packaged startup, native editing in the shell and all three chats, close/reopen, bundle permissions, framework links, source byte parity and ad-hoc signatures are required before artifacts are uploaded. The ZIP is extracted and the DMG mounted read-only for the same bundle checks.
+          Native ARM64 full source tests, offline packaged studio, boss and legacy integration tests, actual packaged startup, native editing in the shell and all three chats, close/reopen, bundle permissions, framework links, source byte parity and ad-hoc signatures are required before artifacts are uploaded. The current studio includes saved-project downloads while disconnected or running, revision recovery, interruption supervision and exact-file document review gates. The production PDF parser and native ARM64 rendering dependency are included and checked. The ZIP is extracted and the DMG mounted read-only for the same bundle checks.
 
           The release is **ad-hoc signed**, without Developer ID signing or Apple notarization. The host is a GitHub ARM64 runner. These checks do not claim a physical MacBook Air M4 test or authenticated live ChatGPT/file exchange.
           SUMMARY
+          echo "Package version: ${{ steps.release.outputs.version }}; source commit: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
       - name: Upload verified release files
         uses: actions/upload-artifact@v4
         with:
@@ -87,6 +108,8 @@ jobs:
             .live-test/macos-native-startup.png
             .live-test/boss-workspace-qa-packaged/*.json
             .live-test/boss-workspace-qa-packaged/*.png
+            .live-test/studio-workspace-qa-packaged/*.json
+            .live-test/studio-workspace-qa-packaged/*.png
             desktop-cookie-packaged-qa-result.json
             desktop-cookie-qa-progress.json
             desktop-cookie-studio*.png

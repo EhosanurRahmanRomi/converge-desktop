@@ -4,8 +4,72 @@ const {
   initialState, normalizePage, validateStartPages, parseDraft, parseReview,
   draftPrompt, reviewPrompt, setCandidate, applyReview, hasAgreement, stateFingerprint,
   replyMedia, draftWithMedia, reviewWithMedia, seedDraftUncertainties, mediaFingerprint,
-  hasRequiredFiles,
+  hasRequiredFiles, requestedArtifacts,
 } = require('../background');
+
+test('page status preserves bounded provider interruption evidence for the desktop UI', () => {
+  const page = normalizePage({ type: 'PAGE_STATUS', status: {
+    ready: true, busy: true, interrupted: true, generating: false,
+    requestOwned: true, awaitingProviderIdle: true, activeRequestId: 'owned-response-42', interruptionKind: 'stream-interrupted',
+    reason: 'ChatGPT could not resume its response stream.',
+  } });
+  assert.equal(page.interrupted, true);
+  assert.equal(page.generating, false);
+  assert.equal(page.requestOwned, true);
+  assert.equal(page.awaitingProviderIdle, true);
+  assert.equal(page.activeRequestId, 'owned-response-42');
+  assert.equal(page.interruptionKind, 'stream-interrupted');
+  const invalid = normalizePage({ interrupted: 'true', generating: 'false', requestOwned: {}, awaitingProviderIdle: 'true',
+    activeRequestId: 'x'.repeat(201), interruptionKind: 'invented' });
+  for (const key of ['interrupted', 'generating', 'requestOwned', 'awaitingProviderIdle', 'activeRequestId', 'interruptionKind']) {
+    assert.equal(Object.hasOwn(invalid, key), false, key);
+  }
+  assert.equal(normalizePage({ interrupted: false }).interrupted, false);
+});
+
+test('output intent distinguishes explicit JSON, CSV, TSV and text delivery from a referenced PDF source', () => {
+  const sources = [{ name: 'verification-input.txt', mimeType: 'text/plain' },
+    { name: 'verification-record.pdf', mimeType: 'application/pdf' }, { name: 'verification-chart.png', mimeType: 'image/png' }];
+  for (const task of ['Create summary.json from the attached PDF.', 'Produce a complete downloadable summary.json with these fields.',
+    'Fix this PDF and return only summary.json.', 'Return the PDF audit as a CSV file.', 'Deliver a plain text file using the PDF source.',
+    'Do not create a PDF. Return summary.json.', 'Create a summary of the PDF in JSON.',
+    'Create ced_scope_manifest.tsv from the attached PDF.', 'Return the PDF audit as a TSV file.', 'Create a summary of the PDF in TSV.']) {
+    const outputs = requestedArtifacts(task, sources);
+    assert.equal(outputs.pdf, false, task); assert.equal(outputs.pdfFallback, false, task); assert.equal(outputs.nonPdf, true, task);
+  }
+  for (const task of ['Fix this PDF.', 'Create a PDF report of the JSON.', 'Return summary.json and a PDF report.',
+    'Create PDF and JSON files.', 'Create a PDF. Do not create summary.json.']) {
+    assert.equal(requestedArtifacts(task, sources).pdf, true, task);
+  }
+  assert.equal(requestedArtifacts('Improve the attached document and return a downloadable file.', sources).pdfFallback, true);
+  for (const task of ['Explain why PDF compression works.', 'Create a text explanation.', 'Create an explanation of 0.5.']) {
+    assert.equal(requestedArtifacts(task, sources).files, false, task);
+  }
+  assert.equal(requestedArtifacts('Create summary.json from the attached image.', sources).images, false);
+  assert.equal(requestedArtifacts('Create a galaxy image and summary.json.', sources).images, true);
+  const tableSource = requestedArtifacts('Improve this table and return ced_scope_manifest.tsv.', [{ name: 'ced_scope_manifest.tsv', mimeType: 'text/tab-separated-values' }]);
+  assert.equal(tableSource.files, true); assert.equal(tableSource.pdf, false); assert.equal(tableSource.profile.codeTask, false);
+});
+
+test('a code test implementation qualifier keeps a later PDF deliverable mandatory', () => {
+  const sources = [{ name: 'weighted_mean_source.py', mimeType: 'text/plain' }];
+  for (const task of [
+    'Repair the attached weighted_mean_source.py. Deliver three real downloadable files: weighted_mean.py, test_weighted_mean.py using standard-library unittest, and a short readable weighted_mean_report.pdf explaining the fixes, equations, test results and remaining limitations.',
+    'Fix the attached code. Deliver corrected.py and tests.py using only the Python standard library, and a PDF report.',
+  ]) {
+    const outputs = requestedArtifacts(task, sources);
+    assert.equal(outputs.files, true, task);
+    assert.equal(outputs.profile.requireCodeFile, true, task);
+    assert.equal(outputs.pdf, true, task);
+  }
+  for (const task of [
+    'Create summary.json using verification-record.pdf.',
+    'Create summary.json using the Python standard library from verification-record.pdf.',
+    'Do not create a PDF. Deliver corrected.py using standard-library unittest.',
+  ]) {
+    assert.equal(requestedArtifacts(task, sources).pdf, false, task);
+  }
+});
 
 const accept = (candidateId, resolvedIssueIds = []) => ({
   candidateId, verdict: 'accept', issues: [], revisedAnswer: '', resolvedIssueIds, uncertainties: [],

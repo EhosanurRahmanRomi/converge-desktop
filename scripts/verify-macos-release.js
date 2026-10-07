@@ -7,7 +7,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const zlib = require('node:zlib');
 const { spawnSync } = require('node:child_process');
-const { readMachO, isMachO, validateZipEntry, validateSymlinkTarget, readIcns } = require('./macos-package-lib');
+const { readMachO, isMachO, validateZipEntry, validateSymlinkTarget, readIcns, validateRuntimeCoverage } = require('./macos-package-lib');
 
 const root = path.join(__dirname, '..');
 const metadata = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
@@ -51,6 +51,7 @@ function filesBelow(directory) {
 }
 
 function inspectBundle(application, label) {
+  validateRuntimeCoverage(metadata);
   const plistPath = path.join(application, 'Contents', 'Info.plist');
   const info = JSON.parse(command('/usr/bin/plutil', ['-convert', 'json', '-o', '-', plistPath]).stdout);
   assert.equal(info.CFBundleIdentifier, metadata.build.appId, `${label}: wrong bundle ID.`);
@@ -105,9 +106,26 @@ function inspectBundle(application, label) {
     assert.deepEqual(packaged, source, `${label}: packaged source differs: ${filename}`);
     return { file: filename, bytes: source.length, sha256: digestBytes(source) };
   });
+  const dependencyParity = [];
+  const dependencyFile = filename => {
+    const bytes = asar.extractFile(asarPath, filename), source = fs.readFileSync(path.join(root, filename));
+    assert.deepEqual(bytes, source, `${label}: production dependency source differs: ${filename}`);
+    dependencyParity.push({ file: filename, bytes: bytes.length, sha256: digestBytes(bytes) });
+    return bytes;
+  };
+  const pdfMetadata = JSON.parse(dependencyFile('node_modules/pdfjs-dist/package.json').toString('utf8'));
+  assert.equal(pdfMetadata.version, metadata.dependencies['pdfjs-dist'], `${label}: PDF parser dependency version differs.`);
+  for (const filename of ['node_modules/pdfjs-dist/legacy/build/pdf.mjs', 'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs',
+    'node_modules/@napi-rs/canvas/package.json', 'node_modules/@napi-rs/canvas/index.js', 'node_modules/@napi-rs/canvas/js-binding.js']) dependencyFile(filename);
+  const canvasMetadata = JSON.parse(asar.extractFile(asarPath, 'node_modules/@napi-rs/canvas-darwin-arm64/package.json').toString('utf8'));
+  assert.ok(canvasMetadata.cpu?.includes('arm64') && canvasMetadata.os?.includes('darwin'), `${label}: native PDF renderer is not configured for Apple Silicon.`);
+  assert.ok(binaries.some(item => item.file.includes('/@napi-rs/canvas-darwin-arm64/') && item.file.endsWith('.node')),
+    `${label}: signed ARM64 PDF rendering dependency is absent.`);
   return { label, bundleIdentifier: info.CFBundleIdentifier, version: info.CFBundleShortVersionString, minimumSystemVersion: info.LSMinimumSystemVersion,
     signature: { verified: true, type: 'ad-hoc', notarized: false, detail: signature.stderr.trim() },
-    binaries, symlinks, sourceParity: parity, asarSha256: digestBytes(fs.readFileSync(asarPath)) };
+    binaries, symlinks, sourceParity: parity, dependencyParity,
+    productionDependencies: { pdfjsVersion: pdfMetadata.version, canvasVersion: canvasMetadata.version, nativeCanvas: 'darwin-arm64' },
+    asarSha256: digestBytes(fs.readFileSync(asarPath)) };
 }
 
 function inspectZip(archivePath) {
@@ -180,7 +198,11 @@ async function main() {
     assert.equal(mountedBundle.asarSha256, originalBundle.asarSha256, 'DMG changed the packaged source.');
     command('/usr/bin/hdiutil', ['detach', mountpoint]); mounted = false;
     const artifacts = await Promise.all([zipPath, dmgPath].map(async filename => ({ name: path.basename(filename), bytes: fs.statSync(filename).size, sha256: await fileDigest(filename) })));
+    const sourceCommit = command('/usr/bin/git', ['-C', root, 'rev-parse', 'HEAD']).stdout.trim();
+    assert.match(sourceCommit, /^[a-f0-9]{40}$/, 'Release source commit is invalid.');
+    if (process.env.GITHUB_SHA) assert.equal(sourceCommit, process.env.GITHUB_SHA, 'Release source is not the workflow commit.');
     const report = { checkedAt: new Date().toISOString(), passed: true, platform: process.platform, architecture: process.arch, hostMacOS: command('/usr/bin/sw_vers', ['-productVersion']).stdout.trim(),
+      sourceCommit, workflowRunId: process.env.GITHUB_RUN_ID || null,
       version: metadata.version, originalBundle, zipStructure,
       archiveRoundTrips: { zip: { signatureVerified: true, sourceBytesMatched: true, permissionsAndSymlinksVerified: true }, dmg: { imageVerified: true, signatureVerified: true, sourceBytesMatched: true, applicationsShortcutVerified: true } },
       artifacts, scope: 'Native ARM64 structural, byte-parity and ad-hoc signature verification, including the extracted ZIP and readonly mounted DMG. This does not claim Developer ID signing, Apple notarization, a physical MacBook M4 test or live provider access.' };

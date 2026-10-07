@@ -1,0 +1,117 @@
+{
+  "version": "1.9.8",
+  "checkedAt": "2026-10-07T05:36:31.600Z",
+  "platform": "win32",
+  "arch": "x64",
+  "artifact": {
+    "name": "Converge-Portable-1.9.8-x64.exe",
+    "sha256": "af23bf2de3bda939b169f8e908adaf9336e3909fbe76868c11e0088c2271cc10",
+    "archiveSha256": "3f9f89254e9eb7060fe41b8d58fd4be0b81222abf7b6cf90282e384c63490d52",
+    "byteLength": 464057796,
+    "compression": "store"
+  },
+  "source": {
+    "total": 628,
+    "passed": 628,
+    "failed": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "packaged": {
+    "boss": {
+      "count": 22,
+      "checks": [
+        "Production Windows shell creates three sandboxed isolated native chat views and keeps its browser session in memory.",
+        "Import and Normal OK open exactly three distinct chats with the boss coordinator active.",
+        "A mixed text, valid PDF and PNG source selection reaches all three native file inputs; Reset clears the staged previews and retains the session.",
+        "One native file picker uploads the original source to the boss and both workers.",
+        "The boss writes distinct worker instructions, receives both results and exact generated files every cycle, then both workers verify one final candidate after four improvement cycles.",
+        "The real boss composer accepts an instruction during worker generation, delivers it in the next boss context, and completes the run with no queued message left behind.",
+        "Native Save downloads the actual accepted file and matches the coordinator SHA-256, with the requested corrected values.",
+        "The settings selector applies Horror, Alien, Night, Cyberpunk and Anime backgrounds to all three real chat views.",
+        "Robot, Explorer and Spirit character choices apply without changing the active chat run or its accepted files.",
+        "Clicking the center boss opens and closes its sliding native chat panel while preserving the worker workspace.",
+        "A follow-up reuses all three conversations; a new instruction while the boss generates is queued safely.",
+        "Stop cancels active boss generation and prevents queued instructions from restarting the stopped run.",
+        "Stop also cancels both workers during their concurrent generation, retaining each completed conversation.",
+        "Accelerated localhost-only supervision checks both real active worker bridges repeatedly without stopping or resending their healthy generation. Production keeps its five-minute interval.",
+        "Confirmed owned idle failure immediately starts a scoped boss repair while the native healthy worker keeps its request and is never stopped or resent.",
+        "A real resumed artifact is retained alongside the original healthy peer; a cycle counts only after both actual completed results arrive.",
+        "After genuine interruption recovery, both workers independently accept one exact final candidate; its actual boss answer, bottom answer, remaining limitation and exported monitoring report all match the completed run.",
+        "A live-shaped Download file card captures an actual TSV native download using its text/plain alias, preserves canonical TSV name, Unicode, bytes and SHA-256, and reaches the boss and both exact final reviewers.",
+        "A real native main-frame reload reconnects the exact active worker without another Send, Stop or deadline reset; its actual file reaches the boss and both final reviewers with matching bytes and SHA-256.",
+        "Reset clears all three chats without clearing the imported session; Work mode is verified on the fresh boss and worker pages.",
+        "Temporary mode is also verified on all three new chats through its visible page controls.",
+        "Unreadable boss control output receives one format repair, then stops safely without dispatching an invented worker task or clearing the session."
+      ]
+    },
+    "studio": {
+      "count": 15,
+      "checks": [
+        "Real production shell and sandboxed native chats use an empty in-memory account session.",
+        "The production Electron PDF worker parses and rasterizes a genuine one-page fixture with installed runtime dependencies; this gate uses the lab module directly.",
+        "The shell native source picker transfers the complete original JavaScript bytes to all three browser file inputs.",
+        "Four actual file revision cycles finish with native syntax checks, explicit criteria, and a newly opened worker final audit.",
+        "The real local report binds the candidate SHA-256, passes Node syntax parsing, and keeps unexecuted runtime coverage visibly unverified.",
+        "Native revision preview IPC resolves two identically named files to their distinct exact historical contents.",
+        "The real Studio drawer clears all three native view bounds; closing it restores tall, usable worker chats.",
+        "Shell IPC records found, assigned, fixed and rechecked issue evidence against the selected revision.",
+        "Real save/list/export dialogs persist the original and all four same-name revision byte identities in a portable ZIP without browser session state.",
+        "Native revision restoration selects the actual earlier bytes and invalidates prior final acceptance and tool authority.",
+        "Real manual verification and delivery dialogs export exact restored source bytes, matching report hashes, every content checksum and honest partial completion status.",
+        "Loading the disk project reconstructs original and revision bytes while requiring fresh chat ownership and verification.",
+        "Disconnected saved projects expose exact individual revision downloads and a saved-file ZIP through production preload IPC without opening remote chats.",
+        "Importing the real exported ZIP and reconnecting new native chats preserves the saved brief and selected revision without resuming stale requests.",
+        "Running project and revision downloads retain exact candidate bytes, live run identity and the original owned request without duplicate prompts or cancellation."
+      ]
+    },
+    "parityFiles": 40,
+    "localFixturesOnly": true
+  },
+  "nativeStartup": {
+    "status": "PASS",
+    "platform": "win32",
+    "arch": "x64",
+    "packaged": true,
+    "visibleShell": true,
+    "firstPaint": true,
+    "embeddedViews": [
+      "left",
+      "right",
+      "boss"
+    ],
+    "sidebarToggleVerified": true,
+    "bossDrawerVerified": true,
+    "progressSectionVerified": true,
+    "didClose": true,
+    "embeddedViewsDisposed": true,
+    "closeCleanupCompleted": true,
+    "isolatedSession": true,
+    "providerScope": "Empty isolated session; no authentication, provider navigation or live model task",
+    "clipboardScope": "The Windows startup smoke does not access the clipboard",
+    "nonce": "737db5a6-401d-4904-8752-a5523298daa4",
+    "pid": 23120,
+    "version": "1.9.8",
+    "executable": "%USERPROFILE%\\AppData\\Local\\Temp\\3KLxjaM0J5ffSoa5T8qjGp0HVyb\\Converge.exe",
+    "portableExecutable": "%USERPROFILE%\\Desktop\\codex\\deliverables\\Converge-Windows-1.9.8\\Converge-Portable-1.9.8-x64.exe",
+    "userData": "%USERPROFILE%\\AppData\\Local\\Temp\\converge-native-smoke-23120-7605443e-540d-4de7-b042-ae122ed475d2",
+    "passed": true,
+    "checkedAt": "2026-10-07T05:35:43.862Z",
+    "launchPath": "%USERPROFILE%\\Desktop\\codex\\deliverables\\Converge-Windows-1.9.8\\Converge-Portable-1.9.8-x64.exe",
+    "executableSha256": "af23bf2de3bda939b169f8e908adaf9336e3909fbe76868c11e0088c2271cc10",
+    "wrapperExit": null
+  },
+  "scope": {
+    "authenticated198ModelWorkflow": false,
+    "completeCEDFinalAcceptance": false,
+    "note": "Inspected the signed-in 1.9.7 app and its restored CED project. Recovered the exact saved working files. The transcript recorded a newer worker reply whose bytes were absent from the saved project. No newer file or final acceptance was fabricated. This release is verified with local fixtures and actual portable startup; it has not completed the authenticated long CED task."
+  },
+  "repairs": [
+    "Permanent Results & downloads with individual captured-file downloads and explicit draft/final status.",
+    "Downloading retained bytes works during a task or with disconnected chats, without another provider export.",
+    "Each completed worker file is autosaved before boss selection, including while the boss repairs its peer.",
+    "Saved project and revision downloads preserve active live work; original failure history is displayed separately.",
+    "Source submission failures retain their original reason alongside any observer ownership failure.",
+    "Mixed standard-library code and PDF briefs preserve the mandatory PDF requirement."
+  ]
+}

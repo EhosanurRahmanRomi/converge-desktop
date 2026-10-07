@@ -7,16 +7,16 @@
     'sessionDetails', 'sessionBadge', 'sidebarIntro', 'cookieInput', 'cookieFile', 'chooseCookies', 'clearSession', 'cookieFileStatus', 'cookieFileLabel', 'cookiePasteDetails',
     'windowMinimize', 'windowMaximize', 'windowClose',
     'importCookies', 'sessionHint', 'sessionError', 'question', 'questionLabel', 'questionCount', 'protocol',
-    'maxRounds', 'roundMinus', 'roundPlus', 'reviewMode', 'reviewModeHint', 'relayMedia', 'requireFiles', 'attachFiles', 'fileStatus',
+    'maxRounds', 'roundMinus', 'roundPlus', 'reviewMode', 'reviewModeHint', 'relayMedia', 'requireFiles', 'attachFiles', 'attachStyleReferences', 'styleReferenceStatus', 'fileStatus', 'fileUploadProgress', 'fileProgressLabel', 'fileProgressBar', 'fileProgressDetail',
     'privacyCheck', 'confirmLeft', 'confirmRight', 'confirmBoss', 'privacyHint', 'start', 'stop', 'actionError',
     'openPages', 'resetChats', 'modeTemporary', 'modeNormal', 'modeWork', 'modeOptions', 'modeHeading', 'modeHint', 'openedMode', 'settingsDetails', 'reviewSummary', 'prepare', 'diagnostics', 'statusTitle', 'statusDetail', 'roundBadge',
     'leftMode', 'leftDetail', 'rightMode', 'rightDetail', 'leftSlot', 'rightSlot',
     'reloadLeft', 'reloadRight', 'expandLeft', 'expandRight', 'restoreSplit', 'chatGrid',
     'resultDrawer', 'toggleResults', 'bottomStage', 'bottomRound', 'bottomFiles', 'saveFilesCompact', 'resultLabel', 'resultCount', 'resultContent',
     'answerTab', 'activityTab', 'issuesTab', 'answerPanel', 'activityPanel', 'issuesPanel',
-    'activityCount', 'issueCount', 'answer', 'answerOutputs', 'outputCard', 'outputHeading', 'saveFiles', 'fileSaveStatus', 'viewOutput', 'copyAnswer',
+    'activityCount', 'issueCount', 'teamHealth', 'teamHealthSummary', 'teamHealthLog', 'answer', 'answerOutputs', 'outputCard', 'outputHeading', 'deliveryStatus', 'deliveryHint', 'workflowHistoryCard', 'workflowHistoryOutcome', 'workflowHistoryTime', 'workflowHistoryStage', 'workflowHistoryError', 'workflowHistoryHint', 'outputFileList', 'checkpointOutputs', 'checkpointCount', 'checkpointFileList', 'saveFiles', 'fileSaveStatus', 'viewOutput', 'copyAnswer',
     'exportAnswer', 'transcript', 'issues', 'improvementCard', 'improvementSummary', 'improvementDetail', 'improvementTrail', 'candidateVersion', 'originalAnswerDetails', 'originalAnswer', 'bossReviewCard', 'bossFinalSummary', 'bossFinalChecks', 'bossLimitations',
-    'stars', 'topStarRibbon', 'bottomStarRibbon', 'effectsButton', 'animationEnabled', 'animationStatus', 'animationTheme', 'animationDescription', 'reviewDeck', 'reviewerLeft', 'reviewerRight', 'leftActivity', 'rightActivity', 'botLeft', 'botRight', 'bridgeLabel', 'handoffDocument',
+    'stars', 'topStarRibbon', 'bottomStarRibbon', 'effectsButton', 'animationEnabled', 'animationStatus', 'animationTheme', 'animationDescription', 'effectsMode', 'openStudio', 'reviewDeck', 'reviewerLeft', 'reviewerRight', 'leftActivity', 'rightActivity', 'botLeft', 'botRight', 'bridgeLabel', 'handoffDocument',
     'toggleBoss', 'closeBoss', 'bossDrawer', 'bossSlot', 'bossMode', 'bossDetail', 'botBoss', 'bossActivity', 'bossMessageForm', 'bossMessageInput', 'sendBossMessage', 'bossQueueStatus', 'bossMessageHint', 'bossMessageError', 'bossAttachFiles', 'bossFilesStatus', 'chatTheme', 'characterStyle'];
   const ui = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
   const galaxyEffects = createGalaxyEffects();
@@ -45,9 +45,16 @@
   let bossOpen = false;
   let bossBoundsFrame = null;
   let fileCandidateKey = '';
+  let outputRowsKey = '';
+  let savingFiles = false;
   let explicitFileRequirement = ui.requireFiles.checked;
   let automaticFileRequirement = false;
+  let activeAttachmentRole = null;
   const confirmedAutomatically = { left: false, right: false, boss: false };
+  const studioUI = window.ConvergeStudioUI?.create({ api, getState: () => state, onLayout: scheduleBounds,
+    onState: render, getBrief: () => ui.question.value.trim(),
+    onOpen: () => { setSidebarOpen(false); setBossOpen(false); setResultsOpen(false); },
+    onLoadBrief: (text) => { ui.question.value = text; updateControls(); } });
 
   const isRunning = () => state.status === 'running';
   const bossWorkspace = () => state.coordinatorMode === 'boss' || state.tabIds?.boss != null;
@@ -61,8 +68,10 @@
   const isFollowup = () => hasPages() && state.status !== 'setup' && state.status !== 'running' && Boolean(state.question);
   const reviewMode = () => ['auto', 'improve', 'verify'].includes(ui.reviewMode.value) ? ui.reviewMode.value : 'auto';
   const rounds = () => Math.max(reviewMode() === 'verify' ? 1 : 4, Math.min(12, Number.parseInt(ui.maxRounds.value, 10) || 6));
-  const answerText = () => typeof state.answer === 'string' && state.answer ? state.answer :
-    typeof state.candidate === 'string' ? state.candidate : String(state.candidate?.answer || state.candidate?.text || '');
+  const answerText = () => outputRecord() === state.delivery && /^worker/.test(state.delivery?.source || '') ? String(state.delivery.answer || state.delivery.text || '') :
+    typeof state.answer === 'string' && state.answer ? state.answer : typeof state.candidate === 'string' ? state.candidate :
+      String(outputRecord()?.answer || outputRecord()?.text || state.candidate?.answer || state.candidate?.text || '');
+  const deliveryIsFinal = () => state.status === 'agreed' && outputRecord()?.draft !== true;
 
   const appearancePreference = { chatTheme: 'converge.chat.theme', characterStyle: 'converge.characters.style' };
   const chatThemes = ['night', 'horror', 'alien', 'cyberpunk', 'anime'];
@@ -105,9 +114,18 @@
     galaxyEffects.stopPaper();
   });
 
+  function styleReferenceNames() {
+    return [...new Set([...(state.studio?.settings?.documentDesign?.referenceNames || []), ...(state.attachments?.referenceNames || [])])];
+  }
+
+  function contentFileNames(names = []) {
+    const references = new Set(styleReferenceNames());
+    return names.filter(name => !references.has(name));
+  }
+
   function syncFileRequirement() {
     const queuedPdf = ['attached', 'ready', 'complete'].includes(state.attachments?.status) &&
-      state.attachments?.names?.some((name) => /\.pdf$/i.test(String(name)));
+      contentFileNames(state.attachments?.names || []).some((name) => /\.pdf$/i.test(String(name)));
     // Auto-requiring a revised PDF belongs to the queued source upload. Once
     // Start consumes it, the next unrelated command returns to the user's own
     // setting. The running task still displays its committed file requirement.
@@ -195,6 +213,7 @@
     ui.modeOptions.hidden = opened;
     ui.modeHeading.textContent = opened ? 'Current workspace' : 'Chat workspace';
     const attachmentFailure = ['failed', 'partial'].includes(state.attachments?.status);
+    const attaching = state.attachments?.status === 'uploading' || busyAction === 'attach';
     ui.importCookies.disabled = busy || running || !ui.cookieInput.value.trim();
     const importing = busyAction === 'import' || busyAction === 'import-file';
     ui.importCookies.textContent = importing ? 'Importing…' : 'Import pasted JSON';
@@ -222,8 +241,10 @@
       hasSession ? `${modeNames[selectedMode]} selected. Click OK to open the boss and its workers.` : 'Import your session, then click OK to open your selected chat type.';
     ui.prepare.disabled = busy || running || !hasPages();
     ui.prepare.textContent = busyAction === 'prepare' ? 'Preparing pages…' : 'Check & prepare pages';
-    ui.attachFiles.disabled = busy || running || !pagesReady() || !canStartStatus() || attachmentFailure;
-    ui.attachFiles.textContent = busyAction === 'attach' ? 'Attaching to the team…' : '＋ Attach files, images or code';
+    ui.attachFiles.disabled = busy || running || !hasPages() || !attachmentFailure && (!pagesReady() || !canStartStatus());
+    ui.attachFiles.textContent = busyAction === 'attach' ? attachmentFailure ? 'Checking uploads…' : 'Attaching to the team…' : attachmentFailure ? '↻ Check pending uploads' : '＋ Attach files, images or code';
+    ui.attachStyleReferences.disabled = ui.attachFiles.disabled;
+    ui.attachStyleReferences.textContent = busyAction === 'attach' && (activeAttachmentRole === 'style-reference' || state.attachments?.fileRole === 'style-reference') ? 'Attaching design reference…' : '＋ Add a design reference';
     ui.bossAttachFiles.disabled = ui.attachFiles.disabled;
     ui.diagnostics.disabled = busy || !hasPages();
     for (const element of [ui.question, ui.protocol, ui.maxRounds, ui.roundMinus, ui.roundPlus, ui.reviewMode, ui.relayMedia, ui.requireFiles]) {
@@ -235,17 +256,17 @@
     ui.start.textContent = busyAction === 'start' ? 'Briefing the boss…' : isFollowup() ? 'Give the boss a new task ✦' : 'Start the team ✦';
     ui.questionLabel.textContent = isFollowup() ? 'Next task · same chats' : 'Your task';
     ui.start.hidden = running;
-    ui.stop.hidden = !running;
+    ui.stop.hidden = !running && !attaching;
     // Stop does not wait for an upload/start action to return.
-    ui.stop.disabled = !running || stopBusy;
-    ui.stop.textContent = stopBusy ? 'Stopping…' : '■ Stop exchange';
-    ui.headerStop.hidden = !running;
-    ui.headerStop.disabled = !running || stopBusy;
+    ui.stop.disabled = !running && !attaching || stopBusy;
+    ui.stop.textContent = stopBusy ? 'Stopping…' : attaching && !running ? '■ Cancel upload' : '■ Stop exchange';
+    ui.headerStop.hidden = !running && !attaching;
+    ui.headerStop.disabled = !running && !attaching || stopBusy;
     ui.headerStop.textContent = stopBusy ? 'Stopping…' : '■ Stop';
     ui.sendBossMessage.disabled = busy || !bossWorkspace() || !hasPages() || !ui.bossMessageInput.value.trim() ||
       (!running && (!pagesReady() || !privacyConfirmed() || !canStartStatus() || attachmentFailure || ui.requireFiles.checked && !ui.relayMedia.checked));
     ui.bossMessageInput.disabled = busyAction === 'boss-message' || busyAction === 'start' || busyAction === 'reset' || busyAction === 'clear';
-    ui.sendBossMessage.textContent = busyAction === 'boss-message' || busyAction === 'start' ? 'Sending…' : running ? 'Add instruction ↗' : state.status === 'blocked' ? 'Continue task ↗' : isFollowup() ? 'Start next task ↗' : 'Send to boss ↗';
+    ui.sendBossMessage.textContent = busyAction === 'boss-message' || busyAction === 'start' ? 'Sending…' : running ? 'Add instruction ↗' : ['blocked', 'limit_reached'].includes(state.status) ? 'Continue task ↗' : isFollowup() ? 'Start next task ↗' : 'Send to boss ↗';
     renderBossControls();
     for (const side of ['left', 'right']) {
       ui[`reload${side === 'left' ? 'Left' : 'Right'}`].disabled = busy || running || !hasPages() || state.attachments?.status === 'attached';
@@ -255,13 +276,14 @@
     const text = answerText();
     ui.copyAnswer.disabled = busy || !text;
     ui.exportAnswer.disabled = busy || !text;
-    const candidateFiles = Array.isArray(state.candidate?.media?.files) ? state.candidate.media.files : [];
-    ui.saveFiles.disabled = busy || !isTerminal() || !candidateFiles.length;
+    const candidateFiles = mediaInfo().files;
+    ui.saveFiles.disabled = savingFiles || windowClosing || !candidateFiles.length;
     ui.saveFiles.hidden = !candidateFiles.length;
-    ui.saveFiles.textContent = busyAction === 'save-files' ? 'Saving files…' : state.status === 'agreed' ? '↓ Save final files' : '↓ Save current files';
+    ui.saveFiles.textContent = savingFiles ? 'Saving files…' : deliveryIsFinal() ? '↓ Download all final files' : '↓ Download all draft files';
     ui.saveFilesCompact.disabled = ui.saveFiles.disabled;
-    ui.saveFilesCompact.textContent = busyAction === 'save-files' ? 'Saving…' : '↓ Save';
-    ui.saveFilesCompact.title = candidateFiles.length ? state.status === 'agreed' ? 'Save the final output files' : 'Save the current output files' : 'Output files will be available here';
+    ui.saveFilesCompact.textContent = savingFiles ? 'Saving…' : !candidateFiles.length ? 'No files yet' : deliveryIsFinal() ? '↓ Final files' : '↓ Draft files';
+    ui.saveFilesCompact.title = candidateFiles.length ? deliveryIsFinal() ? 'Download the final reviewed output files' : 'Download the current draft without stopping the team' : 'No generated files have been captured yet';
+    for (const button of ui.outputCard.querySelectorAll('.output-file-save')) button.disabled = savingFiles || windowClosing;
     ui.sessionBadge.textContent = hasSession ? 'Imported' : 'Not connected';
     ui.sessionBadge.classList.toggle('connected', hasSession);
     ui.questionCount.textContent = `${ui.question.value.length.toLocaleString('en-US')} / 20,000`;
@@ -312,14 +334,16 @@
     const opened = hasPages() && (side !== 'boss' || bossWorkspace());
     const verified = pageVerified(page);
     ui[`${side}Mode`].textContent = !opened ? 'Not opened' : page.authenticated === false ? 'Session not signed in' :
+      page.interrupted === true ? `${modeNames[activeMode()]} · Interrupted` :
+      page.reconnecting === true ? `${modeNames[activeMode()]} · Reconnecting` :
       page.busy ? `${modeNames[activeMode()]} · Generating` : !page.ready ? `${modeNames[activeMode()]} · Loading` :
         verified ? `${modeNames[activeMode()]} · Ready` : `${modeNames[activeMode()]} · Mode not verified`;
     const reason = !opened ? hasSession ? 'Choose a chat type and click OK.' : 'Waiting for your imported session.' : page.reason ||
       (page.busy ? 'ChatGPT is answering. The next review waits until it finishes.' : page.ready ?
         verified ? 'Ready · The app will relay the completed replies automatically.' : 'Composer ready · checking the selected chat type.' : 'Loading ChatGPT and looking for the composer…');
     ui[`${side}Detail`].textContent = reason;
-    ui[`${side}Detail`].classList.toggle('ready', page.ready === true && verified);
-    ui[`${side}Detail`].classList.toggle('error', page.authenticated === false || activeMode() === 'temporary' && page.temporary === false || activeMode() === 'work' && page.work === false);
+    ui[`${side}Detail`].classList.toggle('ready', page.ready === true && verified && page.interrupted !== true && page.reconnecting !== true);
+    ui[`${side}Detail`].classList.toggle('error', page.interrupted === true || page.reconnecting === true || page.authenticated === false || activeMode() === 'temporary' && page.temporary === false || activeMode() === 'work' && page.work === false);
     ui[`${side}Slot`].querySelector('.empty-page').hidden = opened;
   }
 
@@ -339,6 +363,7 @@
 
   function setBossOpen(open) {
     if (windowClosing) return;
+    if (open && studioUI?.isOpen()) studioUI.setOpen(false);
     bossOpen = Boolean(open);
     if (!bossOpen && ui.bossDrawer.contains(document.activeElement)) ui.toggleBoss.focus({ preventScroll: true });
     ui.bossDrawer.hidden = !bossOpen;
@@ -391,7 +416,7 @@
     }
     if (status === 'error') { title = 'The exchange needs attention'; detail = state.error || state.detail || 'Check the page status, then send a command again or Reset the pair.'; }
     if (['stopped', 'cancelled'].includes(status)) { title = 'Exchange stopped'; detail = 'Your current answer and full exchange are retained. Enter another command for these chats, or Reset for a new pair.'; }
-    if (status === 'limit_reached') { title = 'Maximum review rounds reached'; detail = 'Review the current answer and unresolved issues below. You can send your next command to the same chats.'; }
+    if (status === 'limit_reached') { title = state.stage || 'Workflow limit reached'; detail = state.error || 'Review the current results and ask the boss to continue in the same chats.'; }
     if (status === 'stalled') { title = 'The reviewers stopped making progress'; detail = 'Review the current answer and unresolved issues below. You can send your next command to the same chats.'; }
     if (status === 'blocked') { title = state.stage || 'The boss needs your input'; detail = state.detail || 'Open the boss to read what is missing. Your current work and files are retained.'; }
     if (['limit_reached', 'stalled'].includes(status) && (state.issues || []).some(issue => issue.taskRequirementId && !issue.resolved)) {
@@ -433,6 +458,7 @@
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const preferenceKey = 'converge.galaxy.effectsPaused';
     const themePreferenceKey = 'converge.effects.theme';
+    const motionPreferenceKey = 'converge.effects.mode';
     const themes = {
       stars: { description: 'Glowing falling stars and reviewer movement', active: 'falling stars and reviewer motion' },
       ghost: { description: 'Luminous ghosts, spectral lights and reviewer movement', active: 'ghosts, spectral lights and reviewer motion' },
@@ -440,6 +466,8 @@
     };
     let effectsPaused = false;
     let animationTheme = 'stars';
+    let effectsMode = 'full';
+    try { const saved = localStorage.getItem(motionPreferenceKey); if (['full', 'low-power', 'off'].includes(saved)) effectsMode = saved; } catch (_) { }
     try { effectsPaused = localStorage.getItem(preferenceKey) === 'true'; } catch (_) { }
     try {
       const savedTheme = localStorage.getItem(themePreferenceKey);
@@ -450,6 +478,8 @@
     } catch (_) { }
     document.body.dataset.animationTheme = animationTheme;
     ui.animationTheme.value = animationTheme;
+    if (ui.effectsMode) ui.effectsMode.value = effectsMode;
+    document.body.dataset.effectsMode = effectsMode;
     const galaxyScene = window.ConvergeGalaxy?.create(ui.stars, { startPaused: true });
     galaxyScene?.setPaused(true);
     const ribbonScenes = [
@@ -479,18 +509,7 @@
 
     function scheduleMoods() {
       clearTimeout(moodTimer); moodTimer = null;
-      if (!motionAllowed()) return;
-      moodTimer = setTimeout(() => {
-        for (const side of ['left', 'right', 'boss']) {
-          const reviewer = reviewerFor(side);
-          const bot = characterFor(side);
-          if (reviewer.classList.contains('warning')) { setMood(side, 'thoughtful'); continue; }
-          const choices = reviewer.classList.contains('active') ? ['focused', 'focused', 'thoughtful', 'curious'] : ['curious', 'thoughtful', 'sparkle', 'focused'];
-          const candidates = choices.filter((mood) => mood !== bot.dataset.mood);
-          setMood(side, candidates[Math.floor(Math.random() * candidates.length)]);
-        }
-        scheduleMoods();
-      }, 6200 + Math.random() * 3800);
+      // Expressions are set by the real coordinator stage in render().
     }
 
     function stopPaper() {
@@ -557,13 +576,13 @@
       ui.animationEnabled.disabled = reducedMotion.matches;
       ui.animationDescription.textContent = themes[animationTheme].description;
       ui.animationStatus.textContent = reducedMotion.matches ? 'Off · system reduced motion' : effectsPaused ? 'Off · still scene' :
-        document.hidden || !windowVisible ? 'On · paused while the window is hidden' : `On · ${themes[animationTheme].active}`;
+        document.hidden || !windowVisible ? 'On · paused while the window is hidden' : effectsMode === 'low-power' ? 'Low power · task activity only' : `On · ${themes[animationTheme].active}`;
     }
 
     function pauseScenes() {
       // The wide chat backdrop stays still even when the two star bands move.
       galaxyScene?.setPaused(true);
-      for (const scene of ribbonScenes) scene.setPaused(!motionAllowed());
+      for (const scene of ribbonScenes) scene.setPaused(!motionAllowed() || effectsMode === 'low-power');
     }
 
     function applyEffects() {
@@ -581,11 +600,20 @@
 
     function setAnimationEnabled(enabled) {
       effectsPaused = !enabled;
+      if (!enabled) effectsMode = 'off';
+      else if (effectsMode === 'off') effectsMode = 'full';
+      document.body.dataset.effectsMode = effectsMode;
+      if (ui.effectsMode) ui.effectsMode.value = effectsMode;
+      try { localStorage.setItem(motionPreferenceKey, effectsMode); } catch (_) { }
       try { localStorage.setItem(preferenceKey, String(effectsPaused)); } catch (_) { }
       applyEffects();
     }
     ui.effectsButton.addEventListener('click', () => setAnimationEnabled(effectsPaused));
     ui.animationEnabled.addEventListener('change', () => setAnimationEnabled(ui.animationEnabled.checked));
+    ui.effectsMode?.addEventListener('change', () => {
+      effectsMode = ['full', 'low-power', 'off'].includes(ui.effectsMode.value) ? ui.effectsMode.value : 'full';
+      setAnimationEnabled(effectsMode !== 'off');
+    });
     ui.animationTheme.addEventListener('change', () => {
       const selectedTheme = ui.animationTheme.value;
       if (!Object.hasOwn(themes, selectedTheme) || selectedTheme === animationTheme) { ui.animationTheme.value = animationTheme; return; }
@@ -647,8 +675,8 @@
       const attention = ['error', 'stalled', 'blocked', 'limit_reached'].includes(next.status) || next.status === 'agreed' && next.requiredWork?.length > 0;
       const complete = next.status === 'agreed' && !attention;
       ui.reviewDeck.classList.toggle('attention', attention);
-      const bridgeText = attention ? 'REVIEW NEEDS ATTENTION' : complete ? 'REVIEW FINISHED' :
-        running ? next.phase === 'boss-planning' ? 'BOSS IS PLANNING' : next.phase === 'boss-workers' ? 'WORKERS DEVELOPING RESULTS' : next.phase === 'boss-verification' ? 'CHECKING THE FINAL CANDIDATE' : 'REVIEW IN PROGRESS' : 'BOSS AND TWO WORKERS';
+      const bridgeText = attention ? 'Review needs attention' : complete ? 'Review finished' :
+        running ? next.phase === 'boss-planning' ? 'Boss is planning' : next.phase === 'boss-workers' ? 'Workers developing results' : next.phase === 'boss-verification' ? 'Checking the final candidate' : next.phase === 'boss-fresh-audit' ? 'Fresh final audit' : 'Review in progress' : 'Boss + two workers';
       // Page status is polled while the same decorative scene stays on screen.
       // Keep unchanged text nodes so those polls do not repaint the bot deck.
       if (ui.bridgeLabel.textContent !== bridgeText) ui.bridgeLabel.textContent = bridgeText;
@@ -656,16 +684,25 @@
         const reviewer = reviewerFor(side);
         const page = next.pages?.[side] || {};
         const pending = next.pending?.[side];
-        const active = running && !!pending && page.busy === true;
+        const interrupted = page.interrupted === true;
+        const reconnecting = !interrupted && page.reconnecting === true;
+        const active = running && !!pending && page.busy === true && !interrupted && !reconnecting;
         reviewer.classList.toggle('active', active);
         reviewer.classList.toggle('ready', complete);
-        reviewer.classList.toggle('warning', attention);
-        if (attention) setMood(side, 'thoughtful');
-        else if (active && reviewer.dataset.activity !== 'active') setMood(side, 'focused');
+        reviewer.classList.toggle('warning', attention || interrupted || reconnecting);
+        if (attention || interrupted || reconnecting) setMood(side, 'thoughtful');
+        else if (complete) setMood(side, 'sparkle');
+        else if (active) setMood(side, pending?.kind?.includes('review') || pending?.kind?.includes('verify') || pending?.kind?.includes('audit') ? 'thoughtful' : 'focused');
+        else setMood(side, 'curious');
+        const stage = attention || interrupted || reconnecting ? 'attention' : complete ? 'completed' : active ? /verify|audit|review/.test(pending?.kind || '') ? 'check' : 'work' : running ? 'waiting' : 'idle';
+        if (reviewer.dataset.stage !== stage) reviewer.dataset.stage = stage;
         const activity = active ? 'active' : 'idle';
         if (reviewer.dataset.activity !== activity) reviewer.dataset.activity = activity;
         let label = !connected ? 'Waiting for your session' : !next.tabIds?.[side] ? 'Waiting for your chat' :
           !page.authenticated ? page.authenticated === false ? 'Check your session' : 'Opening your chat' :
+            interrupted ? running ? page.awaitingProviderIdle === true || page.generating === true ?
+              'Stream interrupted · waiting for provider' : 'Response interrupted · recovering' : 'Response interrupted · needs attention' :
+            reconnecting ? 'Connection interrupted · waiting for complete answer' :
             running ? pending?.kind === 'draft' ? active ? 'Developing a first answer' : 'Preparing a first answer' :
               pending?.kind === 'review' ? active ? 'Checking the other answer' : 'Preparing the next review' :
                 pending?.kind === 'verify' ? active ? 'Checking the final candidate' : 'Preparing final verification' :
@@ -690,7 +727,7 @@
         seenTransfers.add(key);
         if (seenTransfers.size > 128) seenTransfers.delete(seenTransfers.values().next().value);
         if (!running) continue;
-        ui.bridgeLabel.textContent = record.hasFiles ? 'ANSWER AND FILES SHARED' : 'ANSWER SHARED';
+        ui.bridgeLabel.textContent = record.hasFiles ? 'Answer and files shared' : 'Answer shared';
         if (motionAllowed()) {
           ui.reviewDeck.classList.add('sharing');
           playPaper(record.from, record.to);
@@ -700,11 +737,76 @@
     return { render, stopPaper, setWindowVisible };
   }
 
+  function outputRecord() {
+    if (state.candidate?.media?.files?.length) return state.candidate;
+    if (state.delivery?.files?.length) return state.delivery;
+    return state.candidate || state.delivery || null;
+  }
+
   function mediaInfo() {
-    const media = state.candidate?.media || Object.values(state.drafts || {}).find((draft) => draft?.answer === answerText())?.media;
+    const record = outputRecord();
+    const media = record?.media || Object.values(state.drafts || {}).find((draft) => draft?.answer === answerText())?.media;
     const outputs = Array.isArray(media?.files) && media.files.length ? media.files : Array.isArray(media?.outputs) ? media.outputs : [];
-    return { side: media?.side || state.candidate?.side || 'left', names: outputs.map((output) =>
-      typeof output === 'string' ? output : String(output?.name || output?.filename || output?.kind || 'Generated output')) };
+    const files = Array.isArray(record?.files) ? record.files : Array.isArray(record?.media?.files) ? record.media.files : [];
+    return { side: media?.side || record?.side || record?.author || 'left', files,
+      names: (files.length ? files : outputs).map((output) => typeof output === 'string' ? output : String(output?.name || output?.filename || output?.kind || 'Generated output')) };
+  }
+
+  function fileSnapshot(files = mediaInfo().files) {
+    // This identity is captured before a native save dialog opens. The host
+    // resolves retained bytes once; a new worker result cannot change this save.
+    const record = outputRecord();
+    return { candidateId: record === state.candidate ? record?.id || null : record?.candidateId || null,
+      deliveryId: record?.id || null,
+      sha256: record?.sha256,
+      files: files.map(file => ({ name: String(file.name || file.filename || ''),
+        ...(file.contentSha256 ? { contentSha256: file.contentSha256 } : {}) })),
+      draft: !deliveryIsFinal() };
+  }
+
+  function fileSize(bytes) {
+    if (!Number.isFinite(bytes) || bytes < 0) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    const unit = bytes >= 1024 * 1024 ? 'MB' : 'KB';
+    return `${(bytes / (unit === 'MB' ? 1024 * 1024 : 1024)).toLocaleString('en-US', { maximumFractionDigits: 1 })} ${unit}`;
+  }
+
+  function renderOutputFiles(media) {
+    const checkpoints = (Array.isArray(state.delivery?.checkpoints) ? state.delivery.checkpoints : [])
+      .filter(record => record.files?.length && record.sha256 !== outputRecord()?.sha256);
+    const key = JSON.stringify({ selected: fileSnapshot(media.files), checkpoints: checkpoints.map(record => ({ id: record.id, sha256: record.sha256, files: record.files })) });
+    if (key !== outputRowsKey) {
+      outputRowsKey = key;
+      const fragment = document.createDocumentFragment();
+      const fileRow = (file, snapshot) => {
+        const row = document.createElement('li'); row.className = 'output-file-row';
+        const detail = document.createElement('div'); detail.className = 'output-file-detail';
+        const name = document.createElement('strong'); name.textContent = String(file.name || file.filename || 'Generated file');
+        const metadata = document.createElement('span');
+        const fingerprint = file.contentSha256 ? `SHA-256 ${file.contentSha256.slice(0, 12)}…` : '';
+        metadata.textContent = [fileSize(file.byteLength), fingerprint].filter(Boolean).join(' · ');
+        detail.append(name, metadata);
+        const button = document.createElement('button'); button.type = 'button'; button.className = 'button secondary output-file-save';
+        button.textContent = '↓ Download'; button.setAttribute('aria-label', `Download ${name.textContent}`);
+        button.addEventListener('click', () => saveCurrentFiles([file], snapshot));
+        row.append(detail, button); return row;
+      };
+      for (const file of media.files) fragment.append(fileRow(file));
+      ui.outputFileList.replaceChildren(fragment);
+      const checkpointFragment = document.createDocumentFragment();
+      for (const record of checkpoints) {
+        const group = document.createElement('section'); group.className = 'output-checkpoint-group';
+        const heading = document.createElement('h4'); heading.textContent = `${record.author === 'right' || record.side === 'right' ? 'Worker B' : 'Worker A'} · ${record.id || record.resultId}${record.round ? ` · cycle ${record.round}` : ''}`;
+        const list = document.createElement('ul'); list.className = 'output-file-list';
+        for (const file of record.files) list.append(fileRow(file, { candidateId: null, deliveryId: record.id || record.resultId,
+          sha256: record.sha256, files: [{ name: file.name, ...(file.contentSha256 ? { contentSha256: file.contentSha256 } : {}) }], draft: true }));
+        group.append(heading, list); checkpointFragment.append(group);
+      }
+      ui.checkpointFileList.replaceChildren(checkpointFragment);
+    }
+    ui.checkpointOutputs.hidden = !checkpoints.length;
+    ui.checkpointCount.textContent = String(checkpoints.length);
+    for (const button of ui.outputCard.querySelectorAll('.output-file-save')) button.disabled = savingFiles || windowClosing;
   }
 
   function renderResult() {
@@ -715,12 +817,24 @@
     const media = mediaInfo();
     ui.bottomFiles.textContent = media.names.length ? `${media.names.length} ${media.names.length === 1 ? 'file' : 'files'} · ${media.names.join(' · ')}` : 'No output files yet';
     ui.bottomFiles.title = media.names.length ? media.names.join('\n') : 'Generated files and images will appear here';
-    ui.outputCard.hidden = !media.names.length;
-    ui.outputHeading.textContent = state.status === 'agreed' ? 'Files from the agreed answer' : 'Files from the current answer';
-    ui.answerOutputs.textContent = media.names.length ? `${media.names.join(' · ')}${isRunning() ? '\nThe boss directs further checks and file sharing automatically.' : ''}` : '';
-    const nextFileKey = `${state.runId || ''}:${state.candidate?.id || ''}:${JSON.stringify(state.candidate?.media || null)}`;
+    ui.outputCard.hidden = false;
+    ui.outputHeading.textContent = 'Results & downloads';
+    const final = deliveryIsFinal();
+    const workerDraft = outputRecord() === state.delivery && /^worker/.test(state.delivery?.source || '');
+    ui.deliveryStatus.textContent = final ? 'Final reviewed result' : media.files.length ? workerDraft ? 'Worker draft · awaiting boss review' : 'Current draft · review unfinished' : 'No downloadable files yet';
+    ui.deliveryStatus.classList.toggle('final', final);
+    ui.deliveryHint.textContent = final ? 'These are the exact files retained from the reviewed result. Check the remaining limitations below.' : media.files.length ?
+      'You can download this saved draft now. Review may still change the final answer; downloading keeps the team working.' :
+      text ? 'An answer is available below. The team has not delivered a downloadable file yet. Copy or export the answer, or ask the boss for the missing file.' :
+      'Your final answer and generated files will appear here. Completed drafts stay downloadable while review continues.';
+    ui.answerOutputs.textContent = media.files.length ? `${media.files.length} ${media.files.length === 1 ? 'file' : 'files'} retained · ${outputRecord()?.id || 'current draft'}` : '';
+    renderWorkflowHistory();
+    renderOutputFiles(media);
+    const nextFileKey = JSON.stringify(fileSnapshot(media.files));
     if (nextFileKey !== fileCandidateKey) { fileCandidateKey = nextFileKey; ui.fileSaveStatus.hidden = true; }
-    ui.viewOutput.hidden = !media.names.length;
+    const nativeOutput = hasPages() && outputRecord()?.media?.runId !== 'saved-project';
+    ui.viewOutput.hidden = !media.names.length || !nativeOutput && !studioUI?.openProjects;
+    ui.viewOutput.textContent = nativeOutput ? 'View original outputs' : 'Open saved project';
     const summary = state.boss?.finalSummary;
     const checks = Array.isArray(state.boss?.finalChecks) ? state.boss.finalChecks : [];
     const limitations = state.boss?.limitations;
@@ -734,6 +848,25 @@
     renderImprovements();
     renderTranscript();
     renderIssues();
+  }
+
+  function renderWorkflowHistory() {
+    const previous = state.completionContext;
+    const present = previous && typeof previous === 'object' && (previous.status || previous.stage || previous.error);
+    ui.workflowHistoryCard.hidden = !present;
+    if (!present) return;
+    const status = String(previous.status || 'recorded').slice(0, 80).replace(/_/g, ' ');
+    ui.workflowHistoryOutcome.textContent = `Recorded outcome: ${status}`;
+    ui.workflowHistoryStage.textContent = typeof previous.stage === 'string' ? previous.stage.slice(0, 600) : '';
+    ui.workflowHistoryStage.hidden = !ui.workflowHistoryStage.textContent;
+    ui.workflowHistoryError.textContent = previous.error ? errorText(previous.error) : '';
+    ui.workflowHistoryError.hidden = !ui.workflowHistoryError.textContent;
+    const date = new Date(previous.finishedAt);
+    ui.workflowHistoryTime.hidden = !previous.finishedAt || !Number.isFinite(date.getTime());
+    ui.workflowHistoryTime.textContent = ui.workflowHistoryTime.hidden ? '' : `Recorded ${date.toLocaleString()}`;
+    ui.workflowHistoryHint.textContent = previous.status === 'agreed' ?
+      'Saved history, not live progress. Reopening a project preserves this recorded outcome; it does not restore live verification.' :
+      `Saved history, not live progress. This review was unfinished.${!hasPages() ? ' Open a team to continue from the retained project.' : ' The current workflow status is shown above.'}`;
   }
 
   function renderImprovements() {
@@ -766,6 +899,21 @@
   }
 
   function renderTranscript() {
+    const supervision = state.supervision;
+    if (ui.teamHealth) {
+      ui.teamHealth.hidden = !bossWorkspace();
+      ui.teamHealthSummary.textContent = supervision?.checkedAt ?
+        `Last check ${new Date(supervision.checkedAt).toLocaleTimeString()} · ${supervision.checks || 0} checks · Visible failures are checked immediately; healthy work continues.` :
+        'Visible failures trigger an immediate check. Regular health checks run every 5 minutes; the boss repairs only the failed worker.';
+      const events = supervision?.events || [];
+      const visibleEvents = new Set([...events.filter(event => event.type === 'interrupted').slice(-8), ...events.slice(-20)]);
+      const rows = events.filter(event => visibleEvents.has(event)).map(event => {
+        const item = document.createElement('li');
+        item.textContent = `${event.at ? new Date(event.at).toLocaleTimeString() + ' · ' : ''}${event.detail || event.message || event.reason || event.text || event.status || 'Worker status checked'}`;
+        return item;
+      });
+      ui.teamHealthLog.replaceChildren(...rows);
+    }
     const entries = Array.isArray(state.transcript) ? state.transcript : [];
     ui.activityCount.textContent = String(entries.length);
     const nextKey = JSON.stringify(entries);
@@ -791,9 +939,26 @@
     ui.transcript.replaceChildren(fragment);
   }
 
+  function remainingIssues() {
+    const issues = (Array.isArray(state.issues) ? state.issues : []).filter(issue => !issue.resolved)
+      .map(issue => typeof issue === 'string' ? { problem: issue } : issue);
+    if (bossWorkspace()) {
+      for (const [side, review] of Object.entries(state.finalVerification?.workers || {})) {
+        if (review.verdict === 'accept') continue;
+        for (const problem of review.issues || []) issues.push({ id: `Worker ${side === 'left' ? 'A' : 'B'}`, severity: 'Review', problem });
+      }
+      const limitations = state.boss?.limitations;
+      for (const problem of Array.isArray(limitations) ? limitations : typeof limitations === 'string' && limitations ? [limitations] : []) {
+        issues.push({ id: 'Boss limitation', severity: 'Limitation', problem });
+      }
+    }
+    if (state.error && state.status !== 'agreed') issues.unshift({ id: 'Workflow', severity: 'major', problem: state.error });
+    return issues;
+  }
+
   function renderIssues() {
     const severity = { critical: 0, major: 1, minor: 2 };
-    const issues = (Array.isArray(state.issues) ? state.issues : []).filter((issue) => !issue.resolved).sort((a, b) =>
+    const issues = remainingIssues().sort((a, b) =>
       Number(!a.taskRequirementId) - Number(!b.taskRequirementId) || (severity[a.severity] ?? 3) - (severity[b.severity] ?? 3));
     ui.issueCount.textContent = String(issues.length);
     const nextKey = `${state.status}:${JSON.stringify(issues)}`;
@@ -808,7 +973,7 @@
     for (const issue of issues) {
       const box = document.createElement('article'); box.className = 'issue';
       const heading = document.createElement('h4'); heading.textContent = `${issue.id || 'Issue'} · ${issue.severity || 'Review'}`;
-      const body = document.createElement('p'); body.textContent = typeof issue === 'string' ? issue : [issue.problem, issue.evidence && `Evidence: ${issue.evidence}`, issue.correction && `Suggested correction: ${issue.correction}`].filter(Boolean).join('\n\n');
+      const body = document.createElement('p'); body.textContent = [issue.problem || issue.summary || issue.reason, issue.evidence && `Evidence: ${issue.evidence}`, issue.correction && `Suggested correction: ${issue.correction}`].filter(Boolean).join('\n\n');
       box.append(heading, body); fragment.append(box);
     }
     ui.issues.replaceChildren(fragment);
@@ -816,19 +981,49 @@
 
   function renderAttachments() {
     const attachment = state.attachments || {};
-    const labels = { attaching: 'Attaching files to the team…', attached: 'Attached to the team', ready: 'Attached to the team', complete: 'Attached to the team', partial: 'Some chats did not receive the files. Reset chats before restarting.', failed: 'Attachment failed. Reset chats before restarting.' };
+    const progress = attachment.progress;
+    const uploading = ['uploading', 'attaching'].includes(attachment.status);
+    const progressing = (uploading || busyAction === 'attach' || isRunning()) && progress && ['reading', 'staging', 'processing'].includes(progress.phase);
+    ui.fileUploadProgress.hidden = !progressing;
+    let progressLabel = '';
+    if (progressing) {
+      const sideName = { left: 'Worker A', right: 'Worker B', boss: 'Boss' }[progress.side];
+      const byteAmount = (bytes) => `${(Math.max(0, Number(bytes) || 0) / 1048576).toLocaleString(undefined, { maximumFractionDigits: 1 })} MiB`;
+      const determinate = progress.phase !== 'processing' && Number.isFinite(progress.processedBytes) && Number.isFinite(progress.totalBytes) && progress.totalBytes > 0;
+      const percentage = determinate ? Math.min(100, Math.max(0, progress.processedBytes / progress.totalBytes * 100)) : null;
+      progressLabel = progress.phase === 'reading' ? 'Reading source files' : progress.phase === 'staging' ? `Sending to ${sideName || 'the team'}` : `${sideName || 'The team'} is processing the upload`;
+      ui.fileProgressLabel.textContent = `${progressLabel}${percentage === null ? '…' : ` · ${Math.floor(percentage)}%`}`;
+      if (percentage === null) ui.fileProgressBar.removeAttribute('value');
+      else ui.fileProgressBar.value = percentage;
+      const fileCount = Number.isInteger(progress.fileCount) && progress.fileCount > 0 ? progress.fileCount : 0;
+      const fileIndex = Number.isInteger(progress.fileIndex) ? progress.fileIndex : null;
+      const detail = [progress.fileName, fileCount && fileIndex !== null ? `File ${Math.min(fileCount, Math.max(1, fileIndex + 1))} of ${fileCount}` : ''];
+      if (determinate) detail.push(`${byteAmount(progress.processedBytes)} of ${byteAmount(progress.totalBytes)}`);
+      if (progress.phase === 'processing') detail.push('Waiting for the chat service to confirm the attachment. You can cancel while it processes.');
+      if (Number.isInteger(progress.completedPages) && Number.isInteger(progress.totalPages) && progress.totalPages > 0) detail.push(`${progress.completedPages} of ${progress.totalPages} pages confirmed`);
+      if (typeof progress.warning === 'string' && progress.warning.trim()) detail.push(progress.warning);
+      ui.fileProgressDetail.textContent = detail.filter(Boolean).join(' · ');
+    }
+    const labels = { uploading: 'Waiting for the team to confirm every file…', attaching: 'Attaching files to the team…', attached: 'Attached to the team', ready: 'Attached to the team', complete: 'Attached to the team', partial: 'Some uploads are unconfirmed. Click Check pending uploads when their previews finish.', failed: 'Upload failed or is still pending. Click Check pending uploads to verify the existing previews.' };
     const retained = isRunning() && Array.isArray(state.sourceNames) && state.sourceNames.length;
-    ui.fileStatus.textContent = attachment.error || (labels[attachment.status] ? `${labels[attachment.status]}${attachment.names?.length ? `\n${attachment.names.join('\n')}` : ''}` : retained ? `Original sources for this task · supplied with each review\n${state.sourceNames.join('\n')}` : isFollowup() ? 'No files queued for your next command' : 'No source files attached');
+    const contentNames = contentFileNames(attachment.names || []);
+    const sourceNames = contentFileNames(state.sourceNames || []);
+    const references = styleReferenceNames();
+    ui.fileStatus.textContent = attachment.error || (labels[attachment.status] ? `${labels[attachment.status]}${contentNames.length ? `\nContent files\n${contentNames.join('\n')}` : references.length ? '\nNo content files in this upload' : ''}` : retained && sourceNames.length ? `Original sources for this task · supplied with each review\n${sourceNames.join('\n')}` : isFollowup() ? 'No files queued for your next command' : 'No source files attached');
+    ui.styleReferenceStatus.hidden = !references.length;
+    ui.styleReferenceStatus.textContent = references.length ? `Design references · appearance only\n${references.join('\n')}` : '';
     ui.fileStatus.classList.toggle('success', !!retained || ['attached', 'ready', 'complete'].includes(attachment.status));
     ui.fileStatus.classList.toggle('failure', ['partial', 'failed'].includes(attachment.status));
     const names = attachment.names?.length ? attachment.names : (isRunning() || state.status === 'blocked') && state.sourceNames?.length ? state.sourceNames : [];
-    ui.bossFilesStatus.hidden = !names.length;
-    ui.bossFilesStatus.textContent = `${names.length} ${names.length === 1 ? 'source' : 'sources'} · ${names.join(' · ')}`;
+    ui.bossFilesStatus.hidden = !names.length && !progressing;
+    const bossContentNames = contentFileNames(names);
+    ui.bossFilesStatus.textContent = progressing ? ui.fileProgressLabel.textContent : [bossContentNames.length ? `${bossContentNames.length} content ${bossContentNames.length === 1 ? 'file' : 'files'} · ${bossContentNames.join(' · ')}` : '', references.length ? `${references.length} design ${references.length === 1 ? 'reference' : 'references'} · ${references.join(' · ')}` : ''].filter(Boolean).join(' | ');
     ui.bossFilesStatus.title = names.join('\n');
   }
 
   function render(nextState) {
     const oldStatus = state.status;
+    const hadFiles = mediaInfo().files.length > 0;
     state = nextState && typeof nextState === 'object' ? nextState : state;
     syncFileRequirement();
     if (typeof state.hasSession === 'boolean') hasSession = state.hasSession;
@@ -842,14 +1037,21 @@
     renderPage('left'); renderPage('right'); renderPage('boss'); renderAttachments();
     updateControls(); renderStatus(); renderResult();
     galaxyEffects.render(state, hasSession);
+    studioUI?.render(state);
     if (oldStatus !== 'running' && isRunning()) {
       setSidebarOpen(false);
       setResultsOpen(false);
+    }
+    // A finished run or a restored detached project must reveal its result,
+    // instead of leaving all deliverables behind an unlabelled collapsed bar.
+    if (oldStatus === 'running' && isTerminal() || !hadFiles && mediaInfo().files.length && !hasPages() && !isRunning()) {
+      setResultsOpen(true); setResultTab('answer');
     }
     scheduleBounds();
   }
 
   function slotBounds(element) {
+    if (studioUI?.isOpen()) return { x: 0, y: 0, width: 0, height: 0 };
     if (!hasPages() || element === ui.bossSlot && (!bossOpen || !bossWorkspace()) || !element.getClientRects().length) return { x: 0, y: 0, width: 0, height: 0 };
     const bounds = element.getBoundingClientRect();
     let x = bounds.x;
@@ -895,6 +1097,7 @@
   }
 
   function setResultsOpen(open) {
+    if (open && studioUI?.isOpen()) studioUI.setOpen(false);
     if (open && bossOpen) setBossOpen(false);
     ui.resultDrawer.classList.toggle('open', open);
     ui.resultContent.hidden = !open;
@@ -903,6 +1106,7 @@
   }
 
   function setSidebarOpen(open) {
+    if (open && studioUI?.isOpen()) studioUI.setOpen(false);
     if (open && bossOpen) setBossOpen(false);
     if (!open && ui.sidebar.contains(document.activeElement)) ui.toggleSidebar.focus({ preventScroll: true });
     ui.app.classList.toggle('sidebar-collapsed', !open);
@@ -925,6 +1129,7 @@
     return {
       question, protocol: ui.protocol.value.trim(), reviewMode: reviewMode(), maxRounds: rounds(),
       relayMedia: ui.relayMedia.checked, requireFiles: ui.requireFiles.checked,
+      ...(studioUI ? { studio: studioUI.settings() } : {}),
       confirmTemporary: activeMode() === 'temporary' && privacyConfirmed()
     };
   }
@@ -936,10 +1141,10 @@
   async function sendBossInstruction() {
     if (ui.sendBossMessage.disabled) return;
     const text = ui.bossMessageInput.value.trim();
-    const continueTask = isRunning() || state.status === 'blocked';
+    const continueTask = isRunning() || ['blocked', 'limit_reached'].includes(state.status) && bossWorkspace();
     await action(continueTask ? 'boss-message' : 'start', async () => {
       if (!continueTask) ui.question.value = text;
-      await request(continueTask ? 'bossMessage' : 'start', continueTask ? { text } : startPayload(text));
+      await request(continueTask ? 'bossMessage' : 'start', continueTask ? { text, maxRounds: rounds() } : startPayload(text));
       if (ui.bossMessageInput.value.trim() === text) ui.bossMessageInput.value = '';
     }, ui.bossMessageError);
   }
@@ -1026,20 +1231,26 @@
     resetPrivacyConfirmation(); await setExpanded(null); setResultsOpen(false); render(state);
   }));
   ui.prepare.addEventListener('click', () => action('prepare', () => request('prepare')));
-  function attachTaskFiles(target = ui.actionError) { return action('attach', async () => {
-    const result = await request('attachFiles');
-    const names = result.state?.attachments?.names || state.attachments?.names || [];
-    if (!result.canceled && names.some((name) => /\.pdf$/i.test(String(name)))) {
-      automaticFileRequirement = !explicitFileRequirement;
-      syncFileRequirement();
-      ui.relayMedia.checked = true;
-    }
+  function attachTaskFiles(target = ui.actionError, requestedRole = 'content-source') { return action('attach', async () => {
+    const pending = ['partial', 'failed'].includes(state.attachments?.status);
+    const fileRole = pending && state.attachments?.fileRole === 'style-reference' ? 'style-reference' : requestedRole;
+    activeAttachmentRole = fileRole; updateControls();
+    try {
+      const result = await request('attachFiles', fileRole === 'style-reference' ? { fileRole } : undefined);
+      const names = contentFileNames(result.state?.attachments?.names || state.attachments?.names || []);
+      if (!result.canceled && fileRole !== 'style-reference' && names.some((name) => /\.pdf$/i.test(String(name)))) {
+        automaticFileRequirement = !explicitFileRequirement;
+        syncFileRequirement();
+        ui.relayMedia.checked = true;
+      }
+    } finally { activeAttachmentRole = null; }
   }, target); }
   ui.attachFiles.addEventListener('click', () => attachTaskFiles());
+  ui.attachStyleReferences.addEventListener('click', () => attachTaskFiles(ui.actionError, 'style-reference'));
   ui.bossAttachFiles.addEventListener('click', () => attachTaskFiles(ui.bossMessageError));
   ui.start.addEventListener('click', startExchange);
   async function stopExchange() {
-    if (stopBusy || !isRunning()) return;
+    if (stopBusy || !isRunning() && state.attachments?.status !== 'uploading' && busyAction !== 'attach') return;
     stopBusy = true; updateControls(); ui.actionError.hidden = true;
     try { await request('stop'); } catch (error) { showError(error); }
     finally { stopBusy = false; updateControls(); }
@@ -1093,29 +1304,38 @@
     const original = state.candidateHistory?.[0]?.text;
     const history = `## Revision record\n\n${Number(state.revisionCount) || 0} candidate revisions. Benefits are model-reported; checked means both reviewed that exact candidate.\n\n${changes || 'The candidate was unchanged; no improvement was demonstrated.'}${original && state.revisionCount ? `\n\n## First draft\n\n${original}` : ''}`;
     const bossReview = state.boss?.finalSummary ? `## Boss review\n\n${state.boss.finalSummary}\n\n${state.boss.finalChecks?.length ? `Reported checks:\n${state.boss.finalChecks.map(value => `- ${typeof value === 'string' ? value : JSON.stringify(value)}`).join('\n')}\n\n` : ''}${state.boss.limitations?.length ? `Remaining limitations:\n${Array.isArray(state.boss.limitations) ? state.boss.limitations.join('\n') : state.boss.limitations}\n\n` : ''}` : '';
-    const content = `# Converge review result\n\n${answerText()}\n\n---\n\nStatus: ${state.status}\n\nQuestion: ${state.question || ui.question.value}\n\n${bossReview}${history}\n\nModel agreement does not guarantee correctness.\n`;
+    const monitoring = `## Workflow monitoring\n\n${state.supervision?.checks || 0} worker checks.\n\n${(state.supervision?.events || []).map(event => `- ${event.at ? new Date(event.at).toISOString() + ': ' : ''}${event.detail || event.message || event.reason || event.text || event.status || 'Worker status checked'}`).join('\n') || 'No monitoring events yet.'}`;
+    const unresolved = `## Remaining issues and limitations\n\n${remainingIssues().map(issue => `- ${issue.summary || issue.problem || issue.reason || JSON.stringify(issue)}`).join('\n') || 'No unresolved issues recorded.'}`;
+    const content = `# Converge review result\n\n${answerText()}\n\n---\n\nStatus: ${state.status}\n\nQuestion: ${state.question || ui.question.value}\n\n${bossReview}${history}\n\n${monitoring}\n\n${unresolved}\n\nModel agreement does not guarantee correctness.\n`;
     await request('saveText', { content, defaultName: 'Converge-answer.md' });
   }));
-  function saveCurrentFiles() {
-    if (ui.saveFiles.disabled) return;
+  async function saveCurrentFiles(selectedFiles, selectedSnapshot) {
+    if (savingFiles || windowClosing) return;
+    const snapshot = selectedSnapshot || fileSnapshot(Array.isArray(selectedFiles) ? selectedFiles : mediaInfo().files);
+    if (!snapshot.files.length) return;
     setResultsOpen(true);
     setResultTab('answer');
     ui.fileSaveStatus.classList.remove('failure');
-    action('save-files', async () => {
+    savingFiles = true; updateControls();
+    try {
       ui.fileSaveStatus.hidden = true;
-      let result;
-      try { result = await request('saveFiles'); }
-      catch (error) { ui.fileSaveStatus.classList.add('failure'); throw error; }
+      const result = await request('saveFiles', snapshot);
+      if (windowClosing) return;
       const names = Array.isArray(result.names) ? result.names : [];
       const count = Array.isArray(result.saved) ? result.saved.length : Number(result.saved) || names.length;
       ui.fileSaveStatus.textContent = result.canceled ? (names.length ? `Saved ${names.join(' · ')}. Remaining saves canceled.` : 'Save canceled. Your files are still available here.') :
-        names.length ? `Saved ${names.join(' · ')}` : `Saved ${count || 'the'} ${count === 1 ? 'file' : 'files'}.`;
+        names.length ? `Saved ${names.join(' · ')}${snapshot.deliveryId ? ` · ${snapshot.deliveryId}` : ''}` : `Saved ${count || 'the'} ${count === 1 ? 'file' : 'files'}.`;
       ui.fileSaveStatus.hidden = false;
-    }, ui.fileSaveStatus);
+    } catch (error) {
+      if (!windowClosing) { ui.fileSaveStatus.classList.add('failure'); showError(error, ui.fileSaveStatus); }
+    } finally { savingFiles = false; updateControls(); scheduleBounds(); }
   }
   ui.saveFiles.addEventListener('click', saveCurrentFiles);
   ui.saveFilesCompact.addEventListener('click', saveCurrentFiles);
   ui.viewOutput.addEventListener('click', () => {
+    if (!hasPages() || outputRecord()?.media?.runId === 'saved-project') {
+      studioUI?.openProjects?.(); return;
+    }
     if (mediaInfo().side === 'boss') setBossOpen(true);
     else {
       setBossOpen(false);

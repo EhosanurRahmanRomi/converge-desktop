@@ -43,12 +43,12 @@ if (!process.versions.electron) {
     const channel = 'cookie-file-fixture-' + process.pid;
     const consoleMessages = [];
     try {
-      const files = Object.fromEntries(await Promise.all(['browser.html', 'browser-app.js', 'browser.css', 'galaxy-scene.js', 'galaxy-scene.css', 'star-ribbons.js', 'ghost-v2.png', 'flower-blossom-v1.png'].map(async name => [name, await fs.readFile(path.join(root, 'renderer', name))])));
+      const files = Object.fromEntries(await Promise.all(['browser.html', 'browser-app.js', 'browser.css', 'galaxy-scene.js', 'galaxy-scene.css', 'star-ribbons.js', 'ghost-v2.png', 'flower-blossom-v1.png', 'studio-ui.js', 'studio-ui.css', 'assets/fonts/Manrope-Variable.ttf'].map(async name => [name, await fs.readFile(path.join(root, 'renderer', name))])));
       const html = files['browser.html'].toString('utf8').replace('<script defer src="browser-app.js"></script>', '<script src="api-fixture.js"></script><script defer src="browser-app.js"></script>');
       server = http.createServer((req, res) => {
         if (req.url === '/api-fixture.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(fixtureJs); return; }
         const name = req.url.slice(1), content = files[name];
-        if (content && name !== 'browser.html') { res.setHeader('Content-Type', name.endsWith('.png') ? 'image/png' : name.endsWith('.css') ? 'text/css' : 'text/javascript'); res.end(content); return; }
+        if (content && name !== 'browser.html') { res.setHeader('Content-Type', name.endsWith('.png') ? 'image/png' : name.endsWith('.css') ? 'text/css' : name.endsWith('.ttf') ? 'font/ttf' : 'text/javascript'); res.end(content); return; }
         res.setHeader('Content-Type', 'text/html;charset=utf-8'); res.end(html);
       });
       await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));

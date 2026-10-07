@@ -6,9 +6,11 @@ const { EventEmitter } = require('node:events');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
+const { createHash } = require('node:crypto');
 const { createDownloadBroker } = require('../src/browser/downloads');
 const { MAX_FILE_BYTES } = require('../src/browser/files');
 const archives = require('./fixtures/archive-bytes.json');
+const limitDescription = `${MAX_FILE_BYTES / (1024 * 1024)} MB`;
 
 class DownloadItem extends EventEmitter {
   constructor({ name = 'reviewed.pdf', mimeType = 'application/pdf', total = 0 } = {}) {
@@ -71,7 +73,7 @@ test('authorized native PDF downloads return exact bytes and clean their private
   await assert.rejects(fs.stat(item.savePath), { code: 'ENOENT' });
 });
 
-test('initial size and streamed progress enforce the native 12 MB download limit', async (t) => {
+test('initial size and streamed progress enforce the current native download limit', async (t) => {
   const { broker, browserSession, left } = await harness(t);
   for (const initial of [true, false]) {
     const started = await broker.begin('left', payload);
@@ -79,8 +81,64 @@ test('initial size and streamed progress enforce the native 12 MB download limit
     browserSession.emit('will-download', {}, item, left);
     if (!initial) { item.received = MAX_FILE_BYTES + 1; item.emit('updated', {}, 'progressing'); }
     const result = await broker.read('left', started.token);
-    assert.equal(result.ok, false); assert.match(result.error, /12 MB/); assert.equal(item.canceled, true);
+    assert.equal(result.ok, false); assert.ok(result.error.includes(limitDescription), result.error); assert.equal(item.canceled, true);
   }
+});
+
+test('native download accepts the 512 MB boundary and retains larger artifacts on disk', async (t) => {
+  const { createFileStore, readFileChunks } = require('../src/browser/file-store');
+  const cache = await fs.mkdtemp(path.join(os.tmpdir(), 'converge-download-cache-test-'));
+  const store = createFileStore({ directory: cache });
+  t.after(async () => {
+    await store.close();
+    assert.equal(path.dirname(cache), path.resolve(os.tmpdir()));
+    assert.ok(path.basename(cache).startsWith('converge-download-cache-test-'));
+    await fs.rm(cache, { recursive: true, force: true });
+  });
+  const { broker, browserSession, left } = await harness(t);
+  assert.equal(MAX_FILE_BYTES, 512 * 1024 * 1024);
+  const boundary = await broker.begin('left', payload);
+  const boundaryItem = new DownloadItem({ total: MAX_FILE_BYTES });
+  browserSession.emit('will-download', {}, boundaryItem, left);
+  assert.ok(boundaryItem.savePath, 'A file exactly at the permitted boundary was rejected.');
+  assert.equal(boundaryItem.canceled, false);
+  assert.equal(broker.cancel('left', boundary.token).ok, true);
+  assert.equal((await broker.read('left', boundary.token)).ok, false);
+
+  const started = await broker.begin('left', payload);
+  const bytes = Buffer.alloc(20 * 1024 * 1024, 0x20);
+  bytes.write('%PDF-1.4\nLarge reviewed artifact\n', 0);
+  bytes.write('\n%%EOF', bytes.length - 6);
+  const item = new DownloadItem({ total: bytes.length });
+  browserSession.emit('will-download', {}, item, left);
+  assert.ok(item.savePath, 'The old 12 MB size gate still rejected the actual large artifact.');
+  await item.complete(bytes);
+  const result = await broker.read('left', started.token);
+  assert.equal(result.ok, true, result.error);
+  assert.equal(result.base64, undefined);
+  assert.equal(result.byteLength, bytes.length);
+  const digest = createHash('sha256'); let decodedLength = 0;
+  for await (const chunk of readFileChunks(result)) { assert.ok(chunk.length <= 786432); decodedLength += chunk.length; digest.update(chunk); }
+  assert.equal(decodedLength, bytes.length);
+  assert.equal(digest.digest('hex'), createHash('sha256').update(bytes).digest('hex'));
+  await assert.rejects(fs.stat(item.savePath), { code: 'ENOENT' });
+});
+
+test('completed files exceeding the cap are rejected even when provider progress omitted the size', async (t) => {
+  const { broker, browserSession, left } = await harness(t);
+  const started = await broker.begin('left', payload);
+  const item = new DownloadItem({ total: 0 });
+  browserSession.emit('will-download', {}, item, left);
+  await fs.writeFile(item.savePath, '%PDF-1.4\n');
+  // A sparse file exercises the actual stat guard without allocating or
+  // transporting an oversized payload into the main process.
+  await fs.truncate(item.savePath, MAX_FILE_BYTES + 1);
+  item.emit('done', {}, 'completed');
+  const result = await broker.read('left', started.token);
+  assert.equal(result.ok, false);
+  assert.ok(result.error.includes(limitDescription), result.error);
+  assert.equal(item.canceled, true);
+  await assert.rejects(fs.stat(item.savePath), { code: 'ENOENT' });
 });
 
 test('tokens are bound to their chat and unrelated download events remain untouched', async (t) => {
@@ -244,15 +302,15 @@ test('native source broker rejects downloaded binary data even under a known .mq
   await assert.rejects(fs.stat(item.savePath), { code: 'ENOENT' });
 });
 
-test('a native artifact prepared after 18 seconds still belongs to its authorized job and returns exact bytes', async (t) => {
+test('a native artifact prepared after two minutes still belongs to its authorized job and returns exact bytes', async (t) => {
   const { broker, browserSession, left } = await harness(t);
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const started = await broker.begin('left', payload);
   const reading = broker.read('left', started.token);
   let settled = false;
   reading.then(() => { settled = true; });
-  // The previous page deadline expired before this realistic delayed blob.
-  t.mock.timers.tick(18_000);
+  // The old 45-second broker deadline expired before this delayed artifact.
+  t.mock.timers.tick(120_000);
   await new Promise(setImmediate);
   assert.equal(settled, false);
   const item = new DownloadItem();
@@ -271,13 +329,13 @@ test('the native preparation deadline stays bounded and Stop returns promptly be
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const expired = await broker.begin('left', payload);
   const expiring = broker.read('left', expired.token);
-  t.mock.timers.tick(45_000);
+  t.mock.timers.tick(30 * 60_000);
   const failure = await expiring;
   assert.equal(failure.ok, false);
-  assert.match(failure.error, /45 seconds/);
+  assert.match(failure.error, /30 minutes/);
   const stopped = await broker.begin('left', payload);
   const waiting = broker.read('left', stopped.token);
-  t.mock.timers.tick(18_000);
+  t.mock.timers.tick(120_000);
   assert.equal(broker.cancel('left', stopped.token).ok, true);
   const result = await waiting;
   assert.equal(result.ok, false);
@@ -350,7 +408,7 @@ test('native .set settings downloads retain their canonical name and Unicode sou
   assert.equal(wrong.savePath,null);
 });
 
-test('ZIP and .set downloads keep side ownership, Stop and 12 MB limits', async (t) => {
+test('ZIP and .set downloads keep side ownership, Stop and current byte limits', async (t) => {
   const {broker,browserSession,left,right} = await harness(t);
   for (const [name,mimeType] of [['package.zip','application/zip'],['defaults.set','text/plain']]) {
     const started = await broker.begin('left',{...payload,name,mimeType});
@@ -360,7 +418,7 @@ test('ZIP and .set downloads keep side ownership, Stop and 12 MB limits', async 
     assert.equal(unrelated.savePath,null); assert.equal(unrelated.canceled,false);
     const owned = new DownloadItem({name,mimeType,total:MAX_FILE_BYTES+1});
     browserSession.emit('will-download',{},owned,left);
-    assert.match((await broker.read('left',started.token)).error,/12 MB/);
+    assert.ok((await broker.read('left',started.token)).error.includes(limitDescription));
     assert.equal(owned.canceled,true);
     const waiting = await broker.begin('left',{...payload,name,mimeType});
     assert.equal(broker.cancel('left',waiting.token).ok,true);

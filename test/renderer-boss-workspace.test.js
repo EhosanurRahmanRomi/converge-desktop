@@ -29,7 +29,7 @@ if (!process.versions.electron) {
   app.setPath('userData', path.join(app.getPath('temp'), `converge-boss-renderer-${process.pid}`));
   const fixtureJs = `
     const ready={ready:true,authenticated:true,busy:false,temporary:false,work:false};
-    window.bossFixture={bounds:[],starts:[],messages:[],themes:[],effectCalls:[],listener:null,closing:null,failNext:false,state:{coordinatorMode:'boss',status:'setup',chatMode:'normal',tabIds:{left:10,right:11,boss:12},pages:{left:{...ready},right:{...ready},boss:{...ready}},boss:{queue:[],instructions:[]},attachments:{status:'none',names:[]},transcript:[],issues:[]}};
+    window.bossFixture={bounds:[],starts:[],messages:[],themes:[],effectCalls:[],stops:0,listener:null,closing:null,failNext:false,state:{coordinatorMode:'boss',status:'setup',chatMode:'normal',tabIds:{left:10,right:11,boss:12},pages:{left:{...ready},right:{...ready},boss:{...ready}},boss:{queue:[],instructions:[]},attachments:{status:'none',names:[]},transcript:[],issues:[]}};
     bossFixture.publish=value=>{bossFixture.state={...bossFixture.state,...value};bossFixture.listener(bossFixture.state)};
     window.convergeBrowser={
       bootstrap:async()=>({hasSession:true,version:'boss-ui-fixture',state:bossFixture.state}),
@@ -37,19 +37,21 @@ if (!process.versions.electron) {
       onState:fn=>{bossFixture.listener=fn},onPage:()=>{},onClosing:fn=>{bossFixture.closing=fn},
       setEffectsPaused:async value=>{bossFixture.effectCalls.push(value);return{ok:true}},
       setAppearance:async value=>{bossFixture.themes.push(value);return{ok:true}},
+      attachFiles:()=>{bossFixture.publish({attachments:{status:'none',names:[],progress:{phase:'reading',processedBytes:134217728,totalBytes:536870912,fileName:'large-source.pdf',fileIndex:0,fileCount:1}}});return new Promise(resolve=>{bossFixture.finishAttach=resolve})},
+      stop:async()=>{bossFixture.stops++;bossFixture.publish({attachments:{status:'none',names:[]}});bossFixture.finishAttach?.({ok:true,canceled:true,state:bossFixture.state});bossFixture.finishAttach=null;return{ok:true,state:bossFixture.state}},
       start:async payload=>{bossFixture.starts.push(payload);bossFixture.publish({status:'running',phase:'boss-planning',stage:'Boss planning the task',runId:'fixture-run',question:payload.question,reviewMode:payload.reviewMode,maxRounds:payload.maxRounds,pending:{boss:{kind:'boss-plan'}},pages:{left:{...ready},right:{...ready},boss:{...ready,busy:true}}});return{ok:true,state:bossFixture.state}},
       bossMessage:async payload=>{if(bossFixture.failNext){bossFixture.failNext=false;return{ok:false,error:'Instruction could not be queued. Try again.'}}bossFixture.messages.push(payload);bossFixture.publish({status:'running',boss:{...bossFixture.state.boss,queue:[...(bossFixture.state.boss.queue||[]),payload.text]}});return{ok:true,state:bossFixture.state}},
-      expand:async()=>({ok:true}),copy:async()=>({ok:true}),saveText:async()=>({ok:true}),saveFiles:async()=>({ok:true,saved:1,names:['candidate.txt']}),
+      expand:async()=>({ok:true}),copy:async()=>({ok:true}),saveText:async payload=>{bossFixture.exported=payload;return{ok:true}},saveFiles:async()=>({ok:true,saved:1,names:['candidate.txt']}),
       resetChats:async()=>{bossFixture.publish({status:'idle',tabIds:{left:null,right:null,boss:null},pages:{},boss:{queue:[]},attachments:{status:'none',names:[]}});return{ok:true,state:bossFixture.state}}
     };`;
   async function run() {
-    const assetNames = ['browser.html', 'browser-app.js', 'browser.css', 'galaxy-scene.js', 'galaxy-scene.css', 'star-ribbons.js', 'ghost-v2.png', 'flower-blossom-v1.png'];
+    const assetNames = ['browser.html', 'browser-app.js', 'browser.css', 'galaxy-scene.js', 'galaxy-scene.css', 'star-ribbons.js', 'ghost-v2.png', 'flower-blossom-v1.png', 'studio-ui.js', 'studio-ui.css', 'assets/fonts/Manrope-Variable.ttf'];
     const assets = Object.fromEntries(await Promise.all(assetNames.map(async name => [name, await fs.readFile(path.join(root, 'renderer', name))])));
     const html = assets['browser.html'].toString('utf8').replace('<script defer src="browser-app.js"></script>', '<script src="boss-fixture.js"></script><script defer src="browser-app.js"></script>');
     const server = http.createServer((req, res) => {
       const name = req.url.split('?')[0].slice(1);
       if (name === 'boss-fixture.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(fixtureJs); }
-      else if (assets[name] && name !== 'browser.html') { res.setHeader('Content-Type', name.endsWith('.png') ? 'image/png' : name.endsWith('.css') ? 'text/css' : 'text/javascript'); res.end(assets[name]); }
+      else if (assets[name] && name !== 'browser.html') { res.setHeader('Content-Type', name.endsWith('.png') ? 'image/png' : name.endsWith('.css') ? 'text/css' : name.endsWith('.ttf') ? 'font/ttf' : 'text/javascript'); res.end(assets[name]); }
       else { res.setHeader('Content-Type', 'text/html;charset=utf-8'); res.end(html); }
     });
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -89,6 +91,27 @@ if (!process.versions.electron) {
       await win.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
       await wait("document.getElementById('version').textContent==='vboss-ui-fixture'");
       await settled();
+      // Percentages must come from bytes, and Stop must bypass the held attach request.
+      assert.match(await evaluate("document.querySelector('.attachment-helper').textContent"), /512 MiB each.*1 GiB total/);
+      assert.ok(Number.parseFloat(await evaluate("getComputedStyle(document.querySelector('.attachment-helper')).fontSize")) >= 12);
+      await evaluate("document.getElementById('attachFiles').click()");
+      await wait("!document.getElementById('fileUploadProgress').hidden");
+      assert.equal(await evaluate("document.getElementById('fileProgressBar').value"), 25);
+      assert.match(await evaluate("document.getElementById('fileProgressLabel').textContent"), /Reading source files.*25%/);
+      assert.match(await evaluate("document.getElementById('fileProgressDetail').textContent"), /128 MiB of 512 MiB/);
+      assert.equal(await evaluate("document.getElementById('headerStop').disabled"), false);
+      await evaluate("bossFixture.publish({attachments:{...bossFixture.state.attachments,progress:{phase:'staging',processedBytes:268435456,totalBytes:536870912,side:'left',fileName:'large-source.pdf',fileIndex:0,fileCount:1}}})");
+      assert.equal(await evaluate("document.getElementById('fileProgressBar').value"), 50);
+      assert.match(await evaluate("document.getElementById('fileProgressLabel').textContent"), /Sending to Worker A.*50%/);
+      await evaluate("bossFixture.publish({attachments:{...bossFixture.state.attachments,progress:{phase:'processing',processedBytes:536870912,totalBytes:536870912,side:'boss',fileName:'large-source.pdf',completedPages:2,totalPages:3}}})");
+      assert.equal(await evaluate("document.getElementById('fileProgressBar').hasAttribute('value')"), false);
+      assert.doesNotMatch(await evaluate("document.getElementById('fileProgressLabel').textContent"), /%/);
+      assert.match(await evaluate("document.getElementById('fileProgressDetail').textContent"), /2 of 3 pages confirmed/);
+      assert.match(await evaluate("document.getElementById('bossFilesStatus').textContent"), /Boss is processing/);
+      await evaluate("document.getElementById('headerStop').click()");
+      await wait("bossFixture.stops===1&&!document.getElementById('attachFiles').disabled");
+      assert.equal(await evaluate("document.getElementById('fileUploadProgress').hidden"), true);
+      assert.equal(await evaluate("document.getElementById('actionError').hidden"), true);
       assert.equal(await evaluate("document.getElementById('bossDrawer').hidden"), true);
       assert.equal(await evaluate('bossFixture.bounds.at(-1).boss.width'), 0);
       await evaluate("document.getElementById('closeSidebar').focus();document.getElementById('closeSidebar').click()"); await settled();
@@ -159,7 +182,24 @@ if (!process.versions.electron) {
       assert.equal(await evaluate("document.getElementById('bossMessageInput').value"), 'Keep this unsent instruction.');
       assert.match(await evaluate("document.getElementById('bossMessageError').textContent"), /Try again/);
 
-      await evaluate("bossFixture.publish({status:'blocked',stage:'Need a missing parameter',boss:{queue:[]},pages:{left:{...ready},right:{...ready},boss:{...ready}}})");
+      await evaluate("bossFixture.publish({pages:{left:{...ready,busy:true,generating:false,reconnecting:true,interrupted:false,reason:'Connection interrupted. Waiting for the complete answer…'},right:{...ready},boss:{...ready}}})");
+      await settled();
+      assert.match(await evaluate("document.getElementById('leftMode').textContent"), /Reconnecting/);
+      assert.doesNotMatch(await evaluate("document.getElementById('leftMode').textContent"), /Generating|Interrupted/);
+      assert.equal(await evaluate("document.getElementById('leftDetail').classList.contains('ready')"), false);
+      assert.match(await evaluate("document.getElementById('leftActivity').textContent"), /waiting for complete answer/);
+      await evaluate("bossFixture.publish({pages:{left:{...ready},right:{...ready,busy:true,generating:true,awaitingProviderIdle:true,interrupted:true,reason:'ChatGPT could not resume its response stream.'},boss:{...ready}}})");
+      await settled();
+      assert.match(await evaluate("document.getElementById('rightMode').textContent"), /Interrupted/);
+      assert.equal(await evaluate("document.getElementById('rightDetail').classList.contains('error')"), true);
+      assert.equal(await evaluate("document.getElementById('rightDetail').classList.contains('ready')"), false);
+      assert.match(await evaluate("document.getElementById('rightActivity').textContent"), /waiting for provider/);
+      await evaluate("bossFixture.publish({pages:{...bossFixture.state.pages,right:{...bossFixture.state.pages.right,busy:false,generating:false,awaitingProviderIdle:false}}})");
+      await settled();
+      assert.match(await evaluate("document.getElementById('rightActivity').textContent"), /recovering/);
+      assert.match(await evaluate("document.getElementById('leftMode').textContent"), /Ready/);
+      await evaluate("bossFixture.publish({status:'blocked',error:'Missing required source data.',stage:'Need a missing parameter',boss:{queue:[]},pages:{left:{...ready},right:{...ready},boss:{...ready}}})");
+      assert.match(await evaluate("document.getElementById('issues').textContent"), /Missing required source data/);
       await typeInstruction('The missing value is 20.'); await send();
       await wait('bossFixture.messages.length===2');
       assert.equal(await evaluate('bossFixture.starts.length'), 1, 'Clarification restarted the entire task');
@@ -169,6 +209,12 @@ if (!process.versions.electron) {
       assert.equal(await evaluate("document.getElementById('answer').textContent"), 'CANONICAL WORKER CANDIDATE');
       assert.equal(await evaluate("document.getElementById('bossReviewCard').hidden"), false);
       assert.match(await evaluate("document.getElementById('bossLimitations').textContent"), /External evidence/);
+      assert.match(await evaluate("document.getElementById('issues').textContent"), /External evidence/);
+      await evaluate("bossFixture.publish({supervision:{checkedAt:Date.now(),checks:2,events:[{at:Date.now(),type:'generating',detail:'Worker A is still working.'},{at:Date.now(),type:'interrupted',detail:'Worker B response was confirmed interrupted.'}]}});document.getElementById('exportAnswer').click()");
+      await wait('Boolean(bossFixture.exported)');
+      assert.match(await evaluate('bossFixture.exported.content'), /Worker B response was confirmed interrupted/);
+      assert.match(await evaluate('bossFixture.exported.content'), /External evidence still needs verification/);
+      assert.match(await evaluate("document.getElementById('teamHealthLog').textContent"), /Worker A is still working/);
       assert.match(await evaluate("document.getElementById('transcript').textContent"), /BOSS · TEAM DIRECTOR/);
       await evaluate("document.getElementById('closeBoss').click();document.getElementById('viewOutput').click()"); await settled();
       assert.equal(await evaluate("document.getElementById('bossDrawer').hidden"), false, 'Boss-owned output opened the wrong native page');

@@ -6,13 +6,15 @@ if (!process.versions.electron) {
   const test = require('node:test');
   const assert = require('node:assert/strict');
   const { spawn } = require('node:child_process');
-  test('full-width chat layout, overlay controls, bottom output drawer and review styles', { timeout: 30000 }, async () => {
+  test('full-width chat layout, overlay controls, bottom output drawer and review styles', { timeout: 65000 }, async () => {
     const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE;
     const output = await new Promise((resolve, reject) => {
       const child = spawn(require('electron'), [__filename], { env, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
       let log = '';
       child.stdout.on('data', (value) => { log += value; }); child.stderr.on('data', (value) => { log += value; });
-      const timer = setTimeout(() => { child.kill(); reject(new Error(`Workspace layout test timed out.\n${log}`)); }, 25000);
+      // The fixture intentionally observes more than 20 seconds of animation.
+      // Include startup and Chromium teardown time on a PC running live chats.
+      const timer = setTimeout(() => { child.kill(); reject(new Error(`Workspace layout test timed out.\n${log}`)); }, 60000);
       child.on('error', (error) => { clearTimeout(timer); reject(error); });
       child.on('close', (code) => { clearTimeout(timer); resolve({ code, log }); });
     });
@@ -28,7 +30,7 @@ if (!process.versions.electron) {
   app.setPath('userData', path.join(app.getPath('temp'), `converge-renderer-layout-qa-${process.pid}`));
   const fixtureJs = `
     const ready={ready:true,authenticated:true,busy:false,temporary:false,work:false};
-    window.fixture={bounds:[],starts:[],saves:0,listener:null,paperAnimations:[],centralDraws:0,hidden:false,state:{status:'setup',chatMode:'normal',tabIds:{left:10,right:11},pages:{left:{...ready},right:{...ready}},attachments:{status:'none',names:[]},transcript:[],issues:[]}};
+    window.fixture={bounds:[],starts:[],saves:0,savePayloads:[],listener:null,paperAnimations:[],centralDraws:0,hidden:false,state:{status:'setup',chatMode:'normal',tabIds:{left:10,right:11},pages:{left:{...ready},right:{...ready}},attachments:{status:'none',names:[]},transcript:[],issues:[]}};
     const originalGetContext=HTMLCanvasElement.prototype.getContext;
     const observedContexts=new WeakSet();
     HTMLCanvasElement.prototype.getContext=function(...args){const context=originalGetContext.apply(this,args);if(this.id==='stars'&&args[0]==='webgl'&&context&&!observedContexts.has(context)){observedContexts.add(context);const originalDraw=context.drawArrays;context.drawArrays=function(...drawArgs){fixture.centralDraws++;return originalDraw.apply(this,drawArgs)}}return context};
@@ -40,7 +42,7 @@ if (!process.versions.electron) {
       bootstrap:async()=>({hasSession:true,version:'fixture',platform:new URLSearchParams(location.search).get('platform')||'win32',state:fixture.state}),setBounds:async value=>{fixture.bounds.push(value);return{ok:true}},
       onState:fn=>{fixture.listener=fn},onPage:()=>{},
       start:async payload=>{fixture.starts.push({...payload});fixture.state={...fixture.state,status:'running',phase:'review',stage:'Round 2: B checks improvements',round:2,maxRounds:payload.maxRounds,minReviewRounds:payload.reviewMode==='verify'?1:4,reviewMode:payload.reviewMode,question:payload.question,runId:'run-'+fixture.starts.length,requireFiles:payload.requireFiles,relayMedia:payload.relayMedia,attachments:{status:'none',names:[]}};fixture.listener(fixture.state);return{ok:true,state:fixture.state}},
-      saveFiles:async()=>{fixture.saves++;return{ok:true,names:['improved.pdf'],saved:1}},expand:async()=>({ok:true}),copy:async()=>({ok:true}),saveText:async()=>({ok:true}),
+      saveFiles:async payload=>{fixture.saves++;fixture.savePayloads.push(JSON.parse(JSON.stringify(payload)));if(fixture.deferSave){fixture.deferSave=false;return new Promise(resolve=>{fixture.finishSave=()=>resolve({ok:true,names:payload.files.map(file=>file.name),saved:payload.files.length})})}return{ok:true,names:payload.files.map(file=>file.name),saved:payload.files.length}},expand:async()=>({ok:true}),copy:async()=>({ok:true}),saveText:async()=>({ok:true}),
       resetChats:async()=>{fixture.state={status:'idle',tabIds:{left:null,right:null},pages:{},attachments:{status:'none',names:[]},transcript:[],issues:[]};fixture.listener(fixture.state);return{ok:true,state:fixture.state}}
     };`;
   async function run() {
@@ -52,10 +54,10 @@ if (!process.versions.electron) {
     const galaxyJs = await fs.readFile(path.join(root, 'renderer', 'galaxy-scene.js'), 'utf8');
     const ribbonJs = await fs.readFile(path.join(root, 'renderer', 'star-ribbons.js'), 'utf8');
     const galaxyCss = await fs.readFile(path.join(root, 'renderer', 'galaxy-scene.css'), 'utf8');
-    const themeAssets = Object.fromEntries(await Promise.all(['ghost-v2.png', 'flower-blossom-v1.png'].map(async name => [name, await fs.readFile(path.join(root, 'renderer', name))])));
+    const themeAssets = Object.fromEntries(await Promise.all(['ghost-v2.png', 'flower-blossom-v1.png', 'studio-ui.js', 'studio-ui.css', 'assets/fonts/Manrope-Variable.ttf'].map(async name => [name, await fs.readFile(path.join(root, 'renderer', name))])));
     const server = http.createServer((request, response) => {
-      const themeAsset = themeAssets[request.url?.slice(1)];
-      if (themeAsset) { response.setHeader('Content-Type', 'image/png'); response.end(themeAsset); return; }
+      const assetName = request.url?.slice(1); const themeAsset = themeAssets[assetName];
+      if (themeAsset) { response.setHeader('Content-Type', assetName.endsWith('.png') ? 'image/png' : assetName.endsWith('.css') ? 'text/css' : assetName.endsWith('.ttf') ? 'font/ttf' : 'text/javascript'); response.end(themeAsset); return; }
       if (request.url === '/api-fixture.js') { response.setHeader('Content-Type', 'text/javascript'); response.end(fixtureJs); }
       else if (request.url === '/browser-app.js') { response.setHeader('Content-Type', 'text/javascript'); response.end(js); }
       else if (request.url === '/browser.css') { response.setHeader('Content-Type', 'text/css'); response.end(css); }
@@ -182,7 +184,7 @@ if (!process.versions.electron) {
       const meeting = await evaluate(`(()=>{const bots=['botLeft','botRight'].map(id=>document.getElementById(id));const animations=bots.map(bot=>bot.getAnimations().find(a=>a.effect.getTiming().duration===2800));if(animations.some(a=>!a))return null;animations.forEach(a=>{a.currentTime=1400});const boxes=bots.map(bot=>bot.getBoundingClientRect());return{separation:boxes[1].x-boxes[0].x,meeting:document.getElementById('reviewDeck').classList.contains('meeting')}})()`);
       assert.ok(meeting?.meeting && meeting.separation < homeSeparation * .6, 'Both bots did not approach each other for the acknowledged handoff');
       assert.ok(await evaluate("(()=>{const frames=fixture.paperAnimations.at(-1).frames;return Number(frames[0].transform.match(/translate\\(([-\\d.]+)/)[1])<Number(frames.at(-1).transform.match(/translate\\(([-\\d.]+)/)[1])})()"), 'Left-to-right document moved in the wrong direction');
-      assert.match(await evaluate("document.getElementById('bridgeLabel').textContent"), /ANSWER AND FILES SHARED/);
+      assert.match(await evaluate("document.getElementById('bridgeLabel').textContent"), /Answer and files shared/);
       await evaluate('fixture.listener(fixture.state)'); await settle();
       assert.equal(await evaluate('fixture.paperAnimations.length'), 1, 'Repeated acknowledgment replayed the document');
       if (process.env.CONVERGE_GALAXY_CAPTURE === '1') await fs.writeFile(path.join(root, '.design', 'galaxy-renderer-working.png'), (await win.webContents.capturePage()).toPNG());
@@ -203,7 +205,7 @@ if (!process.versions.electron) {
       await evaluate(`fixture.state={...fixture.state,candidate:{...fixture.state.candidate,id:'C2',media:{side:'right',files:[{name:'improved.pdf'}]}},pending:{left:{kind:'review',requestId:'qa-review-2',candidateId:'C2'}},pages:{left:{...ready,busy:true},right:{...ready}},lastTransfer:{runId:fixture.state.runId,requestId:'qa-review-2',from:'right',to:'left',candidateId:'C2',hasFiles:false}};fixture.listener(fixture.state)`); await settle();
       assert.equal(await evaluate('fixture.paperAnimations.length'), 2, 'Reverse peer answer exchange did not animate');
       assert.ok(await evaluate("(()=>{const frames=fixture.paperAnimations.at(-1).frames;return Number(frames[0].transform.match(/translate\\(([-\\d.]+)/)[1])>Number(frames.at(-1).transform.match(/translate\\(([-\\d.]+)/)[1])})()"), 'Right-to-left document moved in the wrong direction');
-      assert.equal(await evaluate("document.getElementById('bridgeLabel').textContent"), 'ANSWER SHARED');
+      assert.equal(await evaluate("document.getElementById('bridgeLabel').textContent"), 'Answer shared');
       await evaluate(`fixture.hidden=true;document.dispatchEvent(new Event('visibilitychange'));fixture.state={...fixture.state,lastTransfer:{...fixture.state.lastTransfer,requestId:'qa-hidden-transfer'}};fixture.listener(fixture.state)`); await settle();
       assert.equal(await evaluate('fixture.paperAnimations.length'), 2, 'Hidden workspace animated a transfer');
       assert.equal(await evaluate("document.body.classList.contains('document-hidden')"), true);
@@ -242,7 +244,11 @@ if (!process.versions.electron) {
       assert.equal(await evaluate("document.getElementById('reviewMode').disabled"), true, 'Running review style is editable');
       await evaluate("document.getElementById('closeSidebar').click()"); await settle();
       await evaluate('fixture.finish()'); await settle();
-      assert.equal(await evaluate("document.getElementById('resultContent').hidden"), true, 'Completion expanded the drawer without a user click');
+      assert.equal(await evaluate("document.getElementById('resultContent').hidden"), false, 'Completion concealed the final answer and downloads');
+      assert.match(await evaluate("document.getElementById('toggleResults').textContent"), /Results & downloads/);
+      assert.equal(await evaluate("document.getElementById('answerPanel').firstElementChild.id"), 'outputCard', 'Files remain buried after a lengthy answer');
+      assert.match(await evaluate("document.getElementById('deliveryStatus').textContent"), /Final reviewed result/);
+      await evaluate("document.getElementById('toggleResults').click()"); await settle();
       await evaluate("fixture.state={...fixture.state,requiredWork:[{id:'mt5-backtest'}]};fixture.listener(fixture.state)"); await settle();
       assert.equal(await evaluate("document.getElementById('reviewerRight').classList.contains('ready')"), false, 'Model agreement implied independent native tests passed');
       assert.equal(await evaluate("document.getElementById('reviewDeck').classList.contains('attention')"), true);
@@ -256,7 +262,7 @@ if (!process.versions.electron) {
       boxes = await geometry();
       assert.ok(boxes.left.height < closedHeight, 'The bottom drawer did not shrink native chat bounds');
       assert.ok(boxes.native.left.y + boxes.native.left.height <= boxes.result.y + 1, 'Native chat covers the open bottom drawer');
-      assert.match(await evaluate("document.getElementById('answerOutputs').textContent"), /improved\.pdf/);
+      assert.match(await evaluate("document.getElementById('outputFileList').textContent"), /improved\.pdf/);
       assert.match(await evaluate("document.getElementById('improvementSummary').textContent"), /No candidate revisions/);
       assert.match(await evaluate("document.getElementById('statusDetail').textContent"), /no demonstrated improvement/);
       await evaluate(`fixture.state={...fixture.state,revisionCount:1,candidate:{...fixture.state.candidate,id:'C2'},candidateHistory:[{id:'C1',text:'Original draft'}],improvementTrail:[{from:'C1',to:'C2',fileChanged:true,verified:true,changes:[{change:'Corrected the equation <img src=x>',benefit:'The worked example is consistent',evidence:'Independent substitution'}]}]};fixture.listener(fixture.state)`); await settle();
@@ -275,6 +281,53 @@ if (!process.versions.electron) {
       await evaluate("document.getElementById('toggleResults').click();document.getElementById('saveFilesCompact').click()"); await settle();
       assert.equal(await evaluate('fixture.saves'), 1, 'Collapsed Save did not use the file save control');
       assert.match(await evaluate("document.getElementById('fileSaveStatus').textContent"), /Saved improved\.pdf/);
+
+      // Retained file snapshots are available independently of chat state.
+      // A candidate replacement during a save must not rewrite its payload.
+      await evaluate(`fixture.state={...fixture.state,status:'running',candidate:{id:'C2',sha256:'${'a'.repeat(64)}',text:'Still being reviewed',media:{side:'right',files:[{name:'draft.pdf',contentSha256:'${'b'.repeat(64)}',byteLength:2048},{name:'checks.txt',contentSha256:'${'c'.repeat(64)}',byteLength:128}]}},pages:{left:{...ready,busy:true},right:{...ready,busy:true}}};fixture.listener(fixture.state)`); await settle();
+      assert.equal(await evaluate("document.getElementById('saveFilesCompact').disabled"), false, 'Live review prevents downloading already captured files');
+      assert.match(await evaluate("document.getElementById('deliveryStatus').textContent"), /Current draft.*unfinished/);
+      assert.equal(await evaluate("document.querySelectorAll('.output-file-row').length"), 2);
+      assert.match(await evaluate("document.querySelector('.output-file-detail').textContent"), /draft\.pdf.*2 KB.*SHA-256/);
+      await evaluate("document.getElementById('toggleResults').click();fixture.deferSave=true;document.querySelector('.output-file-save').click()"); await settle();
+      const capturedSave = await evaluate('fixture.savePayloads.at(-1)');
+      assert.equal(capturedSave.candidateId, 'C2'); assert.equal(capturedSave.sha256, 'a'.repeat(64)); assert.equal(capturedSave.draft, true);
+      assert.deepEqual(capturedSave.files, [{ name: 'draft.pdf', contentSha256: 'b'.repeat(64) }], 'An individual download included a different file');
+      assert.equal(await evaluate("document.getElementById('headerStop').disabled"), false, 'Saving blocks the hard stop');
+      await evaluate(`fixture.state={...fixture.state,candidate:{id:'C3',sha256:'${'d'.repeat(64)}',text:'New draft',media:{side:'left',files:[{name:'replacement.pdf',contentSha256:'${'e'.repeat(64)}',byteLength:4096}]}}};fixture.listener(fixture.state);fixture.finishSave()`); await settle();
+      assert.deepEqual(await evaluate('fixture.savePayloads.at(-1)'), capturedSave, 'A later worker answer changed the selected download snapshot');
+      assert.match(await evaluate("document.getElementById('fileSaveStatus').textContent"), /Saved draft\.pdf.*C2/);
+      await evaluate("fixture.state={...fixture.state,status:'idle',tabIds:{left:null,right:null},pages:{},completionContext:{status:'blocked',stage:'Boss decision needs attention',error:'Malformed boss reply <img src=x> '+ 'x'.repeat(3000),finishedAt:Date.UTC(2026,9,7,1,2)}};fixture.listener(fixture.state)"); await settle();
+      assert.equal(await evaluate("document.getElementById('saveFilesCompact').disabled"), false, 'A restored detached project cannot export retained files');
+      assert.equal(await evaluate("document.getElementById('viewOutput').textContent"), 'Open saved project', 'A detached saved result points to an unrelated native chat');
+      assert.equal(await evaluate("document.getElementById('workflowHistoryCard').hidden"), false, 'A restored blocked workflow conceals why it stopped');
+      assert.match(await evaluate("document.getElementById('workflowHistoryOutcome').textContent"), /Recorded outcome: blocked/);
+      assert.equal(await evaluate("document.getElementById('workflowHistoryStage').textContent"), 'Boss decision needs attention');
+      assert.match(await evaluate("document.getElementById('workflowHistoryError').textContent"), /Malformed boss reply <img src=x>/);
+      assert.ok(await evaluate("document.getElementById('workflowHistoryError').textContent.length<=2000"));
+      assert.equal(await evaluate("document.querySelectorAll('#workflowHistoryCard img').length"), 0, 'Saved diagnostic text became executable markup');
+      assert.equal(await evaluate("document.getElementById('workflowHistoryTime').hidden"), false);
+      assert.match(await evaluate("document.getElementById('workflowHistoryHint').textContent"), /Saved history, not live progress.*unfinished.*Open a team/);
+      assert.equal(await evaluate('fixture.state.status'), 'idle', 'Displaying history resumed the workflow');
+      await evaluate("document.getElementById('saveFilesCompact').click()"); await settle();
+      assert.equal(await evaluate('fixture.savePayloads.at(-1).candidateId'), 'C3');
+      assert.match(await evaluate("document.getElementById('fileSaveStatus').textContent"), /Saved replacement\.pdf/);
+      await evaluate(`fixture.state={...fixture.state,delivery:{id:'C3',candidateId:'C3',sha256:'${'d'.repeat(64)}',files:fixture.state.candidate.media.files,source:'candidate',checkpoints:[{id:'W7',candidateId:null,sha256:'${'f'.repeat(64)}',author:'right',round:3,source:'worker-checkpoint',draft:true,files:[{name:'newer-worker.pdf',contentSha256:'${'c'.repeat(64)}',byteLength:8192}]}]}};fixture.listener(fixture.state)`); await settle();
+      assert.equal(await evaluate("document.getElementById('checkpointOutputs').hidden"), false, 'A newer worker checkpoint is concealed by the older selected candidate');
+      assert.match(await evaluate("document.getElementById('checkpointFileList').textContent"), /Worker B.*W7.*newer-worker\.pdf/);
+      await evaluate("document.getElementById('checkpointOutputs').open=true;document.querySelector('#checkpointFileList .output-file-save').click()"); await settle();
+      assert.equal(await evaluate('fixture.savePayloads.at(-1).deliveryId'), 'W7');
+      assert.equal(await evaluate('fixture.savePayloads.at(-1).candidateId'), null);
+      assert.deepEqual(await evaluate('fixture.savePayloads.at(-1).files'), [{ name: 'newer-worker.pdf', contentSha256: 'c'.repeat(64) }]);
+      assert.equal(await evaluate('fixture.state.candidate.id'), 'C3', 'Downloading a checkpoint implicitly selected it as the final candidate');
+      await evaluate(`fixture.state={...fixture.state,candidate:null,answer:'',delivery:{id:'W4',candidateId:null,sha256:'${'f'.repeat(64)}',answer:'Completed worker draft',source:'worker',author:'right',files:[{name:'worker-draft.txt',contentSha256:'${'b'.repeat(64)}',byteLength:12}]}};fixture.listener(fixture.state)`); await settle();
+      assert.match(await evaluate("document.getElementById('deliveryStatus').textContent"), /Worker draft.*awaiting boss review/);
+      assert.equal(await evaluate("document.getElementById('answer').textContent"), 'Completed worker draft');
+      await evaluate("document.querySelector('.output-file-save').click()"); await settle();
+      assert.equal(await evaluate('fixture.savePayloads.at(-1).deliveryId'), 'W4');
+      assert.equal(await evaluate('fixture.savePayloads.at(-1).candidateId'), null);
+      await evaluate('fixture.state={...fixture.state,delivery:null,completionContext:null,tabIds:{left:10,right:11},pages:{left:{...ready},right:{...ready}}};fixture.finish()'); await settle();
+      assert.equal(await evaluate("document.getElementById('workflowHistoryCard').hidden"), true, 'Cleared workflow history remains visible as current status');
 
       await evaluate("document.getElementById('toggleSidebar').click()"); await chooseMode('improve');
       await evaluate("document.getElementById('maxRounds').value='1';document.getElementById('maxRounds').dispatchEvent(new Event('input',{bubbles:true}))");

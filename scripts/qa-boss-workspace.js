@@ -8,6 +8,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
 const { createHash } = require('node:crypto');
+const qaOutput = require('./qa-output').createQaOutput();
 const { app, session } = require('electron');
 const root = path.join(__dirname, '..');
 const packagedAsar = process.env.CONVERGE_PACKAGED_ASAR && path.resolve(process.env.CONVERGE_PACKAGED_ASAR);
@@ -24,6 +25,8 @@ const sourcePath = path.join(profileRoot, 'original-source.txt');
 const sourceImagePath = path.join(profileRoot, 'source-diagram.png');
 const sourcePdfPath = path.join(profileRoot, 'source-reference.pdf');
 const savedPath = path.join(profileRoot, 'saved-boss-result.txt');
+const savedReportPath = path.join(profileRoot, 'supervised-review.md');
+const qaSupervisionIntervalMs = 1000;
 fs.writeFileSync(sourcePath, sourceBytes);
 const sourceImageBytes = fs.readFileSync(path.join(root, 'assets/icon.png'));
 // Small valid one-page PDF: only local inert fixture data is uploaded.
@@ -56,12 +59,13 @@ let openDialogCount = 0;
 let saveDialogCount = 0;
 let stateMonitor;
 let bootstrapVersion;
+let supervisionIntegration;
 
 function digest(bytes) { return createHash('sha256').update(bytes).digest('hex'); }
 function pass(message) {
   log.push(message);
   fs.writeFileSync(path.join(evidenceRoot, 'progress.json'), JSON.stringify({ at: new Date().toISOString(), stage: message, stages: log.length }, null, 2));
-  process.stdout.write(`PASS: ${message}\n`);
+  qaOutput.out(`PASS: ${message}\n`);
 }
 
 function fixtureBehavior() {
@@ -78,6 +82,19 @@ function fixtureBehavior() {
   window.fixtureMode = 'normal';
   window.fixtureSlow = false;
   let responseTimer;
+  let finishPendingResponse;
+  window.fixtureCompleteNow = () => {
+    clearTimeout(responseTimer);
+    if (finishPendingResponse) finishPendingResponse();
+  };
+  window.fixtureInterruptNow = () => {
+    clearTimeout(responseTimer);
+    finishPendingResponse = null;
+    const assistant = document.createElement('div'); assistant.setAttribute('data-message-author-role', 'assistant');
+    const header = document.createElement('div'); header.setAttribute('data-testid', 'thinking-status');
+    header.textContent = 'Stopped thinking'; assistant.append(header); turns.append(assistant);
+    stop.hidden = true;
+  };
   editor.addEventListener('input', () => { send.hidden = !editor.innerText.trim(); });
   picker.addEventListener('change', () => {
     window.fixtureUploads.push(Array.from(picker.files, file => ({ name: file.name, type: file.type, size: file.size })));
@@ -106,6 +123,21 @@ function fixtureBehavior() {
     return match ? JSON.parse(match[1].replace(/\u00a0/g, ' ')) : null;
   }
   function generated(body, cycle) {
+    if (window.fixtureMode === 'tsv-audit') {
+      const name = 'ced_scope_manifest.tsv';
+      const bytes = 'lecture\tpages\tnote\n1\t7\tΔ review\n';
+      const card = document.createElement('div');
+      const title = document.createElement('span'); title.title = name; title.textContent = name;
+      const preview = document.createElement('button'); preview.setAttribute('aria-label', `Open preview of ${name}`);
+      const download = document.createElement('button'); download.setAttribute('aria-label', 'Download file'); download.textContent = 'Download file';
+      const blobUrl = URL.createObjectURL(new Blob([bytes], { type: 'text/plain' }));
+      download.addEventListener('click', () => {
+        const anchor = document.createElement('a'); anchor.href = blobUrl; anchor.download = name;
+        anchor.hidden = true; document.body.append(anchor); anchor.click(); anchor.remove();
+      });
+      card.append(title, preview, download); body.append(card);
+      return;
+    }
     const name = `boss-refined-v${cycle}.txt`;
     const bytes = `OFFLINE REFINED SOURCE ONLY\nMaximumLoss=20\nFixedLots=0.01\nReviewPass=${cycle}\n`;
     const control = document.createElement('span');
@@ -121,6 +153,22 @@ function fixtureBehavior() {
     });
     body.append(control);
   }
+  // Offline-only provider reload fixture: the provider retains its submitted
+  // turn on the server while the production main-frame/preload is replaced.
+  const restored = sessionStorage.getItem('converge-qa-reload');
+  if (restored) {
+    sessionStorage.removeItem('converge-qa-reload');
+    const saved = JSON.parse(restored);
+    window.fixtureSide = saved.side; window.fixtureSends = saved.sends;
+    turns.innerHTML = saved.html; stop.hidden = false;
+    finishPendingResponse = () => {
+      finishPendingResponse = null;
+      const assistant = document.createElement('div'); assistant.setAttribute('data-message-author-role','assistant');
+      const body = document.createElement('div'); body.className = 'markdown';
+      body.textContent = 'Worker A completed the exact original request after a real page reload. MaximumLoss=20, FixedLots=0.01. Actual corrected file attached.';
+      assistant.append(body); generated(assistant, 1); turns.append(assistant); stop.hidden = true;
+    };
+  }
   send.addEventListener('click', async () => {
     const text = editor.innerText.trim().replace(/\u00a0/g, ' ');
     const fileBytes = await Promise.all(Array.from(picker.files, async file => ({ name: file.name,
@@ -128,7 +176,9 @@ function fixtureBehavior() {
     window.fixtureSends.push({ text, files: Array.from(picker.files, file => ({ name: file.name, type: file.type, size: file.size })), fileBytes });
     const user = document.createElement('div'); user.setAttribute('data-message-author-role', 'user'); user.textContent = text; turns.append(user);
     editor.innerText = ''; send.hidden = true; stop.hidden = false; picker.value = ''; previews.replaceChildren();
-    responseTimer = setTimeout(() => {
+    finishPendingResponse = () => {
+      if (!finishPendingResponse) return;
+      finishPendingResponse = null;
       const assistant = document.createElement('div'); assistant.setAttribute('data-message-author-role', 'assistant');
       const body = document.createElement('div'); body.className = 'markdown'; assistant.append(body);
       let value;
@@ -145,7 +195,14 @@ function fixtureBehavior() {
           const candidate = context.candidate;
           const bothAccepted = candidate && finalResults.length === 2 && finalResults.every(result => result?.verdict === 'accept' &&
             result.candidate_id === candidate.id && result.candidate_sha256 === candidate.sha256);
-          if (bothAccepted) value = { request_id: context.request_id, action: 'finish', candidate_id: candidate.id,
+          if (context.recovery_task) value = { request_id: context.request_id, action: 'repair', side: context.recovery_task.side,
+            assignment: `QA_RECOVERY_${context.recovery_task.side === 'left' ? 'A' : 'B'}; QA_WORK_CYCLE=1; continue saved useful work and supply a complete corrected file in the original assigned scope.`,
+            summary: 'Repair only the failed worker while its healthy teammate continues.' };
+          else if (context.worker_interruption_reports?.length) value = { request_id: context.request_id, action: 'dispatch',
+            assignments: { left: `QA_RECOVERY_A; QA_WORK_CYCLE=1; start a fresh independent refinement from the preserved original source and completed healthy-worker evidence. Supply the complete corrected file.`,
+              right: `QA_RECOVERY_B; QA_WORK_CYCLE=1; independently challenge the completed evidence and freshly resumed refinement. Do not count the interrupted worker as a finished cycle.` },
+            summary: 'Boss recovery plan: retain completed healthy-worker work and assign fresh tasks after the confirmed interruption.' };
+          else if (bothAccepted) value = { request_id: context.request_id, action: 'finish', candidate_id: candidate.id,
             answer: 'Refined offline source: MaximumLoss=20, FixedLots=0.01. All generated file bytes were checked. This is a transport fixture, not a trading backtest.',
             checks: ['Both workers checked the exact final candidate identity and bytes.'], limitations: ['Offline deterministic responses only; no actual market test.'] };
           else if (context.completed_work_cycles >= context.min_work_cycles && latestFileResult) value = {
@@ -171,7 +228,8 @@ function fixtureBehavior() {
         body.textContent = typeof value === 'string' ? value : JSON.stringify(value);
       } catch (error) { body.textContent = `FIXTURE ERROR: ${error.message}`; }
       turns.append(assistant); stop.hidden = true;
-    }, window.fixtureSlow ? 60_000 : Number(window.fixtureDelay || 80));
+    };
+    responseTimer = setTimeout(() => { if (finishPendingResponse) finishPendingResponse(); }, window.fixtureSlow ? 60_000 : Number(window.fixtureDelay || 80));
   });
 }
 
@@ -276,9 +334,10 @@ async function run() {
   }
   blockRemote(session.defaultSession);
   app.on('web-contents-created', (_event, contents) => blockRemote(contents.session));
-  desktop = await createCookieApp({ qaOrigin: fixture.origin, show: false, dialogs: {
+  desktop = await createCookieApp({ qaOrigin: fixture.origin, show: false, qaSupervisionIntervalMs, dialogs: {
     async showOpenDialog() { openDialogCount += 1; return { canceled: false, filePaths: sourceSelection }; },
     async showSaveDialog(_window, options) {
+      if (options.defaultPath === 'Converge-answer.md') return { canceled: false, filePath: savedReportPath };
       assert.match(options.defaultPath, /^boss-refined-v\d+\.txt$/); saveDialogCount += 1;
       return { canceled: false, filePath: savedPath };
     },
@@ -339,6 +398,10 @@ async function run() {
   pass('One native file picker uploads the original source to the boss and both workers.');
 
   await click('toggleBoss');
+  // This remains the legacy workflow regression. The separate studio QA
+  // exercises the new file-verification and fresh-conversation audit gates.
+  await shell(`document.getElementById('studioFreshAudit').checked=false;
+    document.getElementById('studioVerificationEnabled').checked=false;`);
   await shell(`document.getElementById('bossMessageInput').value='Refine the attached source to MaximumLoss=20 while preserving FixedLots=0.01 and return the complete downloadable file. Check it independently.';
     document.getElementById('reviewMode').value='improve';document.getElementById('maxRounds').value='6';
     document.getElementById('relayMedia').checked=true;document.getElementById('requireFiles').checked=true;
@@ -474,6 +537,165 @@ async function run() {
   await waitFor(async () => (await Promise.all(['left', 'right'].map(side => page(side, 'window.fixtureStops>=1')))).every(Boolean), 'Stop did not cancel both active workers');
   assert.ok(['stopped', 'cancelled'].includes((await desktop.coordinator.getState()).status));
   pass('Stop also cancels both workers during their concurrent generation, retaining each completed conversation.');
+
+  await shell('window.convergeBrowser.resetChats()');
+  await open('normal');
+  const supervisedSource = await shell('window.convergeBrowser.attachFiles()');
+  assert.equal(supervisedSource.ok, true, supervisedSource.error);
+  for (const side of ['left', 'right']) await page(side, 'window.fixtureSlow=true');
+  const supervisedStart = await shell(`window.convergeBrowser.start({question:'Refine the attached source to MaximumLoss=20 while preserving FixedLots=0.01; return the complete downloadable file, perform four useful work cycles, and independently verify the exact final candidate.',reviewMode:'improve',maxRounds:6,relayMedia:true,requireFiles:true})`);
+  assert.equal(supervisedStart.ok, true, supervisedStart.error);
+  await waitFor(async () => {
+    const state = await desktop.coordinator.getState();
+    return state.supervision?.checks >= 2 && state.supervision.workers.left?.generating && state.supervision.workers.right?.generating;
+  }, 'Accelerated supervision did not observe both healthy generating workers', 30_000);
+  const healthyState = await desktop.coordinator.getState();
+  const firstRequests = { left: healthyState.pending.left.requestId, right: healthyState.pending.right.requestId };
+  assert.equal(healthyState.status, 'running'); assert.equal(healthyState.round, 0);
+  for (const side of ['left', 'right']) {
+    assert.equal(await page(side, 'window.fixtureSends.length'), 1);
+    assert.equal(await page(side, 'window.fixtureStops'), 0);
+    assert.equal(await page(side, '!document.getElementById("stopFixture").hidden'), true);
+  }
+  // The first scheduled check can observe source upload before submission.
+  // Require the newest exact-request observation for each active worker to
+  // report generation; historical upload/wait observations remain useful.
+  for (const side of ['left', 'right']) {
+    const observed = healthyState.supervision.events.filter(event => event.side === side && event.requestId === firstRequests[side]);
+    assert.equal(observed.at(-1)?.type, 'generating');
+    assert.equal(observed.some(event => event.type === 'interrupted'), false);
+  }
+  pass('Accelerated localhost-only supervision checks both real active worker bridges repeatedly without stopping or resending their healthy generation. Production keeps its five-minute interval.');
+
+  const bossSendsBeforeInterruption = await page('boss', 'window.fixtureSends.length');
+  await page('boss', 'window.fixtureSlow=true');
+  await page('left', 'window.fixtureInterruptNow()');
+  await waitFor(async () => {
+    const state=await desktop.coordinator.getState();
+    return !state.pending.left && !!state.pending.right && !!state.pending.boss && state.supervision.events.some(event=>event.type==='interrupted'&&event.side==='left');
+  }, 'Confirmed failed worker did not immediately trigger a separate boss repair while its peer continued', 30_000);
+  const interruptionState=await desktop.coordinator.getState();
+  assert.equal(interruptionState.status,'running'); assert.equal(interruptionState.round,0);
+  assert.equal(interruptionState.pending.right.requestId,firstRequests.right);
+  assert.equal(interruptionState.workerResults.length,0);
+  await waitFor(()=>page('boss', 'window.fixtureSends.length==='+(bossSendsBeforeInterruption+1)), 'Immediate boss recovery did not submit');
+  assert.equal(await page('right','window.fixtureSends.length'),1);
+  assert.equal(await page('right','window.fixtureStops'),0);
+  await shell('if(document.getElementById("resultContent").hidden)document.getElementById("toggleResults").click();document.getElementById("activityTab").click();');
+  await waitFor(()=>shell('document.getElementById("teamHealthLog").textContent.includes("Worker A response was confirmed interrupted")'), 'Monitoring drawer hid the failure');
+  const interruptionMonitoring=await shell('document.getElementById("teamHealthLog").textContent');
+  pass('Confirmed owned idle failure immediately starts a scoped boss repair while the native healthy worker keeps its request and is never stopped or resent.');
+  await page('boss','window.fixtureSlow=false;window.fixtureCompleteNow()');
+  await waitFor(()=>page('left','window.fixtureSends.length===2'), 'The boss did not repair only the failed worker');
+  const recoveryContexts=await page('boss','window.fixtureBossContexts');
+  const recoveryContext=recoveryContexts.find(context=>context.recovery_task);
+  assert.equal(recoveryContext.completed_work_cycles,0);
+  assert.equal(recoveryContext.recovery_task.side,'left');
+  assert.equal(recoveryContext.worker_results.length,0,'The immediate repair cannot fabricate its unfinished peer.');
+  const recoveryWorkerSends={left:await page('left','window.fixtureSends.slice(0,2)'),right:await page('right','window.fixtureSends.slice(0,1)')};
+  assert.notEqual(recoveryWorkerSends.left[0].text,recoveryWorkerSends.left[1].text);
+  assert.ok(recoveryWorkerSends.left[1].text.includes('QA_RECOVERY_A'));
+  assert.equal(await page('right','window.fixtureSends.length'),1);
+  for(const side of ['left','right'])assert.equal(await page(side,'window.fixtureStops'),0);
+  await page('left','window.fixtureSlow=false;window.fixtureCompleteNow()');
+  await waitFor(async()=> (await desktop.coordinator.getState()).workerResults.some(result=>result.side==='left'), 'The real resumed worker output was not retained');
+  assert.equal((await desktop.coordinator.getState()).round,0,'Only one actual completed worker does not finish a pair.');
+  await page('right','window.fixtureSlow=false;window.fixtureCompleteNow()');
+  pass('A real resumed artifact is retained alongside the original healthy peer; a cycle counts only after both actual completed results arrive.');
+
+  await waitFor(async () => {
+    const state = await desktop.coordinator.getState();
+    if (['error', 'blocked', 'stopped', 'cancelled'].includes(state.status)) throw new Error(state.error || `Supervised recovery stopped with ${state.status}`);
+    return state.status === 'agreed';
+  }, 'The supervised recovery did not reach four fresh work cycles and final verification', 180_000);
+  const supervisedResult = await desktop.coordinator.getState();
+  assert.equal(supervisedResult.round, 4);
+  assert.equal(supervisedResult.acceptedBy.left, supervisedResult.candidate.id);
+  assert.equal(supervisedResult.acceptedBy.right, supervisedResult.candidate.id);
+  const finalBossContexts = await page('boss', 'window.fixtureBossContexts');
+  const finalBossReplies = await page('boss', `Array.from(document.querySelectorAll('#turns [data-message-author-role=assistant] .markdown'),element=>element.textContent)`);
+  const finalBossReply = JSON.parse(finalBossReplies.at(-1));
+  assert.equal(finalBossReply.action, 'finish'); assert.equal(finalBossReply.answer, supervisedResult.boss.finalSummary);
+  await shell(`document.getElementById('answerTab').click()`);
+  await waitFor(() => shell(`document.getElementById('bossFinalSummary').textContent===${JSON.stringify(supervisedResult.boss.finalSummary)} && document.getElementById('answer').textContent===${JSON.stringify(supervisedResult.answer)}`), 'Bottom answer and boss summary do not match the completed supervised result');
+  await shell(`document.getElementById('issuesTab').click()`);
+  await waitFor(() => shell(`document.getElementById('issues').textContent.includes('Offline deterministic responses only; no actual market test.')`), 'The remaining issues drawer hid the actual boss limitation');
+  const finalIssues = await shell('document.getElementById("issues").textContent');
+  await shell(`document.getElementById('activityTab').click()`);
+  assert.ok((await shell('document.getElementById("teamHealthLog").textContent')).includes('response was confirmed interrupted'));
+  // Text export uses the real guarded renderer/preload/host save handler;
+  // only the native destination picker uses the localhost-only dialog hook.
+  await click('exportAnswer');
+  await waitFor(() => fs.existsSync(savedReportPath) && fs.readFileSync(savedReportPath,'utf8').includes(supervisedResult.answer) &&
+    fs.readFileSync(savedReportPath,'utf8').includes(supervisedResult.boss.finalSummary), 'The real renderer report export did not finish');
+  const exportedReview = fs.readFileSync(savedReportPath, 'utf8');
+  assert.ok(exportedReview.includes(supervisedResult.answer)); assert.ok(exportedReview.includes(supervisedResult.boss.finalSummary));
+  assert.ok(exportedReview.includes('## Workflow monitoring')); assert.ok(exportedReview.includes('Worker A response was confirmed interrupted'));
+  assert.ok(exportedReview.includes('## Remaining issues and limitations')); assert.ok(exportedReview.includes('Offline deterministic responses only; no actual market test.'));
+  supervisionIntegration = { acceleratedLocalIntervalMs: qaSupervisionIntervalMs,
+    productionIntervalNote: 'The normal production interval remains five minutes; this native integration deliberately accelerates the localhost fixture only.',
+    healthyChecks: healthyState.supervision.checks, interruptedRequestId: firstRequests.left, healthyRequestId: firstRequests.right,
+    recoveryBossRequestId: recoveryContext.request_id, recoveryInterruptionReports: recoveryContext.worker_interruption_reports,
+    recoveryCompletedCycles: recoveryContext.completed_work_cycles, retainedPeerResults: recoveryContext.worker_results.map(worker => ({ side: worker.side, id: worker.id })),
+    finalWorkCycles: supervisedResult.round, finalCandidateId: supervisedResult.candidate.id, monitoring: interruptionMonitoring,
+    finalAnswer: supervisedResult.answer, bossSummary: supervisedResult.boss.finalSummary, remainingIssues: finalIssues,
+    exportedReviewSha256: digest(Buffer.from(exportedReview)), finalBossContextCount: finalBossContexts.length };
+  pass('After genuine interruption recovery, both workers independently accept one exact final candidate; its actual boss answer, bottom answer, remaining limitation and exported monitoring report all match the completed run.');
+
+  await shell('window.convergeBrowser.resetChats()');
+  await open('normal');
+  await page('left', "window.fixtureMode='tsv-audit'");
+  const tsvStart = await shell(`window.convergeBrowser.start({question:'Create a downloadable ced_scope_manifest.tsv audit table with lecture, pages and note columns, preserving tab separators and Unicode. Verify the exact file independently.',reviewMode:'verify',maxRounds:6,relayMedia:true,requireFiles:true,studio:{verificationEnabled:false,freshAudit:false}})`);
+  assert.equal(tsvStart.ok, true, tsvStart.error);
+  await waitFor(async () => {
+    const state = await desktop.coordinator.getState();
+    if (['error', 'blocked'].includes(state.status)) throw new Error(state.error);
+    return state.status === 'agreed';
+  }, 'The native TSV output did not reach the boss and both final reviewers.', 60_000);
+  const tsvState = await desktop.coordinator.getState();
+  const tsvSnapshot = await desktop.coordinator.exportProject();
+  const tsvRevision = tsvSnapshot.revisions.find(revision => revision.candidate.id === tsvState.candidate.id);
+  assert.ok(tsvRevision); assert.equal(tsvRevision.files.length, 1);
+  const tsvFile = tsvRevision.files[0];
+  const tsvBytes = Buffer.from('lecture\tpages\tnote\n1\t7\tΔ review\n');
+  assert.equal(tsvFile.name, 'ced_scope_manifest.tsv'); assert.equal(tsvFile.mimeType, 'text/tab-separated-values');
+  assert.deepEqual(Buffer.from(tsvFile.base64, 'base64'), tsvBytes);
+  assert.equal(tsvFile.contentSha256, digest(tsvBytes));
+  for (const side of ['left', 'right', 'boss']) {
+    const received = await page(side, 'window.fixtureSends');
+    const tsv = received.flatMap(send => send.fileBytes).find(file => file.name.endsWith('ced_scope_manifest.tsv'));
+    assert.ok(tsv, `${side} did not receive the actual TSV artifact.`);
+    assert.deepEqual(Buffer.from(tsv.base64, 'base64'), tsvBytes);
+    if (side !== 'boss') assert.equal(tsvState.acceptedBy[side], tsvState.candidate.id);
+  }
+  pass('A live-shaped Download file card captures an actual TSV native download using its text/plain alias, preserves canonical TSV name, Unicode, bytes and SHA-256, and reaches the boss and both exact final reviewers.');
+
+  await shell('window.convergeBrowser.resetChats()'); await open();
+  await shell('window.convergeBrowser.attachFiles()');
+  for (const side of ['left', 'right']) await page(side, 'window.fixtureSlow=true');
+  const reloadStart = await shell(`window.convergeBrowser.start({question:'Correct the source risk limit to 20, preserve 0.01 lot size, and deliver the corrected file. Verify the exact bytes.',reviewMode:'verify',maxRounds:6,relayMedia:true,requireFiles:true,studio:{verificationEnabled:false,freshAudit:false}})`);
+  assert.equal(reloadStart.ok, true, reloadStart.error);
+  await waitFor(async()=>{const state=await desktop.coordinator.getState();return state.pending.left && state.pending.right &&
+    await page('left','window.fixtureSends.length===1') && await page('right','window.fixtureSends.length===1');}, 'Reload fixture did not start its worker pair.');
+  const originalReloadPending = (await desktop.coordinator.getState()).pending;
+  await page('left', `sessionStorage.setItem('converge-qa-reload',JSON.stringify({side:fixtureSide,sends:fixtureSends,html:document.getElementById('turns').innerHTML}));void 0`);
+  desktop.views.left.webContents.reload();
+  await waitFor(async()=> (await desktop.coordinator.getState()).supervision.events.some(event=>event.type==='observation-reconnected'), 'Native main-frame reload did not reconnect its exact observer.');
+  const afterReload = await desktop.coordinator.getState();
+  assert.deepEqual(afterReload.pending, originalReloadPending, 'Reload renewed a deadline or changed the pending request identity.');
+  assert.equal(await page('left','window.fixtureSends.length'),1); assert.equal(await page('right','window.fixtureSends.length'),1);
+  assert.equal(await page('left','window.fixtureStops'),0); assert.equal(await page('right','window.fixtureStops'),0);
+  await page('left','window.fixtureCompleteNow()'); await page('right','window.fixtureSlow=false;window.fixtureCompleteNow()');
+  await waitFor(async()=>{const state=await desktop.coordinator.getState();if(['error','blocked'].includes(state.status))throw Error(state.error);return state.status==='agreed';},'The reconnected native workflow did not export and verify its exact final file.');
+  const reloadState = await desktop.coordinator.getState();
+  const reloadProject = await desktop.coordinator.exportProject();
+  const reloadRevision = reloadProject.revisions.find(item=>item.candidate.id===reloadState.candidate.id);
+  const reloadBytes = Buffer.from('OFFLINE REFINED SOURCE ONLY\nMaximumLoss=20\nFixedLots=0.01\nReviewPass=1\n');
+  assert.deepEqual(Buffer.from(reloadRevision.files[0].base64,'base64'),reloadBytes);
+  assert.equal(reloadRevision.files[0].contentSha256,digest(reloadBytes));
+  for(const side of ['left','right']){assert.equal(reloadState.acceptedBy[side],reloadState.candidate.id);assert.equal(await page(side,'window.fixtureStops'),0);}
+  pass('A real native main-frame reload reconnects the exact active worker without another Send, Stop or deadline reset; its actual file reaches the boss and both final reviewers with matching bytes and SHA-256.');
+
   await shell('window.convergeBrowser.resetChats()');
   await open('work');
   const workState = await desktop.coordinator.getState();
@@ -506,14 +728,17 @@ async function run() {
     tests: log, screenshots, captureWarnings, blockedRemoteOrigins: [...blockedRemoteOrigins],
     consoleMessages, themeCaptures, sourceSha256: digest(sourceBytes), savedFileSha256: digest(fs.readFileSync(savedPath)),
     finalCandidateId: result.candidate.id, workCycles: result.round, sends: Object.fromEntries(Object.entries(sends).map(([side, turns]) => [side, turns.length])),
+    supervisionIntegration,
     ...(packagedAsar ? { packagedAsar, note: 'Production shell, coordinator and preloads were loaded from app.asar under development Electron. Installer execution and live authentication were not tested by this fixture.' } : {}),
   }, null, 2));
 }
 
 app.whenReady().then(run).catch(async error => {
-  process.stderr.write(`FAIL: ${error.stack || error.message}\n`);
+  qaOutput.error(`FAIL: ${error.stack || error.message}\n`);
+  const failureState = desktop ? await desktop.coordinator.getState().catch(() => null) : null;
   fs.writeFileSync(path.join(evidenceRoot, packagedAsar ? 'packaged-result.json' : 'result.json'), JSON.stringify({ passed: false,
-    localFixturesOnly: true, tests: log, error: error.stack || error.message, consoleMessages, captureWarnings }, null, 2));
+    localFixturesOnly: true, tests: log, error: error.stack || error.message, consoleMessages, captureWarnings,
+    failureState, supervisionIntegration }, null, 2));
 }).finally(async () => {
   clearInterval(stateMonitor);
   if (desktop) {

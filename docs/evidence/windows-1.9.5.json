@@ -1,0 +1,220 @@
+{
+  "version": "1.9.5",
+  "platform": "win32",
+  "arch": "x64",
+  "checkedAt": "2026-10-06T19:52:47.224Z",
+  "artifact": {
+    "name": "Converge-Portable-1.9.5-x64.exe",
+    "byteLength": 463998696,
+    "sha256": "ca7e07a0ac8a636cc9027733f9a591425f0ca3a4b3fa3f6d03a0432a3b2dba1c",
+    "archiveSha256": "069c989ff7a182917dfa091256e11c2043967471133badf2d0d0935c964e85ea",
+    "compression": "store"
+  },
+  "source": {
+    "passed": 599,
+    "total": 599,
+    "failed": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "actualChromiumSubmissionCases": 84
+  },
+  "packaged": {
+    "boss": {
+      "passed": true,
+      "count": 21,
+      "offlineOnly": true,
+      "checks": [
+        "Production Windows shell creates three sandboxed isolated native chat views and keeps its browser session in memory.",
+        "Import and Normal OK open exactly three distinct chats with the boss coordinator active.",
+        "A mixed text, valid PDF and PNG source selection reaches all three native file inputs; Reset clears the staged previews and retains the session.",
+        "One native file picker uploads the original source to the boss and both workers.",
+        "The boss writes distinct worker instructions, receives both results and exact generated files every cycle, then both workers verify one final candidate after four improvement cycles.",
+        "The real boss composer accepts an instruction during worker generation, delivers it in the next boss context, and completes the run with no queued message left behind.",
+        "Native Save downloads the actual accepted file and matches the coordinator SHA-256, with the requested corrected values.",
+        "The settings selector applies Horror, Alien, Night, Cyberpunk and Anime backgrounds to all three real chat views.",
+        "Robot, Explorer and Spirit character choices apply without changing the active chat run or its accepted files.",
+        "Clicking the center boss opens and closes its sliding native chat panel while preserving the worker workspace.",
+        "A follow-up reuses all three conversations; a new instruction while the boss generates is queued safely.",
+        "Stop cancels active boss generation and prevents queued instructions from restarting the stopped run.",
+        "Stop also cancels both workers during their concurrent generation, retaining each completed conversation.",
+        "Accelerated localhost-only supervision checks both real active worker bridges repeatedly without stopping or resending their healthy generation. Production keeps its five-minute interval.",
+        "A genuine stopped-thinking header without an answer is recovered only for its exact owned worker; the boss waits for the healthy peer and bottom monitoring shows both observations.",
+        "The recovery boss receives only actual completed peer evidence plus the interruption report, creates fresh useful worker prompts and does not count the abandoned pair as a work cycle.",
+        "After genuine interruption recovery, both workers independently accept one exact final candidate; its actual boss answer, bottom answer, remaining limitation and exported monitoring report all match the completed run.",
+        "A live-shaped Download file card captures an actual TSV native download using its text/plain alias, preserves canonical TSV name, Unicode, bytes and SHA-256, and reaches the boss and both exact final reviewers.",
+        "Reset clears all three chats without clearing the imported session; Work mode is verified on the fresh boss and worker pages.",
+        "Temporary mode is also verified on all three new chats through its visible page controls.",
+        "Unreadable boss control output receives one format repair, then stops safely without dispatching an invented worker task or clearing the session."
+      ]
+    },
+    "studio": {
+      "passed": true,
+      "count": 13,
+      "offlineOnly": true,
+      "checks": [
+        "Real production shell and sandboxed native chats use an empty in-memory account session.",
+        "The production Electron PDF worker parses and rasterizes a genuine one-page fixture with installed runtime dependencies; this gate uses the lab module directly.",
+        "The shell native source picker transfers the complete original JavaScript bytes to all three browser file inputs.",
+        "Four actual file revision cycles finish with native syntax checks, explicit criteria, and a newly opened worker final audit.",
+        "The real local report binds the candidate SHA-256, passes Node syntax parsing, and keeps unexecuted runtime coverage visibly unverified.",
+        "Native revision preview IPC resolves two identically named files to their distinct exact historical contents.",
+        "The real Studio drawer clears all three native view bounds; closing it restores tall, usable worker chats.",
+        "Shell IPC records found, assigned, fixed and rechecked issue evidence against the selected revision.",
+        "Real save/list/export dialogs persist the original and all four same-name revision byte identities in a portable ZIP without browser session state.",
+        "Native revision restoration selects the actual earlier bytes and invalidates prior final acceptance and tool authority.",
+        "Real manual verification and delivery dialogs export exact restored source bytes, matching report hashes, every content checksum and honest partial completion status.",
+        "Loading the disk project reconstructs original and revision bytes while requiring fresh chat ownership and verification.",
+        "Importing the real exported ZIP and reconnecting new native chats preserves the saved brief and selected revision without resuming stale requests."
+      ]
+    },
+    "parityFiles": 39
+  },
+  "nativeStartup": {
+    "passed": true,
+    "visibleShell": true,
+    "firstPaint": true,
+    "sidebarToggleVerified": true,
+    "bossDrawerVerified": true,
+    "progressSectionVerified": true,
+    "didClose": true,
+    "embeddedViewsDisposed": true,
+    "closeCleanupCompleted": true,
+    "isolatedSession": true
+  },
+  "changes": [
+    "Complete long-answer and structured review context attachments with exact evidence references and unchanged full host validation.",
+    "Required PDF checkpoints remain due after audit-only outputs.",
+    "Fresh owned generation-error enters supervised native-idle recovery; healthy peers and completed files are retained."
+  ],
+  "live": {
+    "completedModelTask": false,
+    "finalAcceptance": false,
+    "status": "Authenticated CED run ongoing: first complete working draft captured, independent missing-glyph findings queued, second useful work pair generating. Final acceptance pending.",
+    "longDocumentTaskCompleted": false,
+    "previousVersion": {
+      "version": "1.9.4",
+      "completedModelTask": true,
+      "finalAcceptance": true,
+      "status": "Authenticated two-file task completed automatically: both worker files, exact TSV/Markdown candidate relay, executed byte and TSV parser checks, both accepted final reviews, fresh right-worker audit, and boss finish.",
+      "previousLongDocumentTest": {
+        "version": "1.9.3",
+        "status": "failed",
+        "sourceReachedAllThreeChats": true,
+        "sourceByteLength": 121029744,
+        "sourcePdfs": 17,
+        "sourcePages": 74,
+        "completedWorkerAuditDuration": "38m25s",
+        "defects": [
+          "TSV output unsupported and caused global cancellation.",
+          "Nonterminal connection warning falsely labelled Generating."
+        ],
+        "finalPdfDelivered": false,
+        "capturedAuditDelivered": false,
+        "manualRecovery": {
+          "auditAttachments": 2,
+          "sourceManifestLocallyVerified": true,
+          "automatedCoordinatorCapture": false,
+          "finalPdf": false
+        }
+      },
+      "model": "GPT-5.6 High",
+      "actualFiles": [
+        {
+          "name": "live-table-check.tsv",
+          "mimeType": "text/tab-separated-values",
+          "contentSha256": "3c7e727381575134f24fd14a908e7053fbbb7e7f1edeba328c3ee92f8012407c",
+          "byteLength": 45
+        },
+        {
+          "name": "live-table-check.md",
+          "mimeType": "text/markdown",
+          "contentSha256": "e73b383b35bf33458f23af80b58f0c4143964558149196efe956c8ee5d2fd49d",
+          "byteLength": 11
+        }
+      ],
+      "candidateId": "C1",
+      "candidateSha256": "f8dd3f3fb6c63142a3dc1e12ad2c0eb88cb99ce1b002ea53cb6ec4303f59312d",
+      "finalWorkerChecks": 2,
+      "freshAudit": "accepted",
+      "longDocumentTaskCompleted": false
+    },
+    "longDocumentAttempts": [
+      {
+        "attemptId": "ced-195-production-1",
+        "startedAt": "2026-10-06T20:19:08.326Z",
+        "checkedAt": "2026-10-06T21:38:58.871Z",
+        "status": "running",
+        "models": {
+          "boss": "GPT-5.6 High",
+          "left": "GPT-5.6 High",
+          "right": "GPT-5.6 High"
+        },
+        "modelSelectionEvidence": "All three native model menus inspected; High selected, no Pro.",
+        "sourceDeliveryConfirmed": true,
+        "sourceDeliveryEvidence": "Workspace showed all three sources Attached to the team after per-page receipts; saved source SHA-256 values match original files.",
+        "sources": [
+          {
+            "name": "ced zip.zip",
+            "byteLength": 121029744,
+            "contentSha256": "66d14a9107cae3d2b6c9edf003c6bedd9bee037928541c2d17573e9f05a2917b"
+          },
+          {
+            "name": "WorkerB_CED_L1-20_Forensic_Audit.md",
+            "byteLength": 28737,
+            "contentSha256": "c703f1e5aebbbfc370bbbd2a03a08d97a506d17a651c4d85617b21976cca5e3a"
+          },
+          {
+            "name": "ced_scope_manifest.tsv",
+            "byteLength": 1465,
+            "contentSha256": "602fb5d91d2b49d92acf3f7d79520d96354bdc686574229bffbd5fd745e28d8b"
+          }
+        ],
+        "bossDispatchObserved": true,
+        "bothWorkersGeneratingObserved": true,
+        "completedWorkCycles": 1,
+        "finalPdfDelivered": false,
+        "finalAcceptance": false,
+        "firstCompleteDraftCaptured": true,
+        "candidateRevision": "R2",
+        "candidatePdf": {
+          "byteLength": 461352,
+          "sha256": "8d2392dd8f9f79fabf6165d86fc730fed003349c9f63fe0b4f99b934f844c9fd",
+          "pageCount": 66,
+          "selectableTextOnEveryPage": true,
+          "outlineEntries": 43,
+          "annotations": 42
+        },
+        "coverageLedger": {
+          "rows": 80,
+          "columns": 8,
+          "physicalPageAddresses": 74,
+          "sourceContentCoverageProven": false
+        },
+        "independentVisualCheck": {
+          "sampledPhysicalPages": [
+            2,
+            8,
+            23,
+            40,
+            50,
+            57,
+            65,
+            66
+          ],
+          "missingGlyphDefectsFound": true,
+          "affectedPhysicalPages": [
+            40,
+            50,
+            57,
+            65
+          ],
+          "wholeDocumentVisualQa": false
+        },
+        "automaticBossHandoffObserved": true,
+        "nextDistinctWorkerAssignmentsObserved": true,
+        "missingGlyphFeedbackQueuedWithoutInterruptingWorkers": true
+      }
+    ]
+  },
+  "publication": "Local Windows portable only; no installer, macOS build or GitHub publication in this repair."
+}

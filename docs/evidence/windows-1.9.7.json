@@ -1,0 +1,125 @@
+{
+  "version": "1.9.7",
+  "platform": "win32",
+  "arch": "x64",
+  "checkedAt": "2026-10-06T23:02:32.510Z",
+  "artifact": {
+    "name": "Converge-Portable-1.9.7-x64.exe",
+    "byteLength": 464027100,
+    "sha256": "df494f3eb4c36808e706f8b73714af057784c383e9661663792627c2c66d7cab",
+    "archiveSha256": "f2259e10c4e57f1b7672e947d26fa8cc1972c93d7e544ae5ec9d802cbc74e87a",
+    "compression": "store"
+  },
+  "source": {
+    "total": 614,
+    "passed": 614,
+    "failed": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "actualChromiumSubmissionCases": 103
+  },
+  "packaged": {
+    "boss": {
+      "passed": true,
+      "count": 22,
+      "offlineOnly": true,
+      "checks": [
+        "Production Windows shell creates three sandboxed isolated native chat views and keeps its browser session in memory.",
+        "Import and Normal OK open exactly three distinct chats with the boss coordinator active.",
+        "A mixed text, valid PDF and PNG source selection reaches all three native file inputs; Reset clears the staged previews and retains the session.",
+        "One native file picker uploads the original source to the boss and both workers.",
+        "The boss writes distinct worker instructions, receives both results and exact generated files every cycle, then both workers verify one final candidate after four improvement cycles.",
+        "The real boss composer accepts an instruction during worker generation, delivers it in the next boss context, and completes the run with no queued message left behind.",
+        "Native Save downloads the actual accepted file and matches the coordinator SHA-256, with the requested corrected values.",
+        "The settings selector applies Horror, Alien, Night, Cyberpunk and Anime backgrounds to all three real chat views.",
+        "Robot, Explorer and Spirit character choices apply without changing the active chat run or its accepted files.",
+        "Clicking the center boss opens and closes its sliding native chat panel while preserving the worker workspace.",
+        "A follow-up reuses all three conversations; a new instruction while the boss generates is queued safely.",
+        "Stop cancels active boss generation and prevents queued instructions from restarting the stopped run.",
+        "Stop also cancels both workers during their concurrent generation, retaining each completed conversation.",
+        "Accelerated localhost-only supervision checks both real active worker bridges repeatedly without stopping or resending their healthy generation. Production keeps its five-minute interval.",
+        "Confirmed owned idle failure immediately starts a scoped boss repair while the native healthy worker keeps its request and is never stopped or resent.",
+        "A real resumed artifact is retained alongside the original healthy peer; a cycle counts only after both actual completed results arrive.",
+        "After genuine interruption recovery, both workers independently accept one exact final candidate; its actual boss answer, bottom answer, remaining limitation and exported monitoring report all match the completed run.",
+        "A live-shaped Download file card captures an actual TSV native download using its text/plain alias, preserves canonical TSV name, Unicode, bytes and SHA-256, and reaches the boss and both exact final reviewers.",
+        "A real native main-frame reload reconnects the exact active worker without another Send, Stop or deadline reset; its actual file reaches the boss and both final reviewers with matching bytes and SHA-256.",
+        "Reset clears all three chats without clearing the imported session; Work mode is verified on the fresh boss and worker pages.",
+        "Temporary mode is also verified on all three new chats through its visible page controls.",
+        "Unreadable boss control output receives one format repair, then stops safely without dispatching an invented worker task or clearing the session."
+      ]
+    },
+    "studio": {
+      "passed": true,
+      "count": 13,
+      "offlineOnly": true,
+      "checks": [
+        "Real production shell and sandboxed native chats use an empty in-memory account session.",
+        "The production Electron PDF worker parses and rasterizes a genuine one-page fixture with installed runtime dependencies; this gate uses the lab module directly.",
+        "The shell native source picker transfers the complete original JavaScript bytes to all three browser file inputs.",
+        "Four actual file revision cycles finish with native syntax checks, explicit criteria, and a newly opened worker final audit.",
+        "The real local report binds the candidate SHA-256, passes Node syntax parsing, and keeps unexecuted runtime coverage visibly unverified.",
+        "Native revision preview IPC resolves two identically named files to their distinct exact historical contents.",
+        "The real Studio drawer clears all three native view bounds; closing it restores tall, usable worker chats.",
+        "Shell IPC records found, assigned, fixed and rechecked issue evidence against the selected revision.",
+        "Real save/list/export dialogs persist the original and all four same-name revision byte identities in a portable ZIP without browser session state.",
+        "Native revision restoration selects the actual earlier bytes and invalidates prior final acceptance and tool authority.",
+        "Real manual verification and delivery dialogs export exact restored source bytes, matching report hashes, every content checksum and honest partial completion status.",
+        "Loading the disk project reconstructs original and revision bytes while requiring fresh chat ownership and verification.",
+        "Importing the real exported ZIP and reconnecting new native chats preserves the saved brief and selected revision without resuming stale requests."
+      ]
+    },
+    "parityFiles": 40
+  },
+  "nativeStartup": {
+    "passed": true,
+    "checkedAt": "2026-10-06T23:00:04.750Z",
+    "visibleShell": true,
+    "firstPaint": true,
+    "embeddedViews": [
+      "left",
+      "right",
+      "boss"
+    ],
+    "sidebarToggleVerified": true,
+    "bossDrawerVerified": true,
+    "progressSectionVerified": true,
+    "didClose": true,
+    "embeddedViewsDisposed": true,
+    "closeCleanupCompleted": true,
+    "isolatedSession": true,
+    "providerScope": "Empty isolated session; no authentication, provider navigation or live model task"
+  },
+  "changes": [
+    "Immediate proof check of owned timeout, delivery, server and oversized-message failures.",
+    "Boss repair of only the failed idle worker while its teammate continues; failed boss planning is bounded too.",
+    "Exact original-turn observation reconnection after reload or lost acknowledgement without duplicate Send or Stop.",
+    "Expired observation budgets check and extend healthy requests within the workflow cap.",
+    "Invalid output bytes and repeated unreadable final reviews are quarantined without cancelling healthy peer work.",
+    "Saved historical recovery events do not restore pending request authority."
+  ],
+  "live": {
+    "completedModelTask": false,
+    "finalAcceptance": false,
+    "longDocumentTaskCompleted": false,
+    "status": "No authenticated 1.9.7 workflow was run. The read-only check of the existing 1.9.5 window confirmed navigation failure, a visible message delivery timeout, stopped coordination and a queued instruction. That window remains open; source edits do not update its process.",
+    "olderWindow": {
+      "version": "1.9.5",
+      "status": "Needs attention",
+      "observedError": "left chat: The chat navigated before the reply completed.",
+      "observedProviderError": "Message delivery timed out. Please try again.",
+      "round": 1,
+      "maxRounds": 6,
+      "bossInstructionsQueued": 1,
+      "finalAcceptance": false
+    }
+  },
+  "bounds": {
+    "fileBytes": 536870912,
+    "batchBytes": 1073741824,
+    "workflowHours": 24,
+    "normalInspectionMinutes": 5,
+    "reconnectingInspectionSeconds": 30,
+    "focusedWorkerRepairAttempts": 3
+  },
+  "publication": "Local Windows portable only; installer, macOS and GitHub publication not included."
+}

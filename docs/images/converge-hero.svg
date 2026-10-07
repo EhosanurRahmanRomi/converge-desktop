@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="430" viewBox="0 0 1280 430" role="img" aria-labelledby="title desc">
+  <title id="title">Converge — One boss. Two workers. A result you can inspect.</title>
+  <desc id="desc">A restrained galaxy illustration connecting a boss to two workers, with a brief, work, review and download path. Decorative artwork, not a product screenshot.</desc>
+  <defs>
+    <linearGradient id="space" x2="1" y2="1"><stop stop-color="#090f1c"/><stop offset=".55" stop-color="#14182d"/><stop offset="1" stop-color="#151025"/></linearGradient>
+    <radialGradient id="violet"><stop stop-color="#7864c3" stop-opacity=".24"/><stop offset="1" stop-color="#7864c3" stop-opacity="0"/></radialGradient>
+    <radialGradient id="teal"><stop stop-color="#4a9aa7" stop-opacity=".16"/><stop offset="1" stop-color="#4a9aa7" stop-opacity="0"/></radialGradient>
+    <linearGradient id="path"><stop stop-color="#80dbe0"/><stop offset=".5" stop-color="#a7aff0"/><stop offset="1" stop-color="#d0aae5"/></linearGradient>
+    <linearGradient id="card" x2="1" y2="1"><stop stop-color="#202b40"/><stop offset="1" stop-color="#171d30"/></linearGradient>
+  </defs>
+  <rect width="1280" height="430" rx="24" fill="url(#space)"/>
+  <ellipse cx="943" cy="178" rx="366" ry="240" fill="url(#violet)"/>
+  <ellipse cx="117" cy="131" rx="302" ry="223" fill="url(#teal)"/>
+  <g fill="#dae7fb" opacity=".44">
+    <circle cx="41" cy="23" r="1"/><circle cx="171" cy="30" r="1.2"/><circle cx="328" cy="21" r=".8"/><circle cx="438" cy="65" r="1.2"/><circle cx="574" cy="28" r=".9"/><circle cx="716" cy="36" r="1.3"/><circle cx="819" cy="19" r=".8"/><circle cx="1028" cy="38" r="1.1"/><circle cx="1188" cy="44" r="1.3"/>
+    <circle cx="25" cy="220" r="1.1"/><circle cx="129" cy="398" r=".8"/><circle cx="307" cy="400" r="1.1"/><circle cx="502" cy="368" r=".8"/><circle cx="641" cy="166" r=".8"/><circle cx="705" cy="395" r="1"/><circle cx="994" cy="386" r=".8"/><circle cx="1193" cy="331" r="1.2"/><circle cx="1251" cy="177" r=".8"/>
+  </g>
+  <g fill="#c8d6f4" opacity=".65"><path d="m1167 93 1.4 5 5 1.4-5 1.4-1.4 5-1.4-5-5-1.4 5-1.4z"/><path d="m613 328 1 3.5 3.5 1-3.5 1-1 3.5-1-3.5-3.5-1 3.5-1z"/></g>
+  <g font-family="Manrope,Inter,Segoe UI,Arial,sans-serif">
+    <rect x="56" y="48" width="40" height="40" rx="12" fill="#182c3c" stroke="#78c4cc" stroke-opacity=".65"/>
+    <path d="M66 62h22l-5-5m5 5-5 5M88 75H66l5 5m-5-5 5-5" fill="none" stroke="#92dce1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="111" y="78" fill="#f0f4fc" font-size="31" font-weight="700" letter-spacing="-1.2">Converge<tspan fill="#8ad6dd">.</tspan></text>
+    <text x="58" y="125" fill="#8d9eb9" font-size="11" font-weight="600" letter-spacing="2.6">DESKTOP PROJECT STUDIO</text>
+    <text x="56" y="187" fill="#f0f4fb" font-size="44" font-weight="650" letter-spacing="-1.8">One boss.</text>
+    <text x="56" y="239" fill="#aadfe4" font-size="44" font-weight="650" letter-spacing="-1.8">Two workers.</text>
+    <text x="59" y="288" fill="#c2cbdc" font-size="19">A result you can inspect.</text>
+    <text x="59" y="321" fill="#99a9bf" font-size="15">Real files. Visible evidence. Your final decision.</text>
+    <rect x="59" y="357" width="106" height="29" rx="14.5" fill="#1c2e3b" stroke="#587d89" stroke-opacity=".55"/>
+    <text x="112" y="376" text-anchor="middle" fill="#c0e2e8" font-size="11" font-weight="600">Windows x64</text>
+    <rect x="175" y="357" width="145" height="29" rx="14.5" fill="#25253e" stroke="#7b759b" stroke-opacity=".5"/>
+    <text x="247.5" y="376" text-anchor="middle" fill="#d7d3ed" font-size="11" font-weight="600">Apple Silicon Mac</text>
+    <text x="330" y="376" fill="#8598b2" font-size="11">1.9.9</text>
+    <path d="M891 175v21M891 196H738v24M891 196h153v24" stroke="url(#path)" stroke-opacity=".58" stroke-width="1.5" fill="none"/>
+    <path d="M738 310v19h306v-19" stroke="url(#path)" stroke-opacity=".25" stroke-width="1.2" fill="none"/>
+    <g transform="translate(795 66)">
+      <rect width="192" height="110" rx="18" fill="url(#card)" stroke="#bdb0de" stroke-opacity=".45"/>
+      <rect x="20" y="21" width="39" height="39" rx="13" fill="#322d4d"/>
+      <path d="m29 34 5 4 5-8 5 8 6-4-3 14H32z" fill="none" stroke="#e9d8a8" stroke-width="1.6" stroke-linejoin="round"/>
+      <text x="71" y="39" fill="#f0e8ff" font-size="18" font-weight="650">Boss</text>
+      <text x="71" y="57" fill="#a9abc4" font-size="11">Plan · direct · review</text>
+      <path d="M21 82h92M21 91h142" stroke="#707793" stroke-opacity=".55" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <g transform="translate(646 220)">
+      <rect width="184" height="91" rx="16" fill="url(#card)" stroke="#83c5cc" stroke-opacity=".4"/>
+      <rect x="17" y="19" width="35" height="35" rx="12" fill="#203d4b"/>
+      <text x="34.5" y="43" text-anchor="middle" fill="#b4e8ed" font-size="18" font-weight="600">A</text>
+      <text x="65" y="34" fill="#e0edf6" font-size="16" font-weight="600">Worker A</text>
+      <text x="65" y="53" fill="#93a9bf" font-size="11">Develop · test · refine</text>
+      <path d="M19 72h132" stroke="#607e96" stroke-opacity=".45" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <g transform="translate(952 220)">
+      <rect width="184" height="91" rx="16" fill="url(#card)" stroke="#bd9dd5" stroke-opacity=".4"/>
+      <rect x="17" y="19" width="35" height="35" rx="12" fill="#382d4b"/>
+      <text x="34.5" y="43" text-anchor="middle" fill="#e4c7f3" font-size="18" font-weight="600">B</text>
+      <text x="65" y="34" fill="#eae5f6" font-size="16" font-weight="600">Worker B</text>
+      <text x="65" y="53" fill="#a69cbf" font-size="11">Inspect · challenge · improve</text>
+      <path d="M19 72h132" stroke="#8d759d" stroke-opacity=".45" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <g transform="translate(684 349)">
+      <rect width="414" height="37" rx="12" fill="#131c2e" stroke="#4c5672" stroke-opacity=".65"/>
+      <text x="207" y="24" text-anchor="middle" fill="#acbdd2" font-size="12">Brief <tspan fill="#75829d"> → </tspan> Work <tspan fill="#75829d"> → </tspan> Review <tspan fill="#75829d"> → </tspan> Downloads</text>
+    </g>
+  </g>
+</svg>

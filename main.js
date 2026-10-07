@@ -27,7 +27,7 @@ const attachmentStore = new Map();
 const MIME_TYPES = Object.freeze({
   '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
   '.webp': 'image/webp', '.gif': 'image/gif', '.pdf': 'application/pdf',
-  '.txt': 'text/plain', '.md': 'text/markdown', '.csv': 'text/csv',
+  '.txt': 'text/plain', '.md': 'text/markdown', '.csv': 'text/csv', '.tsv': 'text/tab-separated-values',
   '.json': 'application/json'
 });
 const MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024;
@@ -338,7 +338,7 @@ function registerHandlers() {
       title: 'Add source files for both analysts',
       properties: ['openFile', 'multiSelections'],
       filters: [
-        { name: 'Images, PDF, and text', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'pdf', 'txt', 'md', 'csv', 'json'] }
+        { name: 'Images, PDF, and text', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'pdf', 'txt', 'md', 'csv', 'tsv', 'json'] }
       ]
     });
     if (chosen.canceled) return [];

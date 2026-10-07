@@ -1,8 +1,8 @@
 {
   "name": "converge-desktop",
-  "version": "1.8.1",
+  "version": "1.9.9",
   "private": true,
-  "description": "A boss-directed workspace with two ChatGPT workers and verified file exchange",
+  "description": "A desktop project studio with a boss, two workers, saved revisions and local verification",
   "main": "desktop-main.js",
   "author": "Converge",
   "license": "UNLICENSED",
@@ -12,14 +12,16 @@
     "qa:desktop": "node scripts/build-page-preload.js && electron scripts/qa-desktop-cookie.js",
     "qa:boss": "node scripts/build-page-preload.js && electron scripts/qa-boss-workspace.js",
     "qa:boss:packaged": "node scripts/qa-packaged-boss.js",
+    "qa:studio": "node scripts/build-page-preload.js && electron scripts/qa-studio-workspace.js",
+    "qa:studio:packaged": "node scripts/qa-packaged-studio.js",
+    "build:portable": "node scripts/build-page-preload.js && electron-builder --win portable --x64",
     "build:win": "node scripts/build-page-preload.js && electron-builder --win nsis portable --x64",
     "build:mac": "node scripts/build-macos-release.js",
     "verify:mac": "node scripts/verify-macos-release.js"
   },
   "devDependencies": {
     "electron": "44.5.1",
-    "electron-builder": "26.15.3",
-    "pdfjs-dist": "5.6.205"
+    "electron-builder": "26.15.3"
   },
   "build": {
     "appId": "app.converge.desktop",
@@ -31,16 +33,36 @@
       "desktop-main.js",
       "desktop-preload.js",
       "src/platform/desktop-lifecycle.js",
+      "src/platform/studio-desktop.js",
+      "src/studio/workflow.js",
+      "src/studio/document-design.js",
+      "src/studio/project.js",
+      "src/studio-services/index.js",
+      "src/studio-services/identity.js",
+      "src/studio-services/archive.js",
+      "src/studio-services/project-store.js",
+      "src/studio-services/process-runner.js",
+      "src/studio-services/verification-lab.js",
+      "src/studio-services/pdf-worker.js",
+      "src/studio-services/container-tests.js",
+      "src/studio-services/delivery.js",
       "src/browser/cookies.js",
       "src/browser/files.js",
+      "src/browser/file-store.js",
+      "src/browser/upload-transport.js",
       "src/browser/downloads.js",
       "src/browser/desktop-coordinator.js",
       "src/browser/boss-coordinator.js",
+      "src/browser/recovery-policy.js",
       "src/browser/page-preload.js",
       "chrome-extension/background.js",
       "renderer/browser.html",
       "renderer/browser-app.js",
       "renderer/browser.css",
+      "renderer/studio-ui.js",
+      "renderer/studio-ui.css",
+      "renderer/assets/fonts/Manrope-Variable.ttf",
+      "renderer/assets/fonts/Manrope-OFL.txt",
       "renderer/galaxy-scene.js",
       "renderer/galaxy-scene.css",
       "renderer/star-ribbons.js",
@@ -127,5 +149,8 @@
   },
   "engines": {
     "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "pdfjs-dist": "6.4.299"
   }
 }

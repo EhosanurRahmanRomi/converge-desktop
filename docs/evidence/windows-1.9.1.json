@@ -1,0 +1,823 @@
+{
+  "version": "1.9.1",
+  "checkedAt": "2026-10-06T09:04:01.911Z",
+  "platform": "Windows x64",
+  "artifact": {
+    "filename": "Converge-Portable-1.9.1-x64.exe",
+    "bytes": 116352505,
+    "sha256": "bef12e946662014ed0f2e3d451f637b903c60f18b453905820a97e0f3ec5c468",
+    "archiveSha256": "1e27ca7ce9633647f047081d62cda3a1b18a401f932b1ac0161152809353b7bd"
+  },
+  "sourceSuite": {
+    "tests": 566,
+    "passed": 566,
+    "failed": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "durationMs": 267805.8003
+  },
+  "sourceArchiveParity": {
+    "filesCompared": 39,
+    "packageMetadataEqual": true,
+    "allEqual": true,
+    "files": [
+      {
+        "name": "desktop-main.js",
+        "sourceSha256": "888fcd245e3d2432f0b36185dfd4855055ecdc4c6ca5efd3655bc0c0a0ec5509",
+        "packagedSha256": "888fcd245e3d2432f0b36185dfd4855055ecdc4c6ca5efd3655bc0c0a0ec5509"
+      },
+      {
+        "name": "desktop-preload.js",
+        "sourceSha256": "e812cab10d1a12d704aff05aa0e96a6f568d16aade8a8f3b1c5cd415e3d91f7a",
+        "packagedSha256": "e812cab10d1a12d704aff05aa0e96a6f568d16aade8a8f3b1c5cd415e3d91f7a"
+      },
+      {
+        "name": "src/platform/desktop-lifecycle.js",
+        "sourceSha256": "7cb906dc488ebcb2d2190bb4b6060f16bb01d31c4a93f74c2d6cfe8d8f5cc28f",
+        "packagedSha256": "7cb906dc488ebcb2d2190bb4b6060f16bb01d31c4a93f74c2d6cfe8d8f5cc28f"
+      },
+      {
+        "name": "src/platform/studio-desktop.js",
+        "sourceSha256": "99e2c8654d1962661511c7e37c40cc4326ac023fd1e135b5cd196f14d3742883",
+        "packagedSha256": "99e2c8654d1962661511c7e37c40cc4326ac023fd1e135b5cd196f14d3742883"
+      },
+      {
+        "name": "src/studio/workflow.js",
+        "sourceSha256": "83c818d0f82329cd53a551052dfa338e58804786cdff86a43ea36a4a99afc1fb",
+        "packagedSha256": "83c818d0f82329cd53a551052dfa338e58804786cdff86a43ea36a4a99afc1fb"
+      },
+      {
+        "name": "src/studio/project.js",
+        "sourceSha256": "bb691eaa6200d7db7d9aac50ceb6a24bd2b8506c27643478ddb67e4d3d9cdbf7",
+        "packagedSha256": "bb691eaa6200d7db7d9aac50ceb6a24bd2b8506c27643478ddb67e4d3d9cdbf7"
+      },
+      {
+        "name": "src/studio-services/index.js",
+        "sourceSha256": "7947108243ea63007a2a3fe5c49f2742a730be9d67175386ca912aa5502c5a34",
+        "packagedSha256": "7947108243ea63007a2a3fe5c49f2742a730be9d67175386ca912aa5502c5a34"
+      },
+      {
+        "name": "src/studio-services/identity.js",
+        "sourceSha256": "4e8e48ecd9de607abb6d1a30d6db65a04030e7d247ca565838a5f396711aad56",
+        "packagedSha256": "4e8e48ecd9de607abb6d1a30d6db65a04030e7d247ca565838a5f396711aad56"
+      },
+      {
+        "name": "src/studio-services/archive.js",
+        "sourceSha256": "7834188afe2ba40a614c842bbc2e80b7f715035aefe4a1cab75bb8d6a6b84bc4",
+        "packagedSha256": "7834188afe2ba40a614c842bbc2e80b7f715035aefe4a1cab75bb8d6a6b84bc4"
+      },
+      {
+        "name": "src/studio-services/project-store.js",
+        "sourceSha256": "5b8e2566a927b47c5129bd5ddff71ef08af80955afa80c881612dfe33d34322f",
+        "packagedSha256": "5b8e2566a927b47c5129bd5ddff71ef08af80955afa80c881612dfe33d34322f"
+      },
+      {
+        "name": "src/studio-services/process-runner.js",
+        "sourceSha256": "d479b8c018161c8e4132c4f95f66b67292aa5d66530c185ff97fee1f7d0d699f",
+        "packagedSha256": "d479b8c018161c8e4132c4f95f66b67292aa5d66530c185ff97fee1f7d0d699f"
+      },
+      {
+        "name": "src/studio-services/verification-lab.js",
+        "sourceSha256": "1a2567556f2362d3a2b71c57f7c66ac5c3bb0614e73189b7ecde3a1ba7995d03",
+        "packagedSha256": "1a2567556f2362d3a2b71c57f7c66ac5c3bb0614e73189b7ecde3a1ba7995d03"
+      },
+      {
+        "name": "src/studio-services/pdf-worker.js",
+        "sourceSha256": "fb7f34990e6ac3c6a4326164dc3fabaf16d089bb0fd7345c344effbd4ad574cc",
+        "packagedSha256": "fb7f34990e6ac3c6a4326164dc3fabaf16d089bb0fd7345c344effbd4ad574cc"
+      },
+      {
+        "name": "src/studio-services/container-tests.js",
+        "sourceSha256": "30df99b66e21b8635ed6165be308f8e6fac9be6d7ed153bf7b380bc5c9d048f7",
+        "packagedSha256": "30df99b66e21b8635ed6165be308f8e6fac9be6d7ed153bf7b380bc5c9d048f7"
+      },
+      {
+        "name": "src/studio-services/delivery.js",
+        "sourceSha256": "7ade3fa4ea0348dfa8fe7fdbe76e4052f635941402148d4dd1c816dccba98407",
+        "packagedSha256": "7ade3fa4ea0348dfa8fe7fdbe76e4052f635941402148d4dd1c816dccba98407"
+      },
+      {
+        "name": "src/browser/cookies.js",
+        "sourceSha256": "20f79d39b92dfc16876a13251247940b515f929e599f7a1d089dbc8bbc7a30d7",
+        "packagedSha256": "20f79d39b92dfc16876a13251247940b515f929e599f7a1d089dbc8bbc7a30d7"
+      },
+      {
+        "name": "src/browser/files.js",
+        "sourceSha256": "c48f4fff98c7196750b87c18845b4319e996e8536c757ce4313a7e398d294ea5",
+        "packagedSha256": "c48f4fff98c7196750b87c18845b4319e996e8536c757ce4313a7e398d294ea5"
+      },
+      {
+        "name": "src/browser/file-store.js",
+        "sourceSha256": "3c1d8571152ea6118b7fcd90b0053e8694db375556c7a51c46a4bc1007723ffd",
+        "packagedSha256": "3c1d8571152ea6118b7fcd90b0053e8694db375556c7a51c46a4bc1007723ffd"
+      },
+      {
+        "name": "src/browser/upload-transport.js",
+        "sourceSha256": "c8e9fea0faa3b65849d138d5d350047313e3e0f3c150fa40db6b18ed853030f3",
+        "packagedSha256": "c8e9fea0faa3b65849d138d5d350047313e3e0f3c150fa40db6b18ed853030f3"
+      },
+      {
+        "name": "src/browser/downloads.js",
+        "sourceSha256": "22babe0a3489b25e745c116dd4eae4d51933224fc7a524dd969275b3430d4a90",
+        "packagedSha256": "22babe0a3489b25e745c116dd4eae4d51933224fc7a524dd969275b3430d4a90"
+      },
+      {
+        "name": "src/browser/desktop-coordinator.js",
+        "sourceSha256": "64efad8eadc5680e90ab978f0442a972d2688df404fcf4199eb72b0f041b9025",
+        "packagedSha256": "64efad8eadc5680e90ab978f0442a972d2688df404fcf4199eb72b0f041b9025"
+      },
+      {
+        "name": "src/browser/boss-coordinator.js",
+        "sourceSha256": "10da0081fb92a42c6183459e5067a253084f439925c5e92004e9832854216970",
+        "packagedSha256": "10da0081fb92a42c6183459e5067a253084f439925c5e92004e9832854216970"
+      },
+      {
+        "name": "src/browser/page-preload.js",
+        "sourceSha256": "b69ad147333a585ee1eef15ee9da18e92dfef146a7079f6cfa1faeb361a1adbb",
+        "packagedSha256": "b69ad147333a585ee1eef15ee9da18e92dfef146a7079f6cfa1faeb361a1adbb"
+      },
+      {
+        "name": "chrome-extension/background.js",
+        "sourceSha256": "a03160ece1da16376b404b1cd789a729f2705902d584cb8d905ad065c6fff107",
+        "packagedSha256": "a03160ece1da16376b404b1cd789a729f2705902d584cb8d905ad065c6fff107"
+      },
+      {
+        "name": "renderer/browser.html",
+        "sourceSha256": "2aace08f6148771f47aeb62a5da826092fffcc548af12a0505312050789dc29c",
+        "packagedSha256": "2aace08f6148771f47aeb62a5da826092fffcc548af12a0505312050789dc29c"
+      },
+      {
+        "name": "renderer/browser-app.js",
+        "sourceSha256": "144e2d817f0560245c9bdb6bdb67e18e68170a2f43331e9ec5e3210062a35cc3",
+        "packagedSha256": "144e2d817f0560245c9bdb6bdb67e18e68170a2f43331e9ec5e3210062a35cc3"
+      },
+      {
+        "name": "renderer/browser.css",
+        "sourceSha256": "e6fc562aecb024e76fcb59c0e97d510b709e6f0fa66d4101edb2abf50b68f656",
+        "packagedSha256": "e6fc562aecb024e76fcb59c0e97d510b709e6f0fa66d4101edb2abf50b68f656"
+      },
+      {
+        "name": "renderer/studio-ui.js",
+        "sourceSha256": "f264434ace913a049c2e5f5d0d8f01ecb5e26a9745bb81274d4d3f5b0a99e655",
+        "packagedSha256": "f264434ace913a049c2e5f5d0d8f01ecb5e26a9745bb81274d4d3f5b0a99e655"
+      },
+      {
+        "name": "renderer/studio-ui.css",
+        "sourceSha256": "9ef3ea48b15c27b285c3daab2c8c948812877fa59e8f7aae3d277720ac063844",
+        "packagedSha256": "9ef3ea48b15c27b285c3daab2c8c948812877fa59e8f7aae3d277720ac063844"
+      },
+      {
+        "name": "renderer/assets/fonts/Manrope-Variable.ttf",
+        "sourceSha256": "3ae11c49db0455a3cc33e37d380f20fdb8c7f8b41dc07625c177e3d87a9d6ae6",
+        "packagedSha256": "3ae11c49db0455a3cc33e37d380f20fdb8c7f8b41dc07625c177e3d87a9d6ae6"
+      },
+      {
+        "name": "renderer/assets/fonts/Manrope-OFL.txt",
+        "sourceSha256": "58172e0c0fac2cda8a37b348164bb55e44b0e69051e557e92b1d3f6910141f7b",
+        "packagedSha256": "58172e0c0fac2cda8a37b348164bb55e44b0e69051e557e92b1d3f6910141f7b"
+      },
+      {
+        "name": "renderer/galaxy-scene.js",
+        "sourceSha256": "ef5b85ca303f167c72a08a1f4d47a3da670fc1f99cb6914da7742034c4dc0720",
+        "packagedSha256": "ef5b85ca303f167c72a08a1f4d47a3da670fc1f99cb6914da7742034c4dc0720"
+      },
+      {
+        "name": "renderer/galaxy-scene.css",
+        "sourceSha256": "a2e168477702cd25cb11cccdfadbe68ebbfce6a0182766d9a13adcbf2845c55e",
+        "packagedSha256": "a2e168477702cd25cb11cccdfadbe68ebbfce6a0182766d9a13adcbf2845c55e"
+      },
+      {
+        "name": "renderer/star-ribbons.js",
+        "sourceSha256": "c9724874cb9f58975eff08ac4af2bc75c9ea42b9ed38d630850e3c06888cde7d",
+        "packagedSha256": "c9724874cb9f58975eff08ac4af2bc75c9ea42b9ed38d630850e3c06888cde7d"
+      },
+      {
+        "name": "renderer/ghost-v2.png",
+        "sourceSha256": "3416c160be60ad2aaebe23855db0654a7a73ac54dad6fc6ccbb853e073ba754d",
+        "packagedSha256": "3416c160be60ad2aaebe23855db0654a7a73ac54dad6fc6ccbb853e073ba754d"
+      },
+      {
+        "name": "renderer/flower-blossom-v1.png",
+        "sourceSha256": "a644defaa480c166064921a22af8383f3f5e9b47f6f5af42feaa176849deb5d8",
+        "packagedSha256": "a644defaa480c166064921a22af8383f3f5e9b47f6f5af42feaa176849deb5d8"
+      },
+      {
+        "name": "assets/icon.ico",
+        "sourceSha256": "ebc7920f6f2f66e120091b3155de80a6a59ace972f3a153e8cf62ffb7a78c88d",
+        "packagedSha256": "ebc7920f6f2f66e120091b3155de80a6a59ace972f3a153e8cf62ffb7a78c88d"
+      },
+      {
+        "name": "assets/icon.png",
+        "sourceSha256": "416e36aeb88fffd164fc99afb95304bdaaeb4de2bf995de6ce4cb8586528874d",
+        "packagedSha256": "416e36aeb88fffd164fc99afb95304bdaaeb4de2bf995de6ce4cb8586528874d"
+      },
+      {
+        "name": "assets/icon.icns",
+        "sourceSha256": "182f854e1ba9203d10d574207eeed0a00932d9e0862c6a013a53865dfd99c1ee",
+        "packagedSha256": "182f854e1ba9203d10d574207eeed0a00932d9e0862c6a013a53865dfd99c1ee"
+      }
+    ]
+  },
+  "packagedChecks": {
+    "passed": 48,
+    "bossWorkflow": {
+      "checks": 20,
+      "tests": [
+        "Production Windows shell creates three sandboxed isolated native chat views and keeps its browser session in memory.",
+        "Import and Normal OK open exactly three distinct chats with the boss coordinator active.",
+        "A mixed text, valid PDF and PNG source selection reaches all three native file inputs; Reset clears the staged previews and retains the session.",
+        "One native file picker uploads the original source to the boss and both workers.",
+        "The boss writes distinct worker instructions, receives both results and exact generated files every cycle, then both workers verify one final candidate after four improvement cycles.",
+        "The real boss composer accepts an instruction during worker generation, delivers it in the next boss context, and completes the run with no queued message left behind.",
+        "Native Save downloads the actual accepted file and matches the coordinator SHA-256, with the requested corrected values.",
+        "The settings selector applies Horror, Alien, Night, Cyberpunk and Anime backgrounds to all three real chat views.",
+        "Robot, Explorer and Spirit character choices apply without changing the active chat run or its accepted files.",
+        "Clicking the center boss opens and closes its sliding native chat panel while preserving the worker workspace.",
+        "A follow-up reuses all three conversations; a new instruction while the boss generates is queued safely.",
+        "Stop cancels active boss generation and prevents queued instructions from restarting the stopped run.",
+        "Stop also cancels both workers during their concurrent generation, retaining each completed conversation.",
+        "Accelerated localhost-only supervision checks both real active worker bridges repeatedly without stopping or resending their healthy generation. Production keeps its five-minute interval.",
+        "A genuine stopped-thinking header without an answer is recovered only for its exact owned worker; the boss waits for the healthy peer and bottom monitoring shows both observations.",
+        "The recovery boss receives only actual completed peer evidence plus the interruption report, creates fresh useful worker prompts and does not count the abandoned pair as a work cycle.",
+        "After genuine interruption recovery, both workers independently accept one exact final candidate; its actual boss answer, bottom answer, remaining limitation and exported monitoring report all match the completed run.",
+        "Reset clears all three chats without clearing the imported session; Work mode is verified on the fresh boss and worker pages.",
+        "Temporary mode is also verified on all three new chats through its visible page controls.",
+        "Unreadable boss control output receives one format repair, then stops safely without dispatching an invented worker task or clearing the session."
+      ],
+      "supervision": {
+        "acceleratedLocalIntervalMs": 1000,
+        "productionIntervalNote": "The normal production interval remains five minutes; this native integration deliberately accelerates the localhost fixture only.",
+        "healthyChecks": 2,
+        "interruptedRequestId": "b70ee4ee-f599-4ed5-aaa4-40150c680b77:left:de8ff81d-e468-4951-b6aa-cff9fda62421",
+        "healthyRequestId": "b70ee4ee-f599-4ed5-aaa4-40150c680b77:right:bb6cc41a-d7f3-4bde-90d0-287dad6e30db",
+        "recoveryBossRequestId": "b70ee4ee-f599-4ed5-aaa4-40150c680b77:boss:ecdd6e92-d56b-4a01-bb99-de1bdc9b7a46",
+        "recoveryInterruptionReports": [
+          {
+            "side": "left",
+            "requestId": "b70ee4ee-f599-4ed5-aaa4-40150c680b77:left:de8ff81d-e468-4951-b6aa-cff9fda62421",
+            "kind": "work",
+            "diagnostic": "The provider displayed Stopped thinking before delivering a completed response.",
+            "partial_visible_result": "No completed result was delivered for this request. The provider marked its work interrupted.",
+            "at": 1791276298214
+          }
+        ],
+        "recoveryCompletedCycles": 0,
+        "retainedPeerResults": [
+          {
+            "side": "right",
+            "id": "W1"
+          }
+        ],
+        "finalWorkCycles": 4,
+        "finalCandidateId": "C4",
+        "monitoring": "2:44:56 PM · Worker A is still working. This chat is generating a response or has an unsent draft.2:44:56 PM · Worker B is still working. This chat is generating a response or has an unsent draft.2:44:57 PM · Worker A is still working. This chat is generating a response or has an unsent draft.2:44:57 PM · Worker B is still working. This chat is generating a response or has an unsent draft.2:44:58 PM · Worker A response was confirmed interrupted. The provider displayed Stopped thinking before delivering a completed response.2:44:58 PM · Worker B is still working. This chat is generating a response or has an unsent draft.",
+        "finalAnswer": "Worker A refined source in cycle 4. MaximumLoss=20 and FixedLots=0.01; complete file attached.",
+        "bossSummary": "Refined offline source: MaximumLoss=20, FixedLots=0.01. All generated file bytes were checked. This is a transport fixture, not a trading backtest.",
+        "remainingIssues": "Boss limitation · LimitationOffline deterministic responses only; no actual market test.",
+        "exportedReviewSha256": "fe45963df3730559b5313e7f8e6cedeee224aed577c778b9fe824f51f85fabb2",
+        "finalBossContextCount": 7
+      }
+    },
+    "studio": {
+      "checks": 13,
+      "tests": [
+        "Real production shell and sandboxed native chats use an empty in-memory account session.",
+        "The production Electron PDF worker parses and rasterizes a genuine one-page fixture with installed runtime dependencies; this gate uses the lab module directly.",
+        "The shell native source picker transfers the complete original JavaScript bytes to all three browser file inputs.",
+        "Four actual file revision cycles finish with native syntax checks, explicit criteria, and a newly opened worker final audit.",
+        "The real local report binds the candidate SHA-256, passes Node syntax parsing, and keeps unexecuted runtime coverage visibly unverified.",
+        "Native revision preview IPC resolves two identically named files to their distinct exact historical contents.",
+        "The real Studio drawer clears all three native view bounds; closing it restores tall, usable worker chats.",
+        "Shell IPC records found, assigned, fixed and rechecked issue evidence against the selected revision.",
+        "Real save/list/export dialogs persist the original and all four same-name revision byte identities in a portable ZIP without browser session state.",
+        "Native revision restoration selects the actual earlier bytes and invalidates prior final acceptance and tool authority.",
+        "Real manual verification and delivery dialogs export exact restored source bytes, matching report hashes, every content checksum and honest partial completion status.",
+        "Loading the disk project reconstructs original and revision bytes while requiring fresh chat ownership and verification.",
+        "Importing the real exported ZIP and reconnecting new native chats preserves the saved brief and selected revision without resuming stale requests."
+      ],
+      "generatedProgramExecuted": false,
+      "pdfVerification": {
+        "status": "unverified",
+        "candidateId": "PDF-QA",
+        "candidateSha256": "96d5a224ad6d540b629b94eaaa299e579d1eb727b7592e3dd83db16b65900d80",
+        "answerSha256": "a7815f29a6a79fa515417aeaf4a3cd9c633e7c8f370f185360d15653bd784bad",
+        "files": [
+          {
+            "name": "fixture-page.pdf",
+            "mimeType": "application/pdf",
+            "contentSha256": "562ae7c90e37f07f479f053347a9460140938cff92be7cce82f261595a45d565",
+            "byteLength": 440
+          }
+        ],
+        "startedAt": "2026-10-06T08:46:29.787Z",
+        "finishedAt": "2026-10-06T08:46:30.820Z",
+        "testMode": "static",
+        "checks": [
+          {
+            "source": "executed",
+            "candidateSha256": "96d5a224ad6d540b629b94eaaa299e579d1eb727b7592e3dd83db16b65900d80",
+            "id": "candidate-identity",
+            "label": "Exact candidate identity",
+            "status": "passed",
+            "requirementId": "artifact-integrity",
+            "evidence": "Recomputed candidate PDF-QA SHA-256 96d5a224ad6d540b629b94eaaa299e579d1eb727b7592e3dd83db16b65900d80 and 1 exact file identities. Disk-backed files were hashed incrementally.",
+            "files": [
+              {
+                "name": "fixture-page.pdf",
+                "mimeType": "application/pdf",
+                "contentSha256": "562ae7c90e37f07f479f053347a9460140938cff92be7cce82f261595a45d565",
+                "byteLength": 440
+              }
+            ]
+          },
+          {
+            "source": "executed",
+            "candidateSha256": "96d5a224ad6d540b629b94eaaa299e579d1eb727b7592e3dd83db16b65900d80",
+            "fileName": "fixture-page.pdf",
+            "contentSha256": "562ae7c90e37f07f479f053347a9460140938cff92be7cce82f261595a45d565",
+            "byteLength": 440,
+            "id": "pdf-structure:fixture-page.pdf",
+            "label": "PDF page structure",
+            "status": "passed",
+            "evidence": "1 pages parsed. All bounded pages parsed for text and dimensions. Rendering coverage is reported separately.",
+            "requirementId": "artifact-integrity",
+            "exitCode": 0,
+            "timedOut": false
+          },
+          {
+            "source": "executed",
+            "candidateSha256": "96d5a224ad6d540b629b94eaaa299e579d1eb727b7592e3dd83db16b65900d80",
+            "fileName": "fixture-page.pdf",
+            "contentSha256": "562ae7c90e37f07f479f053347a9460140938cff92be7cce82f261595a45d565",
+            "byteLength": 440,
+            "id": "pdf-rendering:fixture-page.pdf",
+            "label": "PDF page rendering",
+            "status": "passed",
+            "evidence": "Rendered 1 of 1 pages to PNG (pages 1; maximum 1,200 pixels per dimension). Rasterization succeeded. Aesthetic quality, clipping, content accuracy and unrendered pages were not reviewed.",
+            "requirementId": "artifact-integrity",
+            "rendering": {
+              "status": "passed",
+              "pagesRendered": 1,
+              "totalPages": 1,
+              "pages": [
+                {
+                  "page": 1,
+                  "width": 150,
+                  "height": 150,
+                  "pngBytes": 513
+                }
+              ],
+              "evidence": "Rendered 1 of 1 pages to PNG (pages 1; maximum 1,200 pixels per dimension). Rasterization succeeded. Aesthetic quality, clipping, content accuracy and unrendered pages were not reviewed."
+            }
+          },
+          {
+            "source": "executed",
+            "candidateSha256": "96d5a224ad6d540b629b94eaaa299e579d1eb727b7592e3dd83db16b65900d80",
+            "id": "execution-coverage",
+            "label": "Program execution and integration tests",
+            "status": "unverified",
+            "evidence": "Static verification mode: generated programs and their tests were not executed. Syntax, structure and identity checks cannot prove runtime behavior or task correctness."
+          }
+        ],
+        "summary": "3 passed, 0 failed, 1 unverified. Checks apply only to this candidate and these exact bytes."
+      }
+    },
+    "largeUpload": {
+      "checks": 6,
+      "tests": [
+        "Production shell opens three sandboxed pages using only isolated offline fixture data.",
+        "One sidebar click reads a 100 MB PDF through the native picker and confirms delivery to the whole team.",
+        "All three real Chromium file inputs independently hash the exact 100 MB source bytes and receive it once.",
+        "Actual Electron page-request IPC uses sequential 1 MB chunks and one commit per page.",
+        "The sidebar returns to ready state and all three page bridges remain responsive after upload.",
+        "The completed large-file workspace closes and disposes its three owned browser pages cleanly."
+      ],
+      "source": {
+        "name": "large-source-100MiB.pdf",
+        "bytes": 104857600,
+        "sha256": "16b1ec921c7e34a55590faaa9f5d3e68cb4a77e2bc6d9868a90eb361c2c4a151"
+      },
+      "receipts": {
+        "left": {
+          "receipts": [
+            {
+              "name": "large-source-100MiB.pdf",
+              "bytes": 104857600,
+              "mimeType": "application/pdf",
+              "sha256": "16b1ec921c7e34a55590faaa9f5d3e68cb4a77e2bc6d9868a90eb361c2c4a151"
+            }
+          ],
+          "changes": 1,
+          "errors": [],
+          "selected": [
+            {
+              "name": "large-source-100MiB.pdf",
+              "size": 104857600,
+              "type": "application/pdf"
+            }
+          ]
+        },
+        "right": {
+          "receipts": [
+            {
+              "name": "large-source-100MiB.pdf",
+              "bytes": 104857600,
+              "mimeType": "application/pdf",
+              "sha256": "16b1ec921c7e34a55590faaa9f5d3e68cb4a77e2bc6d9868a90eb361c2c4a151"
+            }
+          ],
+          "changes": 1,
+          "errors": [],
+          "selected": [
+            {
+              "name": "large-source-100MiB.pdf",
+              "size": 104857600,
+              "type": "application/pdf"
+            }
+          ]
+        },
+        "boss": {
+          "receipts": [
+            {
+              "name": "large-source-100MiB.pdf",
+              "bytes": 104857600,
+              "mimeType": "application/pdf",
+              "sha256": "16b1ec921c7e34a55590faaa9f5d3e68cb4a77e2bc6d9868a90eb361c2c4a151"
+            }
+          ],
+          "changes": 1,
+          "errors": [],
+          "selected": [
+            {
+              "name": "large-source-100MiB.pdf",
+              "size": 104857600,
+              "type": "application/pdf"
+            }
+          ]
+        }
+      },
+      "scope": "Actual production Electron/native picker/generated preload/file-input transport only. ChatGPT service acceptance, live model responses and large-file downloads are not tested here."
+    },
+    "fullSizeUpload": {
+      "checks": 9,
+      "tests": [
+        "Production shell opens three sandboxed chat pages with remote access blocked.",
+        "The real native chooser rejects 512 MiB plus one byte before any page transfer.",
+        "Stop cancels a transfer after three actual IPC chunks, aborts staging promptly and commits or submits no source.",
+        "A real 512 MiB PDF reaches all three Chromium File inputs once; independent streamed SHA-256 matches exact source bytes.",
+        "Production transfer uses bounded ordered 1 MiB IPC chunks; independent receipt reads never call full-file arrayBuffer.",
+        "The shell stays responsive during reading, staging and provider processing, with Cancel usable independently and ready controls restored.",
+        "Native project Save and Load recover the exact 512 MiB source through opaque disk capabilities after the original file is deleted.",
+        "Native project Export streams a portable ZIP whose independently hashed 512 MiB source matches saved and reloaded bytes.",
+        "The large-file workspace disposes all owned pages and closes cleanly."
+      ],
+      "source": {
+        "name": "large-source-512MiB.pdf",
+        "bytes": 536870912,
+        "sha256": "ca9f2f04ca57b6002548c6cdd4ff824e49a5fc4896dd57a6e77b57eaf255ed04"
+      },
+      "receipts": {
+        "left": {
+          "receipts": [
+            {
+              "name": "large-source-512MiB.pdf",
+              "bytes": 536870912,
+              "mimeType": "application/pdf",
+              "sha256": "ca9f2f04ca57b6002548c6cdd4ff824e49a5fc4896dd57a6e77b57eaf255ed04"
+            }
+          ],
+          "changes": 1,
+          "errors": [],
+          "selected": [
+            {
+              "name": "large-source-512MiB.pdf",
+              "size": 536870912,
+              "type": "application/pdf"
+            }
+          ],
+          "fullFileReads": 0,
+          "maxReceiptChunkBytes": 786432
+        },
+        "right": {
+          "receipts": [
+            {
+              "name": "large-source-512MiB.pdf",
+              "bytes": 536870912,
+              "mimeType": "application/pdf",
+              "sha256": "ca9f2f04ca57b6002548c6cdd4ff824e49a5fc4896dd57a6e77b57eaf255ed04"
+            }
+          ],
+          "changes": 1,
+          "errors": [],
+          "selected": [
+            {
+              "name": "large-source-512MiB.pdf",
+              "size": 536870912,
+              "type": "application/pdf"
+            }
+          ],
+          "fullFileReads": 0,
+          "maxReceiptChunkBytes": 786432
+        },
+        "boss": {
+          "receipts": [
+            {
+              "name": "large-source-512MiB.pdf",
+              "bytes": 536870912,
+              "mimeType": "application/pdf",
+              "sha256": "ca9f2f04ca57b6002548c6cdd4ff824e49a5fc4896dd57a6e77b57eaf255ed04"
+            }
+          ],
+          "changes": 1,
+          "errors": [],
+          "selected": [
+            {
+              "name": "large-source-512MiB.pdf",
+              "size": 536870912,
+              "type": "application/pdf"
+            }
+          ],
+          "fullFileReads": 0,
+          "maxReceiptChunkBytes": 786432
+        }
+      },
+      "independentHashes": {
+        "left": {
+          "bytes": 536870912,
+          "sha256": "ca9f2f04ca57b6002548c6cdd4ff824e49a5fc4896dd57a6e77b57eaf255ed04",
+          "batches": 683,
+          "maxReturnBytes": 786432
+        },
+        "right": {
+          "bytes": 536870912,
+          "sha256": "ca9f2f04ca57b6002548c6cdd4ff824e49a5fc4896dd57a6e77b57eaf255ed04",
+          "batches": 683,
+          "maxReturnBytes": 786432
+        },
+        "boss": {
+          "bytes": 536870912,
+          "sha256": "ca9f2f04ca57b6002548c6cdd4ff824e49a5fc4896dd57a6e77b57eaf255ed04",
+          "batches": 683,
+          "maxReturnBytes": 786432
+        }
+      },
+      "heartbeat": {
+        "count": 4097,
+        "maxGapMs": 94.30000001192093,
+        "phases": [
+          "reading",
+          "staging",
+          "processing"
+        ],
+        "stopMisses": [],
+        "progressReports": 615
+      },
+      "memory": {
+        "initial": {
+          "rss": 103686144,
+          "heapTotal": 7888896,
+          "heapUsed": 5670960,
+          "external": 5089079,
+          "arrayBuffers": 0
+        },
+        "peakRss": 902213632,
+        "peakHeapUsed": 43835928,
+        "peakArrayBuffers": 0
+      },
+      "uploadDurationMs": 202521,
+      "totalDurationMs": 277264,
+      "projectDurationMs": 63559,
+      "cancellation": {
+        "wire": {
+          "left": {
+            "begins": 1,
+            "chunks": 4,
+            "commits": 0,
+            "aborts": 1,
+            "deliveredChunks": 3,
+            "maxChunkLength": 1048576,
+            "maxWireBytes": 1048752,
+            "receivedCharacters": 4194304
+          },
+          "right": {
+            "begins": 0,
+            "chunks": 0,
+            "commits": 0,
+            "aborts": 0,
+            "deliveredChunks": 0,
+            "maxChunkLength": 0,
+            "maxWireBytes": 0,
+            "receivedCharacters": 0
+          },
+          "boss": {
+            "begins": 0,
+            "chunks": 0,
+            "commits": 0,
+            "aborts": 0,
+            "deliveredChunks": 0,
+            "maxChunkLength": 0,
+            "maxWireBytes": 0,
+            "receivedCharacters": 0
+          }
+        },
+        "heldChunk": {
+          "side": "left",
+          "offset": 3145728,
+          "dataLength": 1048576
+        },
+        "cancelDurationMs": 113,
+        "cancelControl": {
+          "visible": true,
+          "enabled": true,
+          "label": "■ Stop"
+        }
+      },
+      "projectEvidence": {
+        "id": "5ef1bb0a-2057-4bee-a126-ccec7f58095d",
+        "reloadHash": {
+          "bytes": 536870912,
+          "sha256": "ca9f2f04ca57b6002548c6cdd4ff824e49a5fc4896dd57a6e77b57eaf255ed04",
+          "maximumRead": 786432
+        },
+        "members": [
+          {
+            "name": "project.json",
+            "bytes": 2271,
+            "sha256": "7629374195639638aa6c8add56e841994f55beec707421a552c54b46e3dd75e5",
+            "maximumRead": 2271
+          },
+          {
+            "name": "blobs/ca9f2f04ca57b6002548c6cdd4ff824e49a5fc4896dd57a6e77b57eaf255ed04.blob",
+            "bytes": 536870912,
+            "sha256": "ca9f2f04ca57b6002548c6cdd4ff824e49a5fc4896dd57a6e77b57eaf255ed04",
+            "maximumRead": 786432
+          }
+        ],
+        "archive": {
+          "bytes": 536873531,
+          "sha256": "0cec1894e3ff172ab8b80652f6b36ad961c458edf10cb67dc8a40badcf0b09fb"
+        },
+        "originalDeletedBeforeReload": true
+      },
+      "scope": "Actual production Electron/native picker/generated preload/512 MiB file-input transport and streamed project recovery/export only. ChatGPT service acceptance, live model responses and large-file downloads are not tested here."
+    }
+  },
+  "actualPortable": {
+    "passed": true,
+    "firstPaint": true,
+    "visible": true,
+    "version": "1.9.1",
+    "sidebar": true,
+    "bossDrawer": true,
+    "progress": true,
+    "closed": true,
+    "viewsDisposed": true,
+    "closeCleanupCompleted": true
+  },
+  "authenticatedTask": {
+    "passed": true,
+    "checkedAt": "2026-10-06T08:59:34.991Z",
+    "model": "GPT-5.6 Sol High",
+    "sources": [
+      {
+        "name": "verification-input.txt",
+        "mimeType": "text/plain",
+        "byteLength": 39,
+        "contentSha256": "3da316f35654d2b72bbd254edd3cd23293a71a1535b4bc2567f9788bb7235c85"
+      },
+      {
+        "name": "verification-record.pdf",
+        "mimeType": "application/pdf",
+        "byteLength": 759,
+        "contentSha256": "b67e637b176e43e1eaeb55f48e9faccc978241132306360c2d505b4a9bcc8827"
+      },
+      {
+        "name": "verification-chart.png",
+        "mimeType": "image/png",
+        "byteLength": 29677,
+        "contentSha256": "1ad5d571cff63d2ee86d7772c3e475fa2ccafa176f41ca7bc0845fb3f000c6a1"
+      }
+    ],
+    "sourceBytes": 39,
+    "workCycles": 4,
+    "workerResults": 11,
+    "candidateId": "C1",
+    "candidateSha256": "633c61c63b6f4f09140f2044dd4cd5d99b19a7cc70af2400e1d692624cda957e",
+    "acceptedBy": {
+      "left": "C1",
+      "right": "C1"
+    },
+    "finalFile": {
+      "name": "summary.json",
+      "byteLength": 105,
+      "sha256": "9b1be091ba33d09e92a86f4f3d625308e8fbec0da384aa50ede7aa0160a91c82",
+      "actual": {
+        "count": 5,
+        "sum": 86,
+        "mean": 17.2,
+        "min": -5,
+        "max": 42,
+        "recorded_sum_correct": false
+      },
+      "expected": {
+        "count": 5,
+        "sum": 86,
+        "mean": 17.2,
+        "min": -5,
+        "max": 42,
+        "recorded_sum_correct": false
+      }
+    },
+    "independentArithmeticPassed": true,
+    "freshAudit": "passed",
+    "nativeVerification": {
+      "status": "unverified",
+      "checks": [
+        {
+          "id": "candidate-identity",
+          "label": "Exact candidate identity",
+          "status": "passed",
+          "source": "executed",
+          "evidence": "Recomputed candidate C1 SHA-256 633c61c63b6f4f09140f2044dd4cd5d99b19a7cc70af2400e1d692624cda957e and 1 exact file identities. Disk-backed files were hashed incrementally.",
+          "requirementId": "artifact-integrity",
+          "candidateSha256": "633c61c63b6f4f09140f2044dd4cd5d99b19a7cc70af2400e1d692624cda957e"
+        },
+        {
+          "id": "json-parse:summary.json",
+          "label": "JSON parsing",
+          "status": "passed",
+          "source": "executed",
+          "evidence": "Strict UTF-8 decoding and JSON parsing succeeded.",
+          "requirementId": "artifact-integrity",
+          "candidateSha256": "633c61c63b6f4f09140f2044dd4cd5d99b19a7cc70af2400e1d692624cda957e"
+        },
+        {
+          "id": "execution-coverage",
+          "label": "Program execution and integration tests",
+          "status": "unverified",
+          "source": "executed",
+          "evidence": "Static verification mode: generated programs and their tests were not executed. Syntax, structure and identity checks cannot prove runtime behavior or task correctness.",
+          "candidateSha256": "633c61c63b6f4f09140f2044dd4cd5d99b19a7cc70af2400e1d692624cda957e"
+        }
+      ]
+    },
+    "freshAuditModel": {
+      "selectedMenuLabel": "Latest",
+      "displayedPower": "5.6 High",
+      "proSelected": false,
+      "note": "Initial boss and workers explicitly selected GPT-5.6 Sol High. The fresh provider conversation displayed Latest with 5.6 High."
+    },
+    "retainedRevisions": 1,
+    "taskScope": "Small matching numeric text, PDF and chart image inputs, with a generated downloadable JSON artifact; not a complex research or one-hour provider task.",
+    "supervision": {
+      "checks": 0,
+      "events": [],
+      "scope": "Observed short authenticated run only; does not establish a one-hour provider turn."
+    }
+  },
+  "authenticatedFollowup": {
+    "passed": true,
+    "checkedAt": "2026-10-06T09:02:40.496Z",
+    "task": "What is 4 + 6?",
+    "model": "GPT-5.6 Sol High",
+    "workCycles": 1,
+    "independentWorkers": true,
+    "newRunIdentity": true,
+    "finalVerificationRounds": 1,
+    "verificationSteps": 2,
+    "sameTabIds": true,
+    "earlierFileRequirementCleared": true,
+    "finalAnswer": "Candidate answer: 4 + 6 = 10.Verification: counting forward six steps from 4 gives 5, 6, 7, 8, 9, 10, so the result is 10.Requirement review: task-complete — met. The exact question is answered directly and correctly. The issue ledger is empty, and no defect was found.",
+    "expectedInteger": 10,
+    "priorFreshAuditDisabled": true
+  },
+  "chromeProfileAccessed": false,
+  "cookieValuesInReports": false,
+  "productionDependencyAudit": {
+    "reportedVulnerabilities": 0
+  },
+  "limits": {
+    "perFileBytes": 536870912,
+    "batchBytes": 1073741824,
+    "projectDistinctBytes": 3221225472,
+    "sourceFiles": 5,
+    "providerImageBytes": 20971520,
+    "spreadsheetAdvisoryBytes": 52428800,
+    "providerUploadMs": 1800000,
+    "nativeDownloadMs": 1800000,
+    "uploadAcknowledgementMs": 2100000,
+    "fiveFileExportMs": 10800000,
+    "requestMs": 7200000,
+    "runMs": 86400000,
+    "supervisionMs": 300000
+  },
+  "practicalScope": [
+    "The authenticated test used matching text, PDF and PNG sources totaling 30475 bytes and a 105-byte JSON output; it does not establish arbitrary task quality.",
+    "The actual 512 MiB and 100 MiB native uploads used controlled offline provider previews. Exact bytes reached all three Chromium file inputs; actual remote service acceptance at these sizes and full-size output downloads were not tested.",
+    "Memory bounds measure the main-process heap and ArrayBuffers during the 512 MiB gate; they do not measure total Chromium renderer/GPU or whole-system memory.",
+    "Long-response deadlines and five-minute recovery use controlled-clock/localhost checks; no real one-hour provider run was tested.",
+    "Docker is unavailable; generated program execution remains unverified. Static parsers do not execute generated code on the host.",
+    "Portable is unsigned. The installer, Mac artifacts and GitHub publication are deferred for this update.",
+    "Model agreement and local file checks do not guarantee universal answer accuracy or profitability."
+  ]
+}

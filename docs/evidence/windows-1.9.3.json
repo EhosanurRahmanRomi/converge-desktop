@@ -1,0 +1,115 @@
+{
+  "version": "1.9.3",
+  "platform": "win32",
+  "arch": "x64",
+  "checkedAt": "2026-10-06T17:12:51.237Z",
+  "artifact": {
+    "name": "Converge-Portable-1.9.3-x64.exe",
+    "byteLength": 463976076,
+    "sha256": "84ab93db967b35b86e5aebf63cf62bd4f00f82ee34e2bfe71bf207970306288b",
+    "archiveSha256": "fcb1d94885399c7c67b3ebef458700814f4e68aab7714ba4c84fb291869e2e8e",
+    "compression": "store"
+  },
+  "source": {
+    "passed": 579,
+    "failed": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "actualChromiumSubmissionCases": 55,
+    "delayedVerificationCases": 5
+  },
+  "packaged": {
+    "boss": {
+      "passed": true,
+      "count": 20,
+      "offlineOnly": true,
+      "checks": [
+        "Production Windows shell creates three sandboxed isolated native chat views and keeps its browser session in memory.",
+        "Import and Normal OK open exactly three distinct chats with the boss coordinator active.",
+        "A mixed text, valid PDF and PNG source selection reaches all three native file inputs; Reset clears the staged previews and retains the session.",
+        "One native file picker uploads the original source to the boss and both workers.",
+        "The boss writes distinct worker instructions, receives both results and exact generated files every cycle, then both workers verify one final candidate after four improvement cycles.",
+        "The real boss composer accepts an instruction during worker generation, delivers it in the next boss context, and completes the run with no queued message left behind.",
+        "Native Save downloads the actual accepted file and matches the coordinator SHA-256, with the requested corrected values.",
+        "The settings selector applies Horror, Alien, Night, Cyberpunk and Anime backgrounds to all three real chat views.",
+        "Robot, Explorer and Spirit character choices apply without changing the active chat run or its accepted files.",
+        "Clicking the center boss opens and closes its sliding native chat panel while preserving the worker workspace.",
+        "A follow-up reuses all three conversations; a new instruction while the boss generates is queued safely.",
+        "Stop cancels active boss generation and prevents queued instructions from restarting the stopped run.",
+        "Stop also cancels both workers during their concurrent generation, retaining each completed conversation.",
+        "Accelerated localhost-only supervision checks both real active worker bridges repeatedly without stopping or resending their healthy generation. Production keeps its five-minute interval.",
+        "A genuine stopped-thinking header without an answer is recovered only for its exact owned worker; the boss waits for the healthy peer and bottom monitoring shows both observations.",
+        "The recovery boss receives only actual completed peer evidence plus the interruption report, creates fresh useful worker prompts and does not count the abandoned pair as a work cycle.",
+        "After genuine interruption recovery, both workers independently accept one exact final candidate; its actual boss answer, bottom answer, remaining limitation and exported monitoring report all match the completed run.",
+        "Reset clears all three chats without clearing the imported session; Work mode is verified on the fresh boss and worker pages.",
+        "Temporary mode is also verified on all three new chats through its visible page controls.",
+        "Unreadable boss control output receives one format repair, then stops safely without dispatching an invented worker task or clearing the session."
+      ]
+    },
+    "studio": {
+      "passed": true,
+      "count": 13,
+      "offlineOnly": true,
+      "checks": [
+        "Real production shell and sandboxed native chats use an empty in-memory account session.",
+        "The production Electron PDF worker parses and rasterizes a genuine one-page fixture with installed runtime dependencies; this gate uses the lab module directly.",
+        "The shell native source picker transfers the complete original JavaScript bytes to all three browser file inputs.",
+        "Four actual file revision cycles finish with native syntax checks, explicit criteria, and a newly opened worker final audit.",
+        "The real local report binds the candidate SHA-256, passes Node syntax parsing, and keeps unexecuted runtime coverage visibly unverified.",
+        "Native revision preview IPC resolves two identically named files to their distinct exact historical contents.",
+        "The real Studio drawer clears all three native view bounds; closing it restores tall, usable worker chats.",
+        "Shell IPC records found, assigned, fixed and rechecked issue evidence against the selected revision.",
+        "Real save/list/export dialogs persist the original and all four same-name revision byte identities in a portable ZIP without browser session state.",
+        "Native revision restoration selects the actual earlier bytes and invalidates prior final acceptance and tool authority.",
+        "Real manual verification and delivery dialogs export exact restored source bytes, matching report hashes, every content checksum and honest partial completion status.",
+        "Loading the disk project reconstructs original and revision bytes while requiring fresh chat ownership and verification.",
+        "Importing the real exported ZIP and reconnecting new native chats preserves the saved brief and selected revision without resuming stale requests."
+      ]
+    },
+    "parityFiles": 39
+  },
+  "nativeStartup": {
+    "passed": true,
+    "visibleShell": true,
+    "firstPaint": true,
+    "sidebarToggleVerified": true,
+    "bossDrawerVerified": true,
+    "progressSectionVerified": true,
+    "didClose": true,
+    "embeddedViewsDisposed": true,
+    "isolatedSession": true
+  },
+  "live": {
+    "completedModelTask": true,
+    "finalAcceptance": true,
+    "model": "GPT-5.6 High",
+    "status": "Authenticated short file task completed automatically through boss planning, both real worker files, exact candidate relay, executed file integrity, two accepted final checks, a new-conversation final audit and boss finish.",
+    "actualFileName": "live-transfer-check.txt",
+    "actualFileByteLength": 11,
+    "actualFileSha256": "e73b383b35bf33458f23af80b58f0c4143964558149196efe956c8ee5d2fd49d",
+    "candidateId": "C1",
+    "candidateSha256": "764220546ef62d36c9b1a4c8fda71a30f7f63104c0c416ff395c9e9800799b7f",
+    "finalWorkerChecks": 2,
+    "freshAudit": "accepted",
+    "observedUiStatus": "Boss completed the worker checks",
+    "longDocumentTaskCompleted": false,
+    "longDocumentTest": {
+      "status": "failed",
+      "observedAt": "2026-10-06T18:14:39.941Z",
+      "sourceByteLength": 121029744,
+      "sourceDeliveryToAllThreeChats": true,
+      "sourcePdfFilesInScope": 17,
+      "sourcePagesInScope": 74,
+      "workerBSourceAuditReturned": true,
+      "workerBDurationReported": "38m25s",
+      "actualCompletedPdf": false,
+      "outputCapturedByCoordinator": false,
+      "defects": [
+        "A temporary Connection interrupted / Waiting for the complete answer status was still labelled Generating.",
+        "The TSV audit attachment was unsupported and halted the whole exchange, cancelling the other worker."
+      ],
+      "nextRepairVersion": "1.9.4"
+    }
+  },
+  "publication": "Local portable only; no GitHub upload, installer or macOS build in this repair."
+}

@@ -1,2 +1,4 @@
 # Preserve the reviewed source and regression-fixture bytes on every platform.
 * -text
+# Preserve the bundled upstream licence bytes used by the approved portable.
+renderer/assets/fonts/Manrope-OFL.txt -whitespace

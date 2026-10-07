@@ -31,16 +31,16 @@ if (!process.versions.electron) {
 
   const apiFixture = `<script>
     const ready={ready:true,authenticated:true,busy:false,temporary:false,work:false};
-    window.fixture={starts:[],state:{status:'setup',phase:'setup',chatMode:'normal',tabIds:{left:10,right:11},pages:{left:{...ready},right:{...ready}},attachments:{status:'none',names:[]},transcript:[],issues:[]},listener:null};
+    window.fixture={starts:[],attachCalls:[],state:{status:'setup',phase:'setup',chatMode:'normal',tabIds:{left:10,right:11},pages:{left:{...ready},right:{...ready}},studio:{settings:{documentDesign:{profile:'academic',notes:'',referenceNames:[]}}},attachments:{status:'none',names:[]},transcript:[],issues:[]},listener:null};
     fixture.finish=()=>{fixture.state={...fixture.state,status:'agreed',phase:'done',answer:'Reviewed result',candidate:{id:'C1',text:'Reviewed result'},pages:{left:{...ready},right:{...ready}}};fixture.listener(fixture.state)};
     fixture.reset=()=>{fixture.state={...fixture.state,status:'setup',question:'',requireFiles:false,attachments:{status:'none',names:[]},transcript:[],issues:[]};fixture.listener(fixture.state)};
     window.convergeBrowser={
       bootstrap:async()=>({hasSession:true,version:'fixture',state:fixture.state}),setBounds:async()=>({ok:true}),
       onState:fn=>{fixture.listener=fn},onPage:()=>{},
-      attachFiles:async()=>{fixture.state={...fixture.state,attachments:{status:'attached',names:['source.pdf']}};fixture.listener(fixture.state);return{ok:true,state:fixture.state}},
+      attachFiles:async payload=>{fixture.attachCalls.push(payload||{});if(payload?.fileRole==='style-reference'){const name=fixture.referenceName||'GOOD Design.pdf';const combined=[...new Set([...(fixture.state.attachments.names||[]),name])];if(fixture.deferReference){fixture.deferReference=false;fixture.state={...fixture.state,attachments:{status:'uploading',names:combined,referenceNames:[...(fixture.state.studio.settings.documentDesign.referenceNames||[]),name],fileRole:'style-reference'}};fixture.listener(fixture.state);return new Promise(resolve=>{fixture.cancelReference=()=>resolve({ok:true,canceled:true,state:fixture.state})})}const partial=fixture.partialReference;fixture.partialReference=false;fixture.state={...fixture.state,attachments:{status:partial?'partial':'attached',names:combined,referenceNames:[...(fixture.state.studio.settings.documentDesign.referenceNames||[]),name],fileRole:'style-reference'}};if(!partial)fixture.state.studio.settings.documentDesign.referenceNames=[...new Set([...(fixture.state.studio.settings.documentDesign.referenceNames||[]),name])]}else fixture.state={...fixture.state,attachments:{status:'attached',names:[...new Set([...(fixture.state.attachments.names||[]),'source.pdf'])],fileRole:'content-source'}};fixture.listener(fixture.state);return{ok:true,state:fixture.state}},
       start:async payload=>{fixture.starts.push({...payload});fixture.state={...fixture.state,status:'running',phase:'drafts',question:payload.question,runId:'run-'+fixture.starts.length,requireFiles:payload.requireFiles,relayMedia:payload.relayMedia,sourceNames:[...(fixture.state.attachments?.names||[])],attachments:{status:'none',names:[]}};fixture.listener(fixture.state);return{ok:true,state:fixture.state}},
       expand:async()=>({ok:true}),copy:async()=>({ok:true}),saveText:async()=>({ok:true}),
-      resetChats:async()=>({ok:true}),clearSession:async()=>({ok:true}),stop:async()=>({ok:true})
+      resetChats:async()=>({ok:true}),clearSession:async()=>({ok:true}),stop:async()=>{fixture.state={...fixture.state,attachments:{status:'none',names:[]}};fixture.listener(fixture.state);fixture.cancelReference?.();fixture.cancelReference=null;return{ok:true,state:fixture.state}}
     };
     </script>`;
 
@@ -54,10 +54,10 @@ if (!process.versions.electron) {
     const galaxyJs = await fs.readFile(path.join(root, 'renderer', 'galaxy-scene.js'), 'utf8');
     const ribbonJs = await fs.readFile(path.join(root, 'renderer', 'star-ribbons.js'), 'utf8');
     const galaxyCss = await fs.readFile(path.join(root, 'renderer', 'galaxy-scene.css'), 'utf8');
-    const themeAssets = Object.fromEntries(await Promise.all(['ghost-v2.png', 'flower-blossom-v1.png'].map(async name => [name, await fs.readFile(path.join(root, 'renderer', name))])));
+    const themeAssets = Object.fromEntries(await Promise.all(['ghost-v2.png', 'flower-blossom-v1.png', 'studio-ui.js', 'studio-ui.css', 'assets/fonts/Manrope-Variable.ttf'].map(async name => [name, await fs.readFile(path.join(root, 'renderer', name))])));
     const server = http.createServer((request, response) => {
-      const themeAsset = themeAssets[request.url?.slice(1)];
-      if (themeAsset) { response.setHeader('Content-Type', 'image/png'); response.end(themeAsset); return; }
+      const assetName = request.url?.slice(1); const themeAsset = themeAssets[assetName];
+      if (themeAsset) { response.setHeader('Content-Type', assetName.endsWith('.png') ? 'image/png' : assetName.endsWith('.css') ? 'text/css' : assetName.endsWith('.ttf') ? 'font/ttf' : 'text/javascript'); response.end(themeAsset); return; }
       if (request.url === '/api-fixture.js') { response.setHeader('Content-Type', 'text/javascript'); response.end(fixtureJs); }
       else if (request.url === '/browser-app.js') { response.setHeader('Content-Type', 'text/javascript'); response.end(js); }
       else if (request.url === '/browser.css') { response.setHeader('Content-Type', 'text/css'); response.end(css); }
@@ -80,8 +80,31 @@ if (!process.versions.electron) {
     };
     try {
       await win.loadURL(`http://127.0.0.1:${server.address().port}/`); await idle();
+      await evaluate("document.getElementById('attachStyleReferences').click()"); await idle();
+      assert.deepEqual(await evaluate('fixture.attachCalls.at(-1)'), { fileRole: 'style-reference' });
+      assert.equal(await evaluate("document.getElementById('requireFiles').checked"), false, 'A style-only PDF reference demanded a revised output file');
+      assert.match(await evaluate("document.getElementById('styleReferenceStatus').textContent"), /appearance only.*\s+GOOD Design\.pdf/);
+      assert.doesNotMatch(await evaluate("document.getElementById('fileStatus').textContent"), /GOOD Design\.pdf/, 'Appearance references are presented as task content');
+      await evaluate("fixture.state.attachments={status:'none',names:[]};fixture.listener(fixture.state);fixture.deferReference=true;document.getElementById('attachStyleReferences').click()");
+      await evaluate('new Promise(resolve=>setTimeout(resolve,100))');
+      assert.equal(await evaluate("document.getElementById('attachStyleReferences').disabled"), true);
+      assert.equal(await evaluate("document.getElementById('attachFiles').disabled"), true);
+      assert.equal(await evaluate("document.getElementById('headerStop').hidden"), false);
+      assert.equal(await evaluate("document.getElementById('headerStop').disabled"), false, 'Style uploads cannot be canceled');
+      await evaluate("document.getElementById('headerStop').click()"); await idle();
+      await evaluate("fixture.partialReference=true;document.getElementById('attachStyleReferences').click()"); await idle();
+      assert.equal(await evaluate('fixture.state.attachments.status'), 'partial');
+      assert.equal(await evaluate("document.getElementById('requireFiles').checked"), false);
+      await attach();
+      assert.deepEqual(await evaluate('fixture.attachCalls.at(-1)'), { fileRole: 'style-reference' }, 'Rechecking a pending reference changed it into a content upload');
+      assert.equal(await evaluate("document.getElementById('requireFiles').checked"), false);
+      await evaluate("fixture.state.attachments={status:'none',names:[]};fixture.listener(fixture.state)");
       await attach();
       assert.equal(await evaluate("document.getElementById('requireFiles').checked"), true);
+      await evaluate("fixture.referenceName='Other Design.pdf';document.getElementById('attachStyleReferences').click()"); await idle();
+      assert.equal(await evaluate("document.getElementById('requireFiles').checked"), true, 'Adding an appearance reference cleared the existing content PDF requirement');
+      assert.match(await evaluate("document.getElementById('fileStatus').textContent"), /Content files\s+source\.pdf/);
+      assert.doesNotMatch(await evaluate("document.getElementById('fileStatus').textContent"), /Other Design\.pdf/);
       await start('Correct the source PDF');
       assert.equal(await evaluate('fixture.starts.at(-1).requireFiles'), true);
       assert.equal(await evaluate("document.getElementById('requireFiles').checked"), true, 'The active PDF run must still show its committed setting');

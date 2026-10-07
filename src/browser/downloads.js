@@ -10,13 +10,15 @@ const SIDES = new Set(['left', 'right', 'boss']);
 const TYPES = new Set(Object.values(MIME));
 const GENERIC_TYPES = new Set(['', 'application/octet-stream', 'binary/octet-stream']);
 const ZIP_NATIVE_TYPES = new Set(['application/zip', 'application/x-zip-compressed']);
+const DOWNLOAD_TIMEOUT_MS = 30 * 60 * 1000;
+const FILE_LIMIT_MB = MAX_FILE_BYTES / (1024 * 1024);
 
 /**
  * Captures the download caused by one authorized, visible file click in an
  * embedded ChatGPT page. It never opens a URL or reads a Chrome profile.
  * Temporary paths are generated here; page-provided paths are never used.
  */
-function createDownloadBroker({ browserSession, sideForContents, authorize, tempRoot } = {}) {
+function createDownloadBroker({ browserSession, sideForContents, authorize, tempRoot, ingestFile } = {}) {
   if (!browserSession?.on || !browserSession?.removeListener || typeof sideForContents !== 'function' || typeof authorize !== 'function') {
     throw new TypeError('The native download broker requires a session and authorization callbacks.');
   }
@@ -65,6 +67,7 @@ function createDownloadBroker({ browserSession, sideForContents, authorize, temp
   }
   function fail(job, message) {
     if (job.settled) return;
+    job.ingestController?.abort(new Error(String(message?.message || message)));
     const item = job.item;
     settle(job, errorResult(message));
     // Cancel only the item captured for this authorized job.
@@ -84,9 +87,17 @@ function createDownloadBroker({ browserSession, sideForContents, authorize, temp
     if (state !== 'completed') return fail(job, 'The visible file download was canceled or interrupted.');
     try {
       const stat = await fs.stat(job.filename);
-      if (!stat.isFile() || stat.size < 1 || stat.size > MAX_FILE_BYTES) throw new Error('The downloaded file is empty or exceeds the 12 MB limit.');
+      if (!stat.isFile() || stat.size < 1 || stat.size > MAX_FILE_BYTES) throw new Error(`The downloaded file is empty or exceeds the ${FILE_LIMIT_MB} MB limit.`);
+      if (stat.size > 4 * 1024 * 1024) {
+        job.ingestController = new AbortController();
+        const importOwnedFile = ingestFile || require('./file-store').importFile;
+        const file = await importOwnedFile(job.filename, { name: job.payload.name, mimeType: job.payload.mimeType,
+          signal: job.ingestController.signal });
+        if (!job.settled) settle(job, { ok: true, ...file });
+        return;
+      }
       const bytes = await fs.readFile(job.filename);
-      if (!bytes.length || bytes.length > MAX_FILE_BYTES) throw new Error('The downloaded file is empty or exceeds the 12 MB limit.');
+      if (!bytes.length || bytes.length > MAX_FILE_BYTES) throw new Error(`The downloaded file is empty or exceeds the ${FILE_LIMIT_MB} MB limit.`);
       validateTextSource(job.payload.name, job.payload.mimeType, bytes);
       if (job.settled) return;
       settle(job, { ok: true, mimeType: job.payload.mimeType, base64: bytes.toString('base64') });
@@ -106,20 +117,25 @@ function createDownloadBroker({ browserSession, sideForContents, authorize, temp
       // Keep our inert source representation canonical and bind this alias to
       // the selected Python filename; filename and Unicode checks still apply.
       const pythonSourceType = type === 'text/x-python' && job.payload.mimeType === 'text/plain' && /\.py$/i.test(job.payload.name);
+      const texSourceType = ['text/x-tex', 'application/x-tex'].includes(type) && job.payload.mimeType === 'text/plain' && /\.tex$/i.test(job.payload.name);
+      // Some provider TSV downloads use text/plain. This alias belongs only
+      // to the selected .tsv file; preserve its canonical type and bytes.
+      const tsvTextType = type === 'text/plain' && job.payload.mimeType === MIME.tsv && /\.tsv$/i.test(job.payload.name);
       if (type === 'text/html' || type === 'application/xhtml+xml' || (type !== job.payload.mimeType && !GENERIC_TYPES.has(type) &&
-          !pythonSourceType &&
+          !pythonSourceType && !texSourceType && !tsvTextType &&
           !(job.payload.mimeType === 'application/zip' && ZIP_NATIVE_TYPES.has(type)) &&
           !(type === 'application/zip' && job.payload.mimeType.includes('openxmlformats')))) {
         throw new Error('The visible download returned an unexpected file type.');
       }
       const nativeName = item.getFilename?.();
-      if (nativeName && safeFilename(nativeName, job.payload.mimeType).toLowerCase() !== safeFilename(job.payload.name, job.payload.mimeType).toLowerCase()) {
+      if (job.payload.mimeType === MIME.tsv && String(nativeName || '').toLowerCase() !== job.payload.name.toLowerCase() ||
+          nativeName && safeFilename(nativeName, job.payload.mimeType).toLowerCase() !== safeFilename(job.payload.name, job.payload.mimeType).toLowerCase()) {
         throw new Error('The downloaded filename does not match the selected candidate file.');
       }
-      if (Number(item.getTotalBytes()) > MAX_FILE_BYTES) throw new Error('The download exceeds the 12 MB file limit.');
+      if (Number(item.getTotalBytes()) > MAX_FILE_BYTES) throw new Error(`The download exceeds the ${FILE_LIMIT_MB} MB file limit.`);
       job.updated = () => {
         if (Number(item.getReceivedBytes()) > MAX_FILE_BYTES || Number(item.getTotalBytes()) > MAX_FILE_BYTES) {
-          fail(job, 'The download exceeds the 12 MB file limit.');
+          fail(job, `The download exceeds the ${FILE_LIMIT_MB} MB file limit.`);
         }
       };
       job.done = (_doneEvent, state) => { void completed(job, state); };
@@ -149,9 +165,10 @@ function createDownloadBroker({ browserSession, sideForContents, authorize, temp
         const extension = Object.keys(MIME).find((key) => MIME[key] === job.payload.mimeType);
         job.filename = path.join(ownedDirectory, `${token}.${extension}`);
         job.phase = 'waiting';
-        // This includes the site's asynchronous blob preparation after the
-        // verified click, not just the eventual file transfer.
-        job.timer = setTimeout(() => fail(job, 'The visible file download did not finish within 45 seconds.'), 45_000);
+        // This includes asynchronous preparation after the verified click,
+        // transfer and byte validation. Large allowed files can legitimately
+        // need several minutes; a provider that never responds stays bounded.
+        job.timer = setTimeout(() => fail(job, 'The visible file download did not finish within 30 minutes.'), DOWNLOAD_TIMEOUT_MS);
         job.timer.unref?.();
         return { ok: true, token };
       } catch (error) {

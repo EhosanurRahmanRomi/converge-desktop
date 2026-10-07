@@ -26,7 +26,7 @@ if (!process.versions.electron) {
   const http = require('node:http');
   const { app, BrowserWindow, ipcMain } = require('electron');
   app.setPath('userData', path.join(app.getPath('temp'), `converge-page-appearance-qa-${process.pid}`));
-  const html = `<!doctype html><html><head><meta charset="utf-8"><style>
+  const html = `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'none'; img-src 'self' data:"><style>
     html,body{margin:0;width:100%;height:100%;background:#0e0e0e;color:#f5f5f5;font-family:Arial}
     #root,main,.scroll-layout{height:100%;width:100%;background:#0e0e0e}
     article{height:180px;padding:16px;box-sizing:border-box}
@@ -36,7 +36,7 @@ if (!process.versions.electron) {
     #send{width:60px;height:36px}#file{position:absolute;left:10px;top:0}
   </style></head><body><div id="root"><main><div class="scroll-layout">
     <article data-testid="conversation-turn-1"><div data-message-author-role="assistant">
-    A readable answer.<pre><code>const verified = true;</code></pre><a id="download" href="/file.txt" download="answer.txt">Download answer</a>
+    <p id="prose">A readable answer with a consistent professional typeface.</p><pre><code id="syntax">const verified = true;</code></pre><a id="download" href="/file.txt" download="answer.txt">Download answer</a>
     </div></article>
     <form onsubmit="event.preventDefault();window.clicked=(window.clicked||0)+1">
     <input id="file" type="file" multiple><div id="prompt-textarea" contenteditable="true" role="textbox"></div><button id="send" type="submit">Send</button>
@@ -44,7 +44,11 @@ if (!process.versions.electron) {
     <script>window.originalText=document.querySelector('article').textContent;window.clicked=0;</script>
   </body></html>`;
   async function run() {
-    const server = http.createServer((_request, response) => { response.setHeader('Content-Type', 'text/html;charset=utf-8'); response.end(html); });
+    const fontRequests = [];
+    const server = http.createServer((request, response) => {
+      if (/\.(?:ttf|otf|woff2?)(?:[?]|$)/i.test(request.url || '')) fontRequests.push(request.url);
+      response.setHeader('Content-Type', 'text/html;charset=utf-8'); response.end(html);
+    });
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     const origin = `http://127.0.0.1:${server.address().port}`;
     ipcMain.handle('converge:page-event', () => ({ ok: true }));
@@ -62,6 +66,30 @@ if (!process.versions.electron) {
       await win.loadURL(origin);
       await win.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
       await settle(250);
+      // The production preload loads a BufferSource font under the remote
+      // page's CSP. Check loaded bytes and actual rendered glyphs; merely
+      // naming a CSS family would pass while displaying a fallback typeface.
+      await evaluate(`new Promise((resolve,reject)=>{const began=performance.now();const check=()=>{if(Array.from(document.fonts).some(face=>face.family==='Converge Manrope'&&face.status==='loaded'))return resolve();if(performance.now()-began>4000)return reject(Error('Bundled native page font did not load under font-src none'));setTimeout(check,20)};check()})`);
+      await evaluate('document.fonts.ready');
+      for (const selector of ['body', '#prose', '#prompt-textarea', '#send', '#file']) assert.match(await evaluate(`getComputedStyle(document.querySelector(${JSON.stringify(selector)})).fontFamily`), /Converge Manrope/);
+      for (const selector of ['pre', '#syntax']) {
+        const family = await evaluate(`getComputedStyle(document.querySelector(${JSON.stringify(selector)})).fontFamily`);
+        assert.match(family, /monospace|Cascadia|Consolas/); assert.doesNotMatch(family, /Manrope/, 'Native code lost its monospace font');
+      }
+      await win.webContents.debugger.sendCommand('DOM.enable'); await win.webContents.debugger.sendCommand('CSS.enable');
+      async function glyphFonts(selector) {
+        const document = await win.webContents.debugger.sendCommand('DOM.getDocument');
+        const { nodeId } = await win.webContents.debugger.sendCommand('DOM.querySelector', { nodeId: document.root.nodeId, selector });
+        assert.ok(nodeId, `Font proof target is missing: ${selector}`);
+        return (await win.webContents.debugger.sendCommand('CSS.getPlatformFontsForNode', { nodeId })).fonts;
+      }
+      for (const selector of ['#prose', '#send']) {
+        const fonts = await glyphFonts(selector);
+        assert.ok(fonts.some(font => font.isCustomFont && /Manrope/i.test(font.familyName) && font.glyphCount > 0), `The actual native ${selector} glyphs use a fallback font: ${JSON.stringify(fonts)}`);
+      }
+      const codeFonts = await glyphFonts('#syntax');
+      assert.ok(codeFonts.some(font => font.glyphCount > 0 && !/Manrope/i.test(font.familyName)), 'Code has no native monospace glyphs');
+      assert.equal(fontRequests.length, 0, 'The embedded font unexpectedly makes a network request');
       assert.equal(await evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches"), false);
       assert.equal(await evaluate("document.querySelectorAll('#converge-page-galaxy').length"), 1);
       assert.equal(await evaluate("document.querySelector('#converge-page-galaxy').getAttribute('aria-hidden')"), 'true');
@@ -79,6 +107,8 @@ if (!process.versions.electron) {
       await evaluate("document.querySelector('#prompt-textarea').focus();document.execCommand('insertText',false,'Native editor still works');document.querySelector('#send').click()");
       assert.equal(await evaluate('window.clicked'), 1);
       assert.equal(await evaluate("document.querySelector('#prompt-textarea').textContent"), 'Native editor still works');
+      const editorFonts = await glyphFonts('#prompt-textarea');
+      assert.ok(editorFonts.some(font => font.isCustomFont && /Manrope/i.test(font.familyName) && font.glyphCount > 0), 'The actual native editor glyphs use a fallback font');
       assert.equal(await evaluate("document.querySelector('#download').getAttribute('download')"), 'answer.txt');
 
       let state = await isolated('globalThis.ConvergePageAppearance.create().diagnostics()');
@@ -90,7 +120,9 @@ if (!process.versions.electron) {
       state = await isolated('globalThis.ConvergePageAppearance.create().diagnostics()');
       assert.equal(state.frames, firstFrame, 'The chat backdrop wastes work animating beneath conversation content');
       if (process.env.CONVERGE_PAGE_GALAXY_CAPTURE === '1') {
+        await fs.mkdir(path.join(__dirname, '..', '.design'), { recursive: true });
         await fs.writeFile(path.join(__dirname, '..', '.design', 'embedded-chat-galaxy.png'), (await win.webContents.capturePage()).toPNG());
+        await fs.writeFile(path.join(__dirname, '..', '.design', 'native-page-manrope.png'), (await win.webContents.capturePage()).toPNG());
       }
       win.webContents.send('converge:page-effects', { paused: true }); await settle(80);
       assert.equal((await isolated('globalThis.ConvergePageAppearance.create().diagnostics()')).effectsSuppressed, true);
@@ -147,7 +179,10 @@ if (!process.versions.electron) {
       await settle(150);
       assert.equal(await evaluate("document.querySelector('#converge-page-galaxy')"), null);
       assert.equal(await evaluate("document.documentElement.classList.contains('converge-galaxy-page')"), false);
+      assert.equal(await evaluate("Array.from(document.fonts).some(face=>face.family==='Converge Manrope')"), false, 'Bundled font escaped the exact authorized origin');
+      assert.equal(await evaluate("getComputedStyle(document.querySelector('#prose')).fontFamily"), 'Arial');
       process.stdout.write('PASS: embedded galaxy cosmetic isolation and input regressions\n');
+      process.stdout.write('PASS: native Manrope font bytes and glyphs load under font-src none without requests; prose, buttons and editor use Manrope, code stays monospace, and other origins retain their native font.\n');
     } finally {
       win.destroy(); server.close(); ipcMain.removeHandler('converge:page-event');
     }

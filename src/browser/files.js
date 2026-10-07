@@ -8,19 +8,35 @@ const TEXT_SOURCE_EXTENSIONS = Object.freeze([
   'mq5', 'mqh', 'mq4', 'py', 'js', 'mjs', 'cjs', 'ts', 'tsx', 'jsx',
   'c', 'cc', 'cpp', 'h', 'hpp', 'cs', 'java', 'go', 'rs', 'rb', 'php', 'sql',
   'html', 'css', 'xml', 'yaml', 'yml', 'toml', 'sh', 'ps1', 'r', 'swift', 'kt', 'kts',
-  'ini', 'cfg', 'log', 'set',
+  'ini', 'cfg', 'log', 'set', 'tex',
 ]);
 const MIME = Object.freeze({
   png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif',
-  pdf: 'application/pdf', txt: 'text/plain', md: 'text/markdown', csv: 'text/csv', json: 'application/json',
+  pdf: 'application/pdf', txt: 'text/plain', md: 'text/markdown', csv: 'text/csv', tsv: 'text/tab-separated-values', json: 'application/json',
   zip: 'application/zip',
   ...Object.fromEntries(TEXT_SOURCE_EXTENSIONS.map((extension) => [extension, 'text/plain'])),
   docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
 });
-const MAX_FILE_BYTES = 12 * 1024 * 1024;
-const MAX_TOTAL_BYTES = 24 * 1024 * 1024;
+// Large files use private disk blobs and bounded IPC chunks. The provider
+// still enforces its own format, token, storage and account limits.
+const MAX_FILE_BYTES = 512 * 1024 * 1024;
+const MAX_TOTAL_BYTES = 1024 * 1024 * 1024;
+const MAX_INLINE_FILE_BYTES = 128 * 1024 * 1024;
+const FILE_LIMIT_MESSAGE = 'File limit is 512 MB each and 1 GB total.';
+const PROVIDER_IMAGE_BYTES = 20 * 1024 * 1024;
+const PROVIDER_SPREADSHEET_BYTES = 50 * 1024 * 1024;
+
+function providerUploadAdvice(name, mimeType, byteLength) {
+  if (String(mimeType).startsWith('image/') && byteLength > PROVIDER_IMAGE_BYTES) {
+    throw new Error(`${name}: ChatGPT supports images up to 20 MB. Resize or compress this image before uploading.`);
+  }
+  if (['csv', 'tsv', 'xlsx', 'xls'].includes(filenameExtension(name)) && byteLength > PROVIDER_SPREADSHEET_BYTES) {
+    return 'ChatGPT limits spreadsheets to approximately 50 MB depending on row size. Split this spreadsheet if the provider rejects it.';
+  }
+  return '';
+}
 
 function filenameExtension(name) {
   return String(name || '').match(/\.([a-z0-9]+)$/i)?.[1]?.toLowerCase() || '';
@@ -63,11 +79,14 @@ function validateTextSource(name, mimeType, bytes) {
   // archive validation, so ZIP input is checked before either chat receives it.
   validateZipArchive(name, mimeType, bytes);
   const extension = filenameExtension(name);
+  if ((extension === 'tsv' || mimeType === MIME.tsv) && (extension !== 'tsv' || mimeType !== MIME.tsv)) {
+    throw new Error('The TSV file type does not match its filename.');
+  }
   if (TEXT_SOURCE_EXTENSIONS.includes(extension) && mimeType !== 'text/plain') {
     throw new Error('The source file type does not match its filename.');
   }
-  if (mimeType !== 'text/plain') return;
-  if (MIME[extension] !== 'text/plain') {
+  if (!isReadableTextMime(mimeType)) return;
+  if (MIME[extension] !== mimeType) {
     throw new Error('The text source file has an unsupported extension.');
   }
   if (bytes === undefined) return;
@@ -81,6 +100,10 @@ function validateTextSource(name, mimeType, bytes) {
   if (/[\x00-\x08\x0b\x0e-\x1f\x7f]/.test(text)) {
     throw new Error('The source file contains binary data instead of readable text.');
   }
+}
+
+function isReadableTextMime(mimeType) {
+  return mimeType === 'text/plain' || mimeType === MIME.tsv;
 }
 
 function safeFilename(value, mimeType) {
@@ -115,16 +138,29 @@ function validateExport(media, exported) {
       throw new Error('The candidate file changed. Run its review again before saving it.');
     }
     ids.add(file.id);
+    if (file.blobId !== undefined) {
+      const { storedFile } = require('./file-store');
+      const stored = storedFile(file);
+      validateTextSource(stored.name, stored.mimeType);
+      total += stored.byteLength;
+      if (total > MAX_TOTAL_BYTES) throw new Error(FILE_LIMIT_MESSAGE);
+      if (expected.contentSha256 !== undefined || expected.byteLength !== undefined) {
+        if (stored.contentSha256 !== expected.contentSha256 || stored.byteLength !== expected.byteLength) {
+          throw new Error('The candidate file contents changed after review. Review it again before saving.');
+        }
+      }
+      return { ...stored, name: safeFilename(stored.name, stored.mimeType) };
+    }
     if (typeof file.base64 !== 'string' || !file.base64 ||
-        file.base64.length > Math.ceil(MAX_FILE_BYTES / 3) * 4 || file.base64.length % 4 !== 0 ||
+        file.base64.length > Math.ceil(MAX_INLINE_FILE_BYTES / 3) * 4 || file.base64.length % 4 !== 0 ||
         !/^[A-Za-z0-9+/]+={0,2}$/.test(file.base64)) {
-      throw new Error('The candidate file data is invalid or exceeds 12 MB.');
+      throw new Error('The candidate file data is invalid or exceeds the 128 MB file limit.');
     }
     const bytes = Buffer.from(file.base64, 'base64');
     total += bytes.length;
-    if (!bytes.length || bytes.length > MAX_FILE_BYTES || total > MAX_TOTAL_BYTES ||
+    if (!bytes.length || bytes.length > MAX_INLINE_FILE_BYTES || total > MAX_TOTAL_BYTES ||
         bytes.toString('base64') !== file.base64) {
-      throw new Error('File limit is 12 MB each and 24 MB total.');
+      throw new Error(FILE_LIMIT_MESSAGE);
     }
     validateTextSource(file.name, file.mimeType, bytes);
     // Recompute the identity in the host. A cached URL or descriptor cannot
@@ -141,4 +177,5 @@ function validateExport(media, exported) {
   });
 }
 
-module.exports = { MIME, TEXT_SOURCE_EXTENSIONS, MAX_FILE_BYTES, MAX_TOTAL_BYTES, safeFilename, validateExport, validateTextSource, validateZipArchive };
+module.exports = { MIME, TEXT_SOURCE_EXTENSIONS, MAX_FILE_BYTES, MAX_TOTAL_BYTES, MAX_INLINE_FILE_BYTES, FILE_LIMIT_MESSAGE,
+  PROVIDER_IMAGE_BYTES, PROVIDER_SPREADSHEET_BYTES, providerUploadAdvice, safeFilename, validateExport, validateTextSource, validateZipArchive, isReadableTextMime };

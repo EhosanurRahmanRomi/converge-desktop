@@ -6,6 +6,28 @@ const path = require('node:path');
 const cpuName = value => value === 0x0100000c ? 'arm64' : value === 0x01000007 ? 'x64' : `cpu-${value.toString(16)}`;
 const versionString = value => `${value >>> 16}.${(value >>> 8) & 255}.${value & 255}`;
 
+// Release coverage is checked independently of whatever happens to be listed
+// in the builder manifest, so an accidentally omitted studio module cannot
+// pass source parity by simply disappearing from the comparison set.
+const REQUIRED_RUNTIME_FILES = Object.freeze([
+  'desktop-main.js', 'desktop-preload.js', 'src/platform/desktop-lifecycle.js', 'src/platform/studio-desktop.js',
+  'src/studio/workflow.js', 'src/studio/document-design.js', 'src/studio/project.js',
+  'src/studio-services/index.js', 'src/studio-services/identity.js', 'src/studio-services/archive.js',
+  'src/studio-services/project-store.js', 'src/studio-services/process-runner.js', 'src/studio-services/verification-lab.js',
+  'src/studio-services/pdf-worker.js', 'src/studio-services/container-tests.js', 'src/studio-services/delivery.js',
+  'src/browser/boss-coordinator.js', 'src/browser/recovery-policy.js', 'src/browser/file-store.js',
+  'src/browser/upload-transport.js', 'src/browser/downloads.js', 'src/browser/files.js', 'src/browser/page-preload.js',
+  'renderer/browser-app.js', 'renderer/browser.html', 'renderer/studio-ui.js', 'renderer/studio-ui.css',
+  'renderer/assets/fonts/Manrope-Variable.ttf', 'renderer/assets/fonts/Manrope-OFL.txt',
+]);
+
+function validateRuntimeCoverage(metadata) {
+  assert.ok(Array.isArray(metadata?.build?.files), 'A runtime packaging manifest is required.');
+  for (const filename of REQUIRED_RUNTIME_FILES) assert.ok(metadata.build.files.includes(filename), `Release manifest omits required runtime ${filename}.`);
+  assert.match(metadata.dependencies?.['pdfjs-dist'] || '', /^\d+\.\d+\.\d+$/, 'The production PDF parser dependency must have an exact version.');
+  return REQUIRED_RUNTIME_FILES;
+}
+
 function readThinMachO(bytes, offset = 0, length = bytes.length) {
   assert.ok(offset >= 0 && length >= 32 && offset + length <= bytes.length, 'Truncated Mach-O slice.');
   const magic = bytes.subarray(offset, offset + 4).toString('hex');
@@ -131,4 +153,4 @@ function readIcns(bytes) {
   return chunks;
 }
 
-module.exports = { readMachO, isMachO, validateZipEntry, validateSymlinkTarget, readIcns };
+module.exports = { readMachO, isMachO, validateZipEntry, validateSymlinkTarget, readIcns, validateRuntimeCoverage, REQUIRED_RUNTIME_FILES };

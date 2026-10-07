@@ -104,7 +104,7 @@ function fixture({ privacy = 'selected', onSend, setup, composerMode = 'default'
     if (selector.includes('send-button')) return sendAppearsAfterText && !composer.value ? [] : [send];
     if (selector.includes('input[type="file"]')) return state.fileInput ? [state.fileInput] : [];
     if (selector.includes('img, [role="img"]')) return state.previews;
-    if (selector.includes('[aria-busy="true"]')) return state.uploadBusy ? [new FakeElement('DIV')] : [];
+    if (selector.includes('[aria-busy="true"]')) return state.uploadBusy ? [new FakeElement('DIV', '', { 'data-upload-state': 'uploading' })] : [];
     return [];
   } };
   composer.form = form;
@@ -175,7 +175,9 @@ function fixture({ privacy = 'selected', onSend, setup, composerMode = 'default'
     location: { href: 'https://chatgpt.com/' },
     HTMLTextAreaElement: FakeTextArea,
     DataTransfer: class { constructor() { this.files = []; this.items = { add: (file) => this.files.push(file) }; } },
-    File: class { constructor(parts, name, options) { this.parts = parts; this.name = name; this.type = options.type; } },
+    Blob,
+    File: class { constructor(parts, name, options) { this.parts = parts; this.name = name; this.type = options.type;
+      this.blob = new Blob(parts); this.size = this.blob.size; } slice(...args) { return this.blob.slice(...args); } },
     Event: class { constructor(type, options) { this.type = type; this.options = options; } },
     atob: (value) => Buffer.from(value, 'base64').toString('binary'),
     btoa: (value) => Buffer.from(value, 'binary').toString('base64'),
@@ -249,7 +251,7 @@ function providerRejectedTurn(users, message, { role = '', parent = null } = {})
   return { failure, scope, retryClicks: () => retryClicks };
 }
 
-test('a provider too-long rejection on the owned submitted turn stops promptly even while generation stays busy and never retries', async () => {
+test('a provider too-long rejection retains its owned request for a smaller boss continuation without Stop or retry', async () => {
   let widget, sendClicks = 0;
   const page = fixture({ onSend({ text, state, addUser }) {
     sendClicks += 1;
@@ -258,31 +260,52 @@ test('a provider too-long rejection on the owned submitted turn stops promptly e
   } });
   const request = { runId: 'provider-too-long', requestId: 'too-long-submitted', text: 'Review this full candidate.' };
   assert.equal((await page.bridge.sendPrompt(request)).ok, true);
-  const error = await waitFor(() => page.messages.find(message => message.type === 'ERROR'), 700);
-  assert.match(error.error, /rejected.*too long.*automatic exchange has stopped/i);
-  assert.match(error.error, /shorter review payload.*no second submission/i);
-  assert.equal(error.runId, request.runId);assert.equal(error.requestId, request.requestId);
+  await waitFor(() => page.bridge.inspect().interrupted, 700);
+  const status = page.bridge.inspect();
+  assert.match(status.reason, /too long.*smaller focused continuation/i);
+  assert.equal(status.interruptionKind, 'too-long');
+  assert.equal(status.activeRequestId, request.requestId);
   assert.equal(sendClicks, 1);assert.equal(widget.retryClicks(), 0);
   assert.equal(page.messages.some(message => message.type === 'REPLY'), false);
   assert.equal(page.state.users.length, 1, 'The submitted chat turn must be retained.');
-  assert.equal(page.bridge.inspect().busy, false);
+  assert.equal(page.bridge.inspect().busy, true);
+  assert.equal(page.state.stopClicks, 0);
+  page.state.generating = false;
+  assert.equal(page.bridge.inspect().interrupted, true);
+  page.bridge.cancel({ ...request, cancelRun: false, stopGeneration: false });
   assert.equal((await page.bridge.sendPrompt(request)).ok, false, 'The same rejected request must not be submitted again.');
   assert.equal(sendClicks, 1);
 });
 
-test('a fresh provider response-generation alert for the owned turn fails without an automatic retry', async () => {
-  let widget;
+test('a fresh provider response-generation alert keeps the owned request for supervision without Stop or retry', async () => {
+  let widget, sendClicks = 0;
   const page = fixture({ onSend({ text, state, addUser }) {
-    widget = providerRejectedTurn([addUser(text)], 'There was an error generating a response. Please try again.', { role: 'alert' });
+    sendClicks += 1;
+    const user = addUser(text);
+    widget = providerRejectedTurn([user], 'There was an error generating a response. Please try again.', { role: 'alert' });
+    user.compareDocumentPosition = element => element === widget.failure ? 4 : 0;
+    const userClosest = user.closest.bind(user);
+    user.closest = selector => selector.includes('article[data-testid') ? widget.scope : userClosest(selector);
+    widget.failure.closest = selector => selector.includes('article[data-testid') ? widget.scope : selector.includes('[role="alert"]') ? widget.failure : null;
     state.generating = true;
   } });
   const request = { runId: 'provider-response-error', requestId: 'generation-alert', text: 'Review the candidate.' };
   assert.equal((await page.bridge.sendPrompt(request)).ok, true);
-  const error = await waitFor(() => page.messages.find(message => message.type === 'ERROR'), 700);
-  assert.match(error.error, /error generating.*no automatic retry/i);
+  await waitFor(() => page.bridge.inspect().interrupted, 700);
+  const waiting = page.bridge.inspect();
+  assert.equal(waiting.interruptionKind, 'generation-error');
+  assert.equal(waiting.awaitingProviderIdle, true);
+  assert.match(waiting.reason, /error generating.*partial response is not a completed result/i);
+  assert.equal(page.state.stopClicks, 0);
+  assert.equal(sendClicks, 1);
   assert.equal(widget.retryClicks(), 0);
   assert.equal(page.state.users.length, 1);
-  assert.equal(page.messages.some(message => message.type === 'REPLY'), false);
+  assert.equal(page.messages.some(message => ['REPLY', 'ERROR'].includes(message.type)), false);
+  page.state.generating = false;
+  assert.equal(page.bridge.inspect().interrupted, true);
+  assert.equal(page.bridge.inspect().awaitingProviderIdle, false);
+  page.bridge.cancel({ ...request, cancelRun: false, stopGeneration: false });
+  assert.equal(page.state.stopClicks, 0);
 });
 
 test('an older rejected message in shared history cannot fail the newest request', async () => {
@@ -330,7 +353,7 @@ test('Stop wins over a late provider rejection and cannot emit a second failure 
   assert.equal(page.messages.some(message => ['REPLY', 'ERROR'].includes(message.type)), false);
 });
 
-test('the live rejection leaf in a fresh page-level alert stops the owned request even outside turn wrappers', async () => {
+test('the live too-long rejection in a fresh page-level alert is supervised even outside turn wrappers', async () => {
   let alertLeaf = null;
   const page = fixture({ onSend({ text, state, addUser }) {
     addUser(text);state.generating = true;
@@ -340,10 +363,11 @@ test('the live rejection leaf in a fresh page-level alert stops the owned reques
   const query = page.document.querySelectorAll.bind(page.document);
   page.document.querySelectorAll = selector => selector.startsWith('[role="alert"]') ? alertLeaf ? [alertLeaf] : [] : query(selector);
   assert.equal((await page.bridge.sendPrompt({ runId: 'outside-turn-alert', requestId: 'owned-alert', text: 'A candidate review.' })).ok, true);
-  const error = await waitFor(() => page.messages.find(message => message.type === 'ERROR'), 700);
-  assert.match(error.error, /rejected.*too long.*no second submission/i);
+  await waitFor(() => page.bridge.inspect().interrupted, 700);
+  assert.match(page.bridge.inspect().reason, /too long.*smaller focused continuation/i);
   assert.equal(page.state.users.length, 1);
-  assert.equal(page.state.stopClicks, 1);
+  assert.equal(page.state.stopClicks, 0);
+  page.bridge.cancel({ runId: 'outside-turn-alert', requestId: 'owned-alert', cancelRun: false, stopGeneration: false });
 });
 
 test('a preexisting page-level rejection alert cannot fail a newly submitted request', async () => {
@@ -556,11 +580,12 @@ test('a source PDF removed after upload stops before filling or sending; filenam
   await waitFor(() => page.messages.find((message) => message.type === 'REPLY'));
 });
 
-test('source receipt names are distinct and capped at the complete fifteen-file boss bundle', async () => {
-  const names = Array.from({ length: 15 }, (_, index) => `source-${index + 1}.pdf`);
-  for (const expectedSourceNames of [names, [...names, 'source-16.pdf'], ['source-1.pdf', 'source-1.pdf']]) {
+test('source receipt names are distinct and capped at fifteen normal files plus three text context files', async () => {
+  const names = [...Array.from({ length: 15 }, (_, index) => `source-${index + 1}.pdf`),
+    'CONVERGE_RESULT_W1_REPLY.txt', 'CONVERGE_RESULT_W2_REPLY.txt', 'CONVERGE_CANDIDATE_C1_ANSWER.txt'];
+  for (const expectedSourceNames of [names, [...names, 'source-19.pdf'], ['source-1.pdf', 'source-1.pdf']]) {
     let sends = 0;
-    const page = fixture({ setup({ form }) { form.innerText = [...names, 'source-16.pdf'].join('\n'); },
+    const page = fixture({ setup({ form }) { form.innerText = [...names, 'source-19.pdf'].join('\n'); },
       onSend({ text, addUser, addAssistant }) { sends += 1; addUser(text); addAssistant('Every source reviewed.'); } });
     const result = await page.bridge.sendPrompt({ runId: `source-limit-${expectedSourceNames.length}`, requestId: 'request',
       text: 'Inspect all attachments.', expectedSourceNames });
@@ -622,7 +647,8 @@ test('only relays a new completed assistant turn after the submitted user turn',
   page.addUser('Older question');
   page.addAssistant('Older answer');
   const ack = await page.bridge.sendPrompt({ runId: 'run-1', requestId: 'req-1', text: 'Check this answer' });
-  assert.deepEqual(ack, { ok: true });
+  assert.equal(ack.ok, true);
+  assert.equal(ack.observationUrl, 'https://chatgpt.com/');
   const reply = await waitFor(() => page.messages.find((message) => message.type === 'REPLY'));
   assert.deepEqual({ runId: reply.runId, requestId: reply.requestId, text: reply.text },
     { runId: 'run-1', requestId: 'req-1', text: 'complete reply' });
@@ -1156,6 +1182,44 @@ test('a thumbnail is not ready while an upload progress indicator is visible', a
   assert.deepEqual(await upload, { ok: true, attached: 1 });
 });
 
+for (const image of [false, true]) test(`a legacy ${image ? 'thumbnail' : 'plain filename'} with a generic Loading spinner cannot acknowledge or send early`, async () => {
+  let stillUploading = true, sends = 0, finished = false;
+  const page = fixture({ options: { uploadTimeoutMs: 300, attachmentSettleMs: 20, sendSettleMs: 5 },
+    setup({ state, form, composer }) {
+      const original = form.querySelectorAll.bind(form);
+      const spinner = new FakeElement('SPAN', 'Loading', { 'aria-busy': 'true', role: 'progressbar', class: 'animate-spin' });
+      const filename = new FakeElement('SPAN', 'source.txt');
+      const thumbnail = new FakeElement('IMG');
+      const preview = new FakeElement('DIV');
+      spinner.parentElement = preview; preview.parentElement = form;
+      preview.contains = node => node === spinner || node === filename || node === thumbnail;
+      preview.querySelectorAll = selector => selector.includes('img, [role="img"]') ? image ? [thumbnail] : []
+        : selector.includes('[title]') ? image ? [] : [filename] : [];
+      form.contains = node => node === composer || node === preview || preview.contains(node);
+      form.querySelectorAll = selector => selector.includes('[aria-busy="true"]')
+        ? stillUploading && state.fileInput.files?.length ? [spinner] : [] : original(selector);
+      state.fileInput = new FakeElement('INPUT');
+      state.fileInput.dispatchEvent = () => {
+        if (image) state.previews.push(thumbnail);
+        else form.innerText = 'source.txt';
+        return true;
+      };
+    }, onSend({ text, addUser, addAssistant }) {
+      assert.equal(stillUploading, false, 'Send must wait for the actual upload indicator to finish.');
+      sends += 1; addUser(text); addAssistant('Done.');
+    } });
+  const file = image ? { name: 'source.png', mimeType: 'image/png', base64: 'YQ==' }
+    : { name: 'source.txt', mimeType: 'text/plain', base64: Buffer.from('source content').toString('base64') };
+  const prompt = page.bridge.sendPrompt({ runId: 'legacy-upload', requestId: `legacy-${image}`, text: 'Review the file', files: [file] })
+    .then(result => { finished = true; return result; });
+  await new Promise(resolve => setTimeout(resolve, 40));
+  assert.equal(page.bridge.inspect().ready, false);
+  assert.match(page.bridge.inspect().reason, /uploading an attachment/);
+  assert.equal(finished, false); assert.equal(sends, 0);
+  stillUploading = false;
+  assert.equal((await prompt).ok, true); assert.equal(sends, 1);
+});
+
 test('a filename already visible before selection cannot prove a new document upload', async () => {
   const page = fixture({ options: { uploadTimeoutMs: 60 }, setup({ state, form }) {
     form.innerText = 'old-report.txt';
@@ -1164,6 +1228,97 @@ test('a filename already visible before selection cannot prove a new document up
   const result = await page.bridge.uploadFiles({ files: [{ name: 'old-report.txt', mimeType: 'text/plain', base64: 'YQ==' }] });
   assert.equal(result.ok, false);
   assert.match(result.error, /new preview|name/);
+});
+
+const stageMessage = (page, message) => new Promise(resolve => page.bridge.onMessage(message, null, resolve));
+test('staging expiry renews after each chunk and measures inactivity rather than whole-transfer age', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const page = fixture();
+  assert.equal((await stageMessage(page, { type: 'FILE_STAGE_BEGIN', transferId: 'slow-source',
+    files: [{ name: 'source.pdf', mimeType: 'application/pdf', base64Length: 12, byteLength: 9 }] })).ok, true);
+  t.mock.timers.tick(14 * 60_000);
+  assert.equal((await stageMessage(page, { type: 'FILE_STAGE_CHUNK', transferId: 'slow-source', fileIndex: 0, offset: 0, data: 'YWJj' })).ok, true);
+  t.mock.timers.tick(14 * 60_000);
+  assert.equal((await stageMessage(page, { type: 'FILE_STAGE_CHUNK', transferId: 'slow-source', fileIndex: 0, offset: 4, data: 'ZGVm' })).ok, true,
+    'An active transfer remains owned after 28 minutes.');
+  t.mock.timers.tick(15 * 60_000);
+  const expired = await stageMessage(page, { type: 'FILE_STAGE_CHUNK', transferId: 'slow-source', fileIndex: 0, offset: 8, data: 'Z2hp' });
+  assert.equal(expired.ok, false); assert.match(expired.error, /no longer available/);
+  assert.equal((await stageMessage(page, { type: 'FILE_STAGE_BEGIN', transferId: 'new-source',
+    files: [{ name: 'source.pdf', mimeType: 'application/pdf', base64Length: 4, byteLength: 1 }] })).ok, true);
+  await stageMessage(page, { type: 'FILE_STAGE_ABORT', transferId: 'new-source' });
+});
+
+test('default provider upload wait allows 30 minutes and remains immediately cancellable', async t => {
+  const delays = [];
+  const realSetTimeout = global.setTimeout;
+  t.mock.method(global, 'setTimeout', (callback, delay, ...args) => { delays.push(delay); return realSetTimeout(callback, delay, ...args); });
+  const page = fixture({ setup({ state, form }) {
+    state.uploadBusy = true;
+    state.fileInput = new FakeElement('INPUT');
+    state.fileInput.dispatchEvent = () => { form.innerText = 'source.pdf'; return true; };
+  } });
+  t.after(() => page.bridge.cancel({ runId: 'long-upload' }));
+  const pending = page.bridge.uploadFiles({ runId: 'long-upload', files: [{ name: 'source.pdf', mimeType: 'application/pdf', base64: 'YQ==' }] });
+  await waitFor(() => delays.includes(30 * 60_000));
+  page.bridge.cancel({ runId: 'long-upload' });
+  const result = await pending;
+  assert.equal(result.ok, false); assert.match(result.error, /cancelled/i);
+});
+
+test('staged chunks become Blob-backed files without whole base64 reconstruction and still wait for provider completion', async () => {
+  const bytes = Buffer.from('\ufeffalpha = "€"\n', 'utf16le');
+  const page = fixture({ setup({ state, form }) {
+    state.fileInput = new FakeElement('INPUT');
+    state.fileInput.dispatchEvent = () => { form.innerText = 'original.py.txt'; state.uploadBusy = true; return true; };
+  } });
+  assert.equal((await stageMessage(page, { type: 'FILE_STAGE_BEGIN', transferId: 'streamed', runId: 'stream-run',
+    files: [{ name: 'original.py.txt', mimeType: 'text/plain', base64Length: Math.ceil(bytes.length / 3) * 4, byteLength: bytes.length, contentSha256: createHash('sha256').update(bytes).digest('hex') }] })).ok, true);
+  let offset = 0;
+  for (let start = 0; start < bytes.length; start += 3) {
+    const data = bytes.subarray(start, start + 3).toString('base64');
+    assert.equal((await stageMessage(page, { type: 'FILE_STAGE_CHUNK', transferId: 'streamed', fileIndex: 0, offset, data })).ok, true);
+    offset += data.length;
+  }
+  let completed = false;
+  const commit = stageMessage(page, { type: 'FILE_STAGE_COMMIT', transferId: 'streamed' }).then(result => { completed = true; return result; });
+  await new Promise(resolve => setTimeout(resolve, 40));
+  assert.equal(completed, false); assert.equal(page.bridge.inspect().ready, false);
+  const file = page.state.fileInput.files[0];
+  assert.equal(file.size, bytes.length); assert.ok(file.parts.every(part => part instanceof Blob));
+  assert.deepEqual(Buffer.from(await file.blob.arrayBuffer()), bytes);
+  page.state.uploadBusy = false; assert.equal((await commit).ok, true);
+});
+
+test('staged cancellation, malformed encoding and incomplete Unicode never reach the picker', async () => {
+  for (const mode of ['cancel', 'encoding', 'unicode']) {
+    let selections = 0;
+    const page = fixture({ setup({ state }) { state.fileInput = new FakeElement('INPUT'); state.fileInput.dispatchEvent = () => { selections += 1; return true; }; } });
+    await stageMessage(page, { type: 'FILE_STAGE_BEGIN', transferId: mode, runId: `run-${mode}`,
+      files: [{ name: 'source.txt', mimeType: 'text/plain', base64Length: 4, byteLength: 1 }] });
+    if (mode === 'cancel') page.bridge.cancel({ runId: `run-${mode}` });
+    else await stageMessage(page, { type: 'FILE_STAGE_CHUNK', transferId: mode, fileIndex: 0, offset: 0, data: mode === 'encoding' ? 'YR==' : 'wg==' });
+    assert.equal((await stageMessage(page, { type: 'FILE_STAGE_COMMIT', transferId: mode })).ok, false);
+    assert.equal(selections, 0);
+  }
+});
+
+test('staged malformed ZIP validation uses bounded file slices and rejects before selecting the file', async () => {
+  let selections = 0;
+  const page = fixture({ setup({ state }) { state.fileInput = new FakeElement('INPUT'); state.fileInput.dispatchEvent = () => { selections += 1; return true; }; } });
+  await stageMessage(page, { type: 'FILE_STAGE_BEGIN', transferId: 'zip', files: [{ name: 'source.zip', mimeType: 'application/zip', base64Length: 4, byteLength: 2 }] });
+  await stageMessage(page, { type: 'FILE_STAGE_CHUNK', transferId: 'zip', fileIndex: 0, offset: 0, data: 'UEs=' });
+  const result = await stageMessage(page, { type: 'FILE_STAGE_COMMIT', transferId: 'zip' });
+  assert.equal(result.ok, false); assert.match(result.error, /ZIP/); assert.equal(selections, 0);
+});
+
+test('staged declared 512 MiB boundary is accepted while an oversized file or 1 GiB batch is rejected without allocating payloads', async () => {
+  const page = fixture(); const maximum = 512 * 1024 * 1024;
+  const descriptor = bytes => ({ name: 'source.pdf', mimeType: 'application/pdf', byteLength: bytes, base64Length: Math.ceil(bytes / 3) * 4 });
+  assert.equal((await stageMessage(page, { type: 'FILE_STAGE_BEGIN', transferId: 'limit', files: [descriptor(maximum)] })).ok, true);
+  assert.equal((await stageMessage(page, { type: 'FILE_STAGE_ABORT', transferId: 'limit' })).ok, true);
+  assert.equal((await stageMessage(page, { type: 'FILE_STAGE_BEGIN', transferId: 'oversized', files: [descriptor(maximum + 1)] })).ok, false);
+  assert.equal((await stageMessage(page, { type: 'FILE_STAGE_BEGIN', transferId: 'aggregate', files: [0, 1, 2].map(index => ({ ...descriptor(maximum), name: `source-${index}.pdf` })) })).ok, false);
 });
 
 test('invalid source bytes, noncanonical base64 and duplicate filenames never reach the attachment picker', async () => {
@@ -1192,15 +1347,63 @@ test('UTF-8 and BOM-marked UTF-16 source uploads preserve every inert byte', asy
   const text = '// বাংলা\r\nvoid OnTick() {}\r\n';
   const little = Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(text, 'utf16le')]);
   const big = Buffer.from(little); big.swap16();
-  for (const bytes of [Buffer.from(text), little, big]) {
+  for (const name of ['reviewed.mq5', 'notes.tex']) for (const bytes of [Buffer.from(text), little, big]) {
     let selected;
     const page = fixture({ setup({ state, form }) {
       state.fileInput = new FakeElement('INPUT');
-      state.fileInput.dispatchEvent = () => { selected = state.fileInput.files; form.innerText = 'reviewed.mq5'; return true; };
+      state.fileInput.dispatchEvent = () => { selected = state.fileInput.files; form.innerText = name; return true; };
     } });
-    const result = await page.bridge.uploadFiles({ files: [{ name: 'reviewed.mq5', mimeType: 'text/plain', base64: bytes.toString('base64') }] });
+    const result = await page.bridge.uploadFiles({ files: [{ name, mimeType: 'text/plain', base64: bytes.toString('base64') }] });
     assert.deepEqual(result, { ok: true, attached: 1 });
     assert.deepEqual(Buffer.from(selected[0].parts[0]), bytes);
+  }
+});
+
+test('TSV inline and staged uploads preserve Unicode bytes and reject binary or mislabeled tables', async () => {
+  const name = 'ced_scope_manifest.tsv', mimeType = 'text/tab-separated-values';
+  const text = 'scope\tstatus\r\nবাংলা\tchecked\r\n';
+  const little = Buffer.concat([Buffer.from([255, 254]), Buffer.from(text, 'utf16le')]);
+  for (const bytes of [Buffer.from(text), little, Buffer.from(little).swap16()]) {
+    for (const staged of [false, true]) {
+      let selected;
+      const page = fixture({ setup({ state, form }) {
+        state.fileInput = new FakeElement('INPUT');
+        state.fileInput.dispatchEvent = () => { selected = state.fileInput.files; form.innerText = name; return true; };
+      } });
+      let result;
+      if (staged) {
+        assert.equal((await stageMessage(page, { type: 'FILE_STAGE_BEGIN', transferId: 'tsv', files: [{ name, mimeType, base64Length: Math.ceil(bytes.length / 3) * 4, byteLength: bytes.length }] })).ok, true);
+        let offset = 0;
+        for (let at = 0; at < bytes.length; at += 3) {
+          const data = bytes.subarray(at, at + 3).toString('base64');
+          assert.equal((await stageMessage(page, { type: 'FILE_STAGE_CHUNK', transferId: 'tsv', fileIndex: 0, offset, data })).ok, true);
+          offset += data.length;
+        }
+        result = await stageMessage(page, { type: 'FILE_STAGE_COMMIT', transferId: 'tsv' });
+        assert.deepEqual(Buffer.from(await selected[0].blob.arrayBuffer()), bytes);
+      } else {
+        result = await page.bridge.uploadFiles({ files: [{ name, mimeType, base64: bytes.toString('base64') }] });
+        assert.deepEqual(Buffer.from(selected[0].parts[0]), bytes);
+      }
+      assert.deepEqual(result, { ok: true, attached: 1 }); assert.equal(selected[0].name, name); assert.equal(selected[0].type, mimeType);
+    }
+  }
+  for (const file of [
+    { name, mimeType, base64: Buffer.from([65, 9, 0]).toString('base64') },
+    { name, mimeType, base64: Buffer.from([0xc3, 0x28]).toString('base64') },
+    { name, mimeType: 'text/plain', base64: little.toString('base64') },
+    { name: 'manifest.txt', mimeType, base64: little.toString('base64') }
+  ]) {
+    let selections = 0;
+    const page = fixture({ setup({ state }) { state.fileInput = new FakeElement('INPUT'); state.fileInput.dispatchEvent = () => { selections++; }; } });
+    assert.equal((await page.bridge.uploadFiles({ files: [file] })).ok, false); assert.equal(selections, 0);
+  }
+  for (const bytes of [Buffer.from([65, 9, 0]), Buffer.from([0xc3])]) {
+    const page = fixture();
+    assert.equal((await stageMessage(page, { type: 'FILE_STAGE_BEGIN', transferId: 'invalid-tsv', files: [{ name, mimeType, base64Length: 4, byteLength: bytes.length }] })).ok, true);
+    const chunk = await stageMessage(page, { type: 'FILE_STAGE_CHUNK', transferId: 'invalid-tsv', fileIndex: 0, offset: 0, data: bytes.toString('base64') });
+    assert.equal((await stageMessage(page, { type: 'FILE_STAGE_COMMIT', transferId: 'invalid-tsv' })).ok, false);
+    if (bytes.length === 3) assert.equal(chunk.ok, false);
   }
 });
 
@@ -1277,7 +1480,9 @@ test('pagehide aborts a standalone source upload promptly without an active prom
   assert.equal(page.messages.some(message => ['ERROR', 'REPLY'].includes(message.type)), false);
 });
 
-test('pagehide cancels a completed-result native export even when no prompt remains active', async () => {
+test('pagehide cancels a completed-result native export even when no prompt remains active', async t => {
+  const delays = [], realSetTimeout = global.setTimeout;
+  t.mock.method(global, 'setTimeout', (callback, delay, ...args) => { delays.push(delay); return realSetTimeout(callback, delay, ...args); });
   const link = downloadableFile('reviewed.pdf', 'sandbox:/mnt/data/reviewed.pdf');
   let capturedSignal;
   let finishNative;
@@ -1290,6 +1495,7 @@ test('pagehide cancels a completed-result native export even when no prompt rema
   await waitFor(() => page.messages.find(message => message.type === 'REPLY'));
   const exporting = page.bridge.exportMedia({ ...request, ids: ['media-1'] });
   await waitFor(() => capturedSignal);
+  assert.ok(delays.includes(35 * 60_000), 'The page export cannot abort before the 30-minute native broker plus transfer overhead.');
   page.window.dispatchEvent(new page.window.Event('pagehide'));
   const result = await exporting;
   assert.equal(result.ok, false);
@@ -1439,6 +1645,73 @@ test('sandbox PDF downloads use the exact visible native action and retain byte 
   assert.equal(calls.length, 1);
 });
 
+test('native CED Markdown and TSV Download file cards export their real canonical bytes', async () => {
+  const sources = new Map([
+    ['WorkerB_CED_L1-20_Forensic_Audit.md', Buffer.from('# Forensic audit\nSee [scope](ced_scope_manifest.tsv).\n')],
+    ['ced_scope_manifest.tsv', Buffer.from('scope,note\tstatus\n"L1-20, বাংলা"\tchecked\n')]
+  ]);
+  const calls = [];
+  const page = fixture({ downloadVisible: async request => {
+    calls.push(request); assert.equal(request.isCurrent(), true);
+    return { ok: true, base64: sources.get(request.name).toString('base64'), mimeType: request.mimeType, sourceVerifiedAtClick: true };
+  }, onSend({ text, addUser, addAssistant }) {
+    addUser(text);
+    const turn = addAssistant('Completed CED forensic audit and scope manifest.');
+    const cards = [...sources.keys()].map(name => {
+      const card = new FakeElement('DIV'), title = new FakeElement('DIV', name, { title: name });
+      const preview = new FakeElement('BUTTON', '', { 'aria-label': `Open preview of ${name}` });
+      const action = new FakeElement('BUTTON', '', { 'aria-label': 'Download file' });
+      for (const child of [title, preview, action]) child.parentElement = card;
+      card.parentElement = turn; card.children = [title, preview, action];
+      card.querySelectorAll = selector => selector === 'button[aria-label="Download file"]' ? [action]
+        : selector === 'button[aria-label^="Open preview of "]' ? [preview] : selector === '[title]' ? [title] : [];
+      return card;
+    });
+    turn.contains = child => cards.some(card => child === card || card.children.includes(child));
+    turn.querySelectorAll = selector => selector === 'button[aria-label="Download file"]' ? cards.map(card => card.children[2])
+      : selector === 'button, [role="button"]' ? cards.flatMap(card => card.children.slice(1)) : [];
+  } });
+  const request = { runId: 'native-ced', requestId: 'worker-b', text: 'Audit the CED chapters.', relayMedia: true };
+  await page.bridge.sendPrompt(request);
+  const reply = await waitFor(() => page.messages.find(message => message.type === 'REPLY' || message.type === 'ERROR'));
+  assert.equal(reply.type, 'REPLY', reply.error);
+  assert.deepEqual(reply.media.map(file => [file.name, file.mimeType]), [
+    ['WorkerB_CED_L1-20_Forensic_Audit.md', 'text/markdown'], ['ced_scope_manifest.tsv', 'text/tab-separated-values']
+  ]);
+  const result = await page.bridge.exportMedia({ ...request, ids: reply.media.map(file => file.id) });
+  assert.equal(result.ok, true, result.error); assert.equal(calls.length, 2);
+  for (const file of result.files) {
+    assert.deepEqual(Buffer.from(file.base64, 'base64'), sources.get(file.name));
+    assert.equal(file.contentSha256, createHash('sha256').update(sources.get(file.name)).digest('hex'));
+    assert.equal(file.byteLength, sources.get(file.name).length);
+  }
+  assert.deepEqual((await page.bridge.exportMedia({ ...request, ids: reply.media.map(file => file.id) })).files, result.files);
+  assert.equal(calls.length, 2);
+});
+
+test('fetched TSV provider plain-text MIME remains bound to the selected table and readable bytes', async () => {
+  for (const [name, contentType, bytes, expected] of [
+    ['manifest.tsv', 'text/plain; charset=utf-8', Buffer.from('scope,note\tstatus\nL1\tchecked\n'), true],
+    ['manifest.tsv', 'text/tab-separated-values', Buffer.from('scope\tstatus\nL1\tchecked\n'), true],
+    ['manifest.tsv', 'text/html', Buffer.from('<html>wrong</html>'), false],
+    ['manifest.tsv', 'text/plain', Buffer.from([65, 0]), false],
+    ['manifest.tsv', 'text/plain', Buffer.from([0xc3, 0x28]), false],
+    ['manifest.csv', 'text/plain', Buffer.from('scope,status\nL1,checked\n'), false]
+  ]) {
+    const link = downloadableFile(name, `https://chatgpt.com/visible/${name}`);
+    const page = fixture({ onSend({ text, addUser, addAssistant }) { addUser(text); addMediaToTurn(addAssistant('Manifest attached.'), [link]); } });
+    page.window.fetch = async () => ({ ok: true, type: 'basic', headers: { get: header => header === 'content-type' ? contentType : null }, body: { getReader: () => {
+      let sent = false; return { async read() { if (sent) return { done: true }; sent = true; return { done: false, value: bytes }; }, async cancel() {} };
+    } } });
+    const request = { runId: 'fetched-tsv', requestId: 'draft', text: 'Create a manifest.', relayMedia: true };
+    await page.bridge.sendPrompt(request);
+    const reply = await waitFor(() => page.messages.find(message => message.type === 'REPLY'));
+    const exported = await page.bridge.exportMedia({ ...request, ids: reply.media.map(file => file.id) });
+    assert.equal(exported.ok, expected, exported.error);
+    if (expected) { assert.equal(exported.files[0].name, name); assert.equal(exported.files[0].mimeType, 'text/tab-separated-values'); assert.deepEqual(Buffer.from(exported.files[0].base64, 'base64'), bytes); }
+  }
+});
+
 test('native PDF links without the desktop broker fail clearly and canceled downloads stop promptly', async () => {
   for (const withBroker of [false, true]) {
     const link = downloadableFile('corrected.pdf', '#download-corrected');
@@ -1458,6 +1731,23 @@ test('native PDF links without the desktop broker fail clearly and canceled down
     assert.equal(result.ok, false);
     assert.match(result.error, withBroker ? /cancelled/i : /native download action.*desktop app/i);
   }
+});
+
+test('native stored downloads relay and cache only their opaque identity even at the 512 MiB boundary', async () => {
+  const link = downloadableFile('large.pdf', 'sandbox:/mnt/data/large.pdf'); let downloads = 0;
+  const stored = { ok: true, mimeType: 'application/pdf', blobId: 'native-owned-file', byteLength: 512 * 1024 * 1024, contentSha256: 'c'.repeat(64) };
+  const page = fixture({ downloadVisible: async request => {
+    downloads += 1; assert.equal(request.isCurrent(), true); return { ...stored, sourceVerifiedAtClick: true };
+  }, onSend({ text, addUser, addAssistant }) { addUser(text); addMediaToTurn(addAssistant('PDF output.'), [link]); } });
+  const request = { runId: 'stored-native', requestId: 'response', text: 'Create a PDF.', relayMedia: true };
+  await page.bridge.sendPrompt(request); await waitFor(() => page.messages.find(message => message.type === 'REPLY'));
+  const result = await page.bridge.exportMedia({ ...request, ids: ['media-1'] });
+  assert.equal(result.ok, true, result.error); assert.equal(result.files[0].blobId, stored.blobId);
+  assert.equal(result.files[0].contentSha256, stored.contentSha256); assert.equal(result.files[0].byteLength, stored.byteLength);
+  assert.equal('base64' in result.files[0], false);
+  page.state.assistants[0].isConnected = false;
+  assert.deepEqual((await page.bridge.exportMedia({ ...request, ids: ['media-1'] })).files, result.files);
+  assert.equal(downloads, 1, 'Retained native identity does not re-download or recreate its bytes.');
 });
 
 test('sequential native files prepared after 18 seconds each keep their export owner and exact bytes', async (t) => {
@@ -1650,7 +1940,53 @@ test('fetched Python MIME aliases remain bound to the selected .py source filena
 test('a visible unsupported download stops enabled media relay clearly', async () => {
   const page = fixture({ onSend({ text, addUser, addAssistant }) { addUser(text); addMediaToTurn(addAssistant('File ready'), [downloadableFile('archive.exe', 'https://chatgpt.com/archive.exe')]); } });
   await page.bridge.sendPrompt({ runId: 'unsupported-run', requestId: 'request', text: 'Create', relayMedia: true });
-  assert.match((await waitFor(() => page.messages.find((message) => message.type === 'ERROR'))).error, /unsupported/);
+  const failure = await waitFor(() => page.messages.find((message) => message.type === 'ERROR'));
+  assert.match(failure.error, /unsupported/);
+  assert.equal(failure.recoverableOutputFailure, true);
+  assert.equal(failure.owned, true);
+  assert.equal(failure.active, false);
+  assert.equal(failure.generationBusy, false);
+  assert.equal(failure.newerUserMessage, false);
+});
+
+test('a native Stop reappearing between unsupported output observation and its catch preserves the original response', async () => {
+  const link = downloadableFile('archive.exe', 'https://chatgpt.com/archive.exe');
+  const closest = link.closest.bind(link);
+  let resumed = false;
+  let sent = 0;
+  let response;
+  const page = fixture({ onSend({ text, addUser, addAssistant }) {
+    sent += 1; addUser(text); response = addAssistant('Provisional output while the provider reconnects.');
+    addMediaToTurn(response, [link]);
+  } });
+  link.closest = selector => {
+    // The unsupported-file diagnostic resolves its exact assistant wrapper
+    // after the final native-idle check. Let the provider resume in the queued
+    // microtask before the promise rejection reaches the bridge's catch.
+    if (!resumed && selector === '[data-message-author-role="assistant"], div:has(> h4[data-conversation-role="assistant"])') {
+      resumed = true;
+      queueMicrotask(() => {
+        page.state.generating = true;
+        addMediaToTurn(response, []);
+        setTimeout(() => {
+          response.innerText = response.textContent = 'Completed original response after the provider resumed.';
+          page.state.generating = false;
+        }, 40);
+      });
+    }
+    return closest(selector);
+  };
+  const request = { runId: 'unsupported-output-resume-race', requestId: 'original-request', text: 'Create the document.', relayMedia: true };
+  assert.equal((await page.bridge.sendPrompt(request)).ok, true);
+  await waitFor(() => resumed && page.state.generating);
+  assert.equal(page.state.stopClicks, 0);
+  assert.equal(page.messages.some(message => message.type === 'ERROR'), false);
+  const reply = await waitFor(() => page.messages.find(message => message.type === 'REPLY'));
+  assert.equal(reply.runId, request.runId); assert.equal(reply.requestId, request.requestId);
+  assert.equal(reply.text, 'Completed original response after the provider resumed.');
+  assert.equal(page.state.stopClicks, 0); assert.equal(sent, 1);
+  assert.equal(page.messages.some(message => message.type === 'ERROR'), false);
+  assert.equal(page.messages.filter(message => message.type === 'REPLY').length, 1);
 });
 
 test('verified native PDF snapshots survive history remounts without another download and keep exact task ownership', async () => {

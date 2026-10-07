@@ -1,0 +1,173 @@
+{
+  "version": "1.9.6",
+  "platform": "win32",
+  "arch": "x64",
+  "checkedAt": "2026-10-06T21:29:23.924Z",
+  "artifact": {
+    "name": "Converge-Portable-1.9.6-x64.exe",
+    "byteLength": 463998942,
+    "sha256": "3cdb45c4d1f140ca602f7bb480b1856d09ded5d3c756c3c9b8b6f6d9e65550c4",
+    "archiveSha256": "b4fab806770d77d0ba372c8e81a3bd202e4eb087a739c885401a89e1cd9de57d",
+    "compression": "store"
+  },
+  "source": {
+    "passed": 601,
+    "total": 601,
+    "failed": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "actualChromiumSubmissionCases": 84
+  },
+  "initialSourceRun": {
+    "passed": 598,
+    "total": 599,
+    "failed": 1,
+    "reason": "Existing 20-second animation observation exceeded its 25-second child harness deadline after printing PASS. Assertions were preserved; the final full suite passed."
+  },
+  "packaged": {
+    "boss": {
+      "passed": true,
+      "count": 21,
+      "offlineOnly": true,
+      "checks": [
+        "Production Windows shell creates three sandboxed isolated native chat views and keeps its browser session in memory.",
+        "Import and Normal OK open exactly three distinct chats with the boss coordinator active.",
+        "A mixed text, valid PDF and PNG source selection reaches all three native file inputs; Reset clears the staged previews and retains the session.",
+        "One native file picker uploads the original source to the boss and both workers.",
+        "The boss writes distinct worker instructions, receives both results and exact generated files every cycle, then both workers verify one final candidate after four improvement cycles.",
+        "The real boss composer accepts an instruction during worker generation, delivers it in the next boss context, and completes the run with no queued message left behind.",
+        "Native Save downloads the actual accepted file and matches the coordinator SHA-256, with the requested corrected values.",
+        "The settings selector applies Horror, Alien, Night, Cyberpunk and Anime backgrounds to all three real chat views.",
+        "Robot, Explorer and Spirit character choices apply without changing the active chat run or its accepted files.",
+        "Clicking the center boss opens and closes its sliding native chat panel while preserving the worker workspace.",
+        "A follow-up reuses all three conversations; a new instruction while the boss generates is queued safely.",
+        "Stop cancels active boss generation and prevents queued instructions from restarting the stopped run.",
+        "Stop also cancels both workers during their concurrent generation, retaining each completed conversation.",
+        "Accelerated localhost-only supervision checks both real active worker bridges repeatedly without stopping or resending their healthy generation. Production keeps its five-minute interval.",
+        "A genuine stopped-thinking header without an answer is recovered only for its exact owned worker; the boss waits for the healthy peer and bottom monitoring shows both observations.",
+        "The recovery boss receives only actual completed peer evidence plus the interruption report, creates fresh useful worker prompts and does not count the abandoned pair as a work cycle.",
+        "After genuine interruption recovery, both workers independently accept one exact final candidate; its actual boss answer, bottom answer, remaining limitation and exported monitoring report all match the completed run.",
+        "A live-shaped Download file card captures an actual TSV native download using its text/plain alias, preserves canonical TSV name, Unicode, bytes and SHA-256, and reaches the boss and both exact final reviewers.",
+        "Reset clears all three chats without clearing the imported session; Work mode is verified on the fresh boss and worker pages.",
+        "Temporary mode is also verified on all three new chats through its visible page controls.",
+        "Unreadable boss control output receives one format repair, then stops safely without dispatching an invented worker task or clearing the session."
+      ]
+    },
+    "studio": {
+      "passed": true,
+      "count": 13,
+      "offlineOnly": true,
+      "checks": [
+        "Real production shell and sandboxed native chats use an empty in-memory account session.",
+        "The production Electron PDF worker parses and rasterizes a genuine one-page fixture with installed runtime dependencies; this gate uses the lab module directly.",
+        "The shell native source picker transfers the complete original JavaScript bytes to all three browser file inputs.",
+        "Four actual file revision cycles finish with native syntax checks, explicit criteria, and a newly opened worker final audit.",
+        "The real local report binds the candidate SHA-256, passes Node syntax parsing, and keeps unexecuted runtime coverage visibly unverified.",
+        "Native revision preview IPC resolves two identically named files to their distinct exact historical contents.",
+        "The real Studio drawer clears all three native view bounds; closing it restores tall, usable worker chats.",
+        "Shell IPC records found, assigned, fixed and rechecked issue evidence against the selected revision.",
+        "Real save/list/export dialogs persist the original and all four same-name revision byte identities in a portable ZIP without browser session state.",
+        "Native revision restoration selects the actual earlier bytes and invalidates prior final acceptance and tool authority.",
+        "Real manual verification and delivery dialogs export exact restored source bytes, matching report hashes, every content checksum and honest partial completion status.",
+        "Loading the disk project reconstructs original and revision bytes while requiring fresh chat ownership and verification.",
+        "Importing the real exported ZIP and reconnecting new native chats preserves the saved brief and selected revision without resuming stale requests."
+      ]
+    },
+    "parityFiles": 39
+  },
+  "nativeStartup": {
+    "passed": true,
+    "checkedAt": "2026-10-06T21:24:15.734Z",
+    "visibleShell": true,
+    "firstPaint": true,
+    "embeddedViews": [
+      "left",
+      "right",
+      "boss"
+    ],
+    "sidebarToggleVerified": true,
+    "bossDrawerVerified": true,
+    "progressSectionVerified": true,
+    "didClose": true,
+    "embeddedViewsDisposed": true,
+    "closeCleanupCompleted": true,
+    "isolatedSession": true,
+    "providerScope": "Empty isolated session; no authentication, provider navigation or live model task"
+  },
+  "changes": [
+    "Validated inert TeX-source relay, canonical names and byte-identical upload aliases.",
+    "Complete historical verification evidence retained through project persistence while restored authority is invalidated.",
+    "Animation-layout harness permits existing observation plus startup/teardown; all assertions remain."
+  ],
+  "live": {
+    "completedModelTask": false,
+    "finalAcceptance": false,
+    "longDocumentTaskCompleted": false,
+    "status": "No authenticated 1.9.6 provider task yet. Existing 1.9.5 CED production remains running without replacement.",
+    "previousShortTask": {
+      "version": "1.9.4",
+      "completedModelTask": true,
+      "finalAcceptance": true,
+      "model": "GPT-5.6 High",
+      "scope": "Actual two-file TSV/Markdown relay, both exact final reviews, fresh audit and boss finish."
+    },
+    "ongoingLongTask": {
+      "version": "1.9.5",
+      "startedAt": "2026-10-06T20:19:08.326Z",
+      "model": "GPT-5.6 High on all three chats",
+      "sourceDeliveryConfirmed": true,
+      "originalZipByteLength": 121029744,
+      "completedPartialPackageCaptured": true,
+      "healthyPeerPreservedAfterUnsupportedTex": true,
+      "revisedPartialPackageObserved": true,
+      "fullDocumentWorkerStillGeneratingObserved": false,
+      "hostInstructionQueuedWithoutInterruptingGeneration": true,
+      "finalPdfDelivered": false,
+      "finalAcceptance": false,
+      "checkedAt": "2026-10-06T21:38:58.871Z",
+      "completedWorkCycles": 1,
+      "firstCompleteDraftCaptured": true,
+      "candidateRevision": "R2",
+      "candidatePdf": {
+        "byteLength": 461352,
+        "sha256": "8d2392dd8f9f79fabf6165d86fc730fed003349c9f63fe0b4f99b934f844c9fd",
+        "pageCount": 66,
+        "selectableTextOnEveryPage": true,
+        "outlineEntries": 43,
+        "annotations": 42
+      },
+      "coverageLedger": {
+        "rows": 80,
+        "columns": 8,
+        "physicalPageAddresses": 74,
+        "sourceContentCoverageProven": false
+      },
+      "independentVisualCheck": {
+        "sampledPhysicalPages": [
+          2,
+          8,
+          23,
+          40,
+          50,
+          57,
+          65,
+          66
+        ],
+        "missingGlyphDefectsFound": true,
+        "affectedPhysicalPages": [
+          40,
+          50,
+          57,
+          65
+        ],
+        "wholeDocumentVisualQa": false
+      },
+      "automaticBossHandoffObserved": true,
+      "nextDistinctWorkerAssignmentsObserved": true,
+      "missingGlyphFeedbackQueuedWithoutInterruptingWorkers": true,
+      "firstFullDraftCompleted": true,
+      "status": "Second useful work pair generating; complete working draft has confirmed missing-glyph defects."
+    }
+  },
+  "publication": "Local Windows portable only; installer, macOS build and GitHub publication deferred."
+}

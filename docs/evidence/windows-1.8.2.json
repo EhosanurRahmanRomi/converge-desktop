@@ -1,0 +1,161 @@
+{
+  "version": "1.8.2",
+  "checkedOn": "2026-10-06",
+  "platform": "Windows x64",
+  "scope": "Portable verification candidate; installer and Mac builds deferred until user verification.",
+  "artifact": {
+    "filename": "Converge-Portable-1.8.2-x64.exe",
+    "bytes": 137441344,
+    "sha256": "9df9906ad8b226bf22a1c1d0c434ce51bafc375250e2148b6557e72d61b12f8a",
+    "productionArchiveSha256": "e474016694785be4575c61a5e97a7864857e2dab308c7410426bb6dc927af4b2"
+  },
+  "sourceSuite": {
+    "tests": 460,
+    "passed": 460,
+    "failed": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "durationMs": 113781.7029
+  },
+  "archiveParity": {
+    "runtimeFilesCompared": 22,
+    "allEqual": true,
+    "runtimePackageMetadataEqual": true
+  },
+  "bossWorkspace": {
+    "sourceChecks": 20,
+    "packagedChecks": 20,
+    "passed": true,
+    "launch": "Final production archive loaded under a metadata-matched Electron launcher.",
+    "localFixturesOnly": true,
+    "tests": [
+      "Production Windows shell creates three sandboxed isolated native chat views and keeps its browser session in memory.",
+      "Import and Normal OK open exactly three distinct chats with the boss coordinator active.",
+      "A mixed text, valid PDF and PNG source selection reaches all three native file inputs; Reset clears the staged previews and retains the session.",
+      "One native file picker uploads the original source to the boss and both workers.",
+      "The boss writes distinct worker instructions, receives both results and exact generated files every cycle, then both workers verify one final candidate after four improvement cycles.",
+      "The real boss composer accepts an instruction during worker generation, delivers it in the next boss context, and completes the run with no queued message left behind.",
+      "Native Save downloads the actual accepted file and matches the coordinator SHA-256, with the requested corrected values.",
+      "The settings selector applies Horror, Alien, Night, Cyberpunk and Anime backgrounds to all three real chat views.",
+      "Robot, Explorer and Spirit character choices apply without changing the active chat run or its accepted files.",
+      "Clicking the center boss opens and closes its sliding native chat panel while preserving the worker workspace.",
+      "A follow-up reuses all three conversations; a new instruction while the boss generates is queued safely.",
+      "Stop cancels active boss generation and prevents queued instructions from restarting the stopped run.",
+      "Stop also cancels both workers during their concurrent generation, retaining each completed conversation.",
+      "Accelerated localhost-only supervision checks both real active worker bridges repeatedly without stopping or resending their healthy generation. Production keeps its five-minute interval.",
+      "A genuine stopped-thinking header without an answer is recovered only for its exact owned worker; the boss waits for the healthy peer and bottom monitoring shows both observations.",
+      "The recovery boss receives only actual completed peer evidence plus the interruption report, creates fresh useful worker prompts and does not count the abandoned pair as a work cycle.",
+      "After genuine interruption recovery, both workers independently accept one exact final candidate; its actual boss answer, bottom answer, remaining limitation and exported monitoring report all match the completed run.",
+      "Reset clears all three chats without clearing the imported session; Work mode is verified on the fresh boss and worker pages.",
+      "Temporary mode is also verified on all three new chats through its visible page controls.",
+      "Unreadable boss control output receives one format repair, then stops safely without dispatching an invented worker task or clearing the session."
+    ],
+    "supervision": {
+      "productionIntervalMs": 300000,
+      "acceleratedLocalFixtureIntervalMs": 1000,
+      "healthyChecks": 2,
+      "confirmedInterruptedWorkerRecovered": true,
+      "abandonedPairCountedAsCompleted": false,
+      "healthyPeerResultRetained": true,
+      "finalWorkCycles": 4,
+      "finalCandidateId": "C4",
+      "finalReportExportSha256": "c256f87ec14f8e5d75502db3d38f4e93d1feeed83b7a9314452c1a6d3985399d"
+    }
+  },
+  "largeUpload": {
+    "passed": true,
+    "checks": 6,
+    "localFixturesOnly": true,
+    "source": {
+      "name": "large-source-100MiB.pdf",
+      "bytes": 104857600,
+      "sha256": "16b1ec921c7e34a55590faaa9f5d3e68cb4a77e2bc6d9868a90eb361c2c4a151"
+    },
+    "nativePickerInvocations": 1,
+    "wire": {
+      "left": {
+        "begins": 1,
+        "chunks": 134,
+        "commits": 1,
+        "maxChunkLength": 1048576,
+        "maxWireBytes": 1048754,
+        "receivedCharacters": 139810136
+      },
+      "right": {
+        "begins": 1,
+        "chunks": 134,
+        "commits": 1,
+        "maxChunkLength": 1048576,
+        "maxWireBytes": 1048754,
+        "receivedCharacters": 139810136
+      },
+      "boss": {
+        "begins": 1,
+        "chunks": 134,
+        "commits": 1,
+        "maxChunkLength": 1048576,
+        "maxWireBytes": 1048754,
+        "receivedCharacters": 139810136
+      }
+    },
+    "received": {
+      "left": {
+        "bytes": 104857600,
+        "sha256": "16b1ec921c7e34a55590faaa9f5d3e68cb4a77e2bc6d9868a90eb361c2c4a151",
+        "nativeInputChangeCount": 1
+      },
+      "right": {
+        "bytes": 104857600,
+        "sha256": "16b1ec921c7e34a55590faaa9f5d3e68cb4a77e2bc6d9868a90eb361c2c4a151",
+        "nativeInputChangeCount": 1
+      },
+      "boss": {
+        "bytes": 104857600,
+        "sha256": "16b1ec921c7e34a55590faaa9f5d3e68cb4a77e2bc6d9868a90eb361c2c4a151",
+        "nativeInputChangeCount": 1
+      }
+    },
+    "sidebarReadyAfterUpload": true,
+    "tests": [
+      "Production shell opens three sandboxed pages using only isolated offline fixture data.",
+      "One sidebar click reads a 100 MB PDF through the native picker and confirms delivery to the whole team.",
+      "All three real Chromium file inputs independently hash the exact 100 MB source bytes and receive it once.",
+      "Actual Electron page-request IPC uses sequential 1 MB chunks and one commit per page.",
+      "The sidebar returns to ready state and all three page bridges remain responsive after upload.",
+      "The completed large-file workspace closes and disposes its three owned browser pages cleanly."
+    ]
+  },
+  "nativePortableStartup": {
+    "passed": true,
+    "actualPortableWrapperLaunched": true,
+    "isolatedSession": true,
+    "visibleShell": true,
+    "firstPaint": true,
+    "embeddedViews": [
+      "left",
+      "right",
+      "boss"
+    ],
+    "sidebarToggleVerified": true,
+    "bossDrawerVerified": true,
+    "progressSectionVerified": true,
+    "didClose": true,
+    "embeddedViewsDisposed": true,
+    "closeCleanupCompleted": true,
+    "providerScope": "Empty isolated session; no authentication, provider navigation or live model task",
+    "clipboardScope": "The Windows startup smoke does not access the clipboard"
+  },
+  "limits": {
+    "perFileBytes": 134217728,
+    "batchBytes": 268435456,
+    "sourceFiles": 5,
+    "modelResponseMs": 7200000,
+    "workflowMs": 86400000
+  },
+  "verificationLimits": [
+    "Provider responses and upload previews used controlled offline fixtures; no live ChatGPT task or account limit was tested for 1.8.2.",
+    "Long response scheduling used controlled clocks; this is not evidence of a real one-hour remote analysis.",
+    "The 100 MiB check establishes exact app-to-file-input upload transport, not remote service acceptance or large generated-file downloads.",
+    "Agreement between models is not proof of correctness or external test execution."
+  ]
+}

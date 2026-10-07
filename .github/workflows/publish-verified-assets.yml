@@ -1,0 +1,64 @@
+name: Transfer verified native assets into release draft
+
+on:
+  workflow_dispatch:
+    inputs:
+      windows_run_id:
+        description: 'Successful Native Windows installer release checks run ID'
+        required: true
+        type: string
+      macos_run_id:
+        description: 'Successful Native macOS ARM64 release checks run ID'
+        required: true
+        type: string
+      release_tag:
+        description: 'Existing draft release tag; this workflow never publishes it'
+        required: true
+        default: 'v1.9.9'
+        type: string
+      expected_version:
+        description: 'Exact stable release version matching the checkout and native reports'
+        required: true
+        default: '1.9.9'
+        type: string
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: converge-draft-asset-transfer-${{ inputs.release_tag }}
+  cancel-in-progress: false
+
+jobs:
+  transfer-verified-assets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Test draft-only artifact and provenance guards
+        run: node --test test/publish-artifacts.test.js
+      - name: Verify both native runs and transfer exact assets into the existing draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WINDOWS_RUN_ID: ${{ inputs.windows_run_id }}
+          MACOS_RUN_ID: ${{ inputs.macos_run_id }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          EXPECTED_VERSION: ${{ inputs.expected_version }}
+        run: node scripts/qa-publish-artifacts.js
+      - name: Record draft handoff
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'SUMMARY'
+          ## Native assets transferred; release remains a draft
+          Both named native workflows must have succeeded in this repository. Their exact version, commit provenance, 41 packaged source files, artifact sizes, SHA-256 hashes and checksums are verified against this checkout before transfer. Only the Windows installer, Apple Silicon DMG/ZIP and their native reports/checksums are uploaded. The existing portable/source assets are preserved. This workflow neither creates nor publishes a release; final review and publication remain separate.
+          SUMMARY
+      - name: Retain transfer verification
+        uses: actions/upload-artifact@v4
+        with:
+          name: Converge-draft-native-asset-transfer
+          if-no-files-found: error
+          include-hidden-files: true
+          path: .live-test/verified-release-transfer.json

@@ -9,7 +9,7 @@ Verification records bind checks to specific source revisions and download hashe
 | Artifact | Record |
 |---|---|
 | Approved Windows portable | [Windows 1.9.9](WINDOWS_1_9_9_VERIFICATION.md) · [Public evidence](evidence/windows-1.9.9.json) |
-| Windows installer | The release's Windows installer report records clean-runner install, source parity, actual installed startup and uninstall |
+| Windows installer | [Windows installer 1.9.9](WINDOWS_INSTALLER_1_9_9_VERIFICATION.md) · clean-runner install, source parity, actual installed startup and uninstall |
 | Apple Silicon macOS DMG and ZIP | The release's Mac report records native ARM64 source tests, archive verification, packaged workflows and startup |
 | All downloads | [Artifact lengths and SHA-256](release-artifacts.json) · release `SHA256SUMS.txt` |
 

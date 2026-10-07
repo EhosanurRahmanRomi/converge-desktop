@@ -17,6 +17,7 @@ const productionRoot = packagedAsar || root;
 const packageMetadata = JSON.parse(fs.readFileSync(path.join(productionRoot, 'package.json'), 'utf8'));
 if (packagedAsar) app.setAppPath(packagedAsar);
 const { createCookieApp } = require(path.join(productionRoot, 'desktop-main.js'));
+const { validateExport } = require(path.join(productionRoot, 'src/browser/files.js'));
 const profileRoot = fs.mkdtempSync(path.join(app.getPath('temp'), 'converge-desktop-qa-'));
 app.setPath('userData', profileRoot);
 const log = [];
@@ -44,7 +45,23 @@ fs.writeFileSync(sourceEaPath, sourceEa);
 let selectedSourcePath = sourcePdfPath;
 let eaRegression = null;
 let openDialogCalls = 0;
-let saveDialogCalls = 0;
+
+async function exportExactCandidate(state, destination, expectedBytes) {
+  const media = state.candidate?.media;
+  assert.ok(media?.side && media.runId && media.requestId, 'Legacy export must retain its exact page request ownership.');
+  const response = await desktop.sendToPage(media.side, { type: 'EXPORT_MEDIA', runId: media.runId,
+    requestId: media.requestId, ids: media.files.map(file => file.id) });
+  const files = validateExport(media, response);
+  assert.equal(files.length, 1, 'This legacy export fixture has one exact retained output.');
+  const bytes = files[0].bytes;
+  assert.deepEqual(bytes, expectedBytes);
+  assert.equal(createHash('sha256').update(bytes).digest('hex'), media.files[0].contentSha256);
+  assert.equal(bytes.length, media.files[0].byteLength);
+  assert.equal(path.dirname(destination), profileRoot, 'Export fixture files must remain in this isolated QA profile.');
+  fs.writeFileSync(destination, bytes);
+  assert.deepEqual(fs.readFileSync(destination), expectedBytes);
+  return bytes;
+}
 
 function pass(message) {
   log.push(message);
@@ -229,21 +246,18 @@ async function verifyEaTransport() {
   }
   pass('Live-shaped inline .mq5 Download spans are detected, changed bytes become C2, and eight fresh reviews receive complete original and verified current-candidate JSON source readbacks plus one byte-identical .mq5.txt candidate alias across four rounds.');
 
-  await waitFor(() => shell(`!document.getElementById('saveFiles').disabled`), 'Accepted .mq5 Save did not enable');
-  await click('saveFiles');
-  await waitFor(() => fs.existsSync(savedEaPath), 'Host Save did not write the accepted .mq5 source');
-  const saved = fs.readFileSync(savedEaPath);
+  const saved = await exportExactCandidate(state, savedEaPath, makeEaSource(true));
   assert.deepEqual(saved, makeEaSource(true));
   assert.equal(path.extname(savedEaPath), '.mq5');
   assert.equal(digest(saved), state.candidate.media.files[0].contentSha256);
-  assert.equal(saveDialogCalls, 3);
-  pass('Host Save preserves the generated .mq5 extension and exactly matches the revised file SHA-256 checked by both reviewers.');
+  pass('Legacy page EXPORT_MEDIA returns the canonical .mq5 extension and exact revised SHA-256 checked by both reviewers; the fixture persists those bytes locally. Native Save is covered by the current studio gate.');
   eaRegression = { originalName: path.basename(sourceEaPath), originalSha256: digest(sourceEa),
     originalTransport: { initialUploadExactBytes: true, laterReviews: 'complete decoded source in BEGIN_ORIGINAL_SOURCE_SNAPSHOT_JSON prompt data', repeatedSourceUploads: false },
     candidateTransport: { peerAttachmentAliasExactBytes: true, canonicalFilenamePreserved: true,
       laterReviews: 'complete decoded current source with candidate ID, attached-byte SHA-256 and byte length in BEGIN_CURRENT_CANDIDATE_SOURCE_JSON',
       completeReadbacks: readbackChecks.length, readbacksMatchCandidateAttachments: true, finalTrackingMarkerPreserved: true },
-    candidateName: state.candidate.media.files[0].name, candidateSha256: digest(saved), nativeSavedPath: savedEaPath,
+    candidateName: state.candidate.media.files[0].name, candidateSha256: digest(saved), exportedFixturePath: savedEaPath,
+    downloadScope: 'Legacy page EXPORT_MEDIA and local fixture byte persistence; not current native Save integration.',
     fullRounds: state.round, actualRevisionCount: state.revisionCount, reviewReadbacks: readbackChecks, inlineOutputControls,
     noSourceExecuted: true, simulatedModelReplies: true, externalNetworkAllowed: false };
 
@@ -304,6 +318,61 @@ async function verifyExpansion() {
   pass('Expand B hides A and enlarges only B inside the shell; Restore split returns both native page bounds.');
 }
 
+async function verifyCompletedDownloads(state) {
+  // Current completion reveals retained output immediately. Users can then
+  // collapse the same panel to give the worker pages their tall layout back.
+  await waitFor(() => shell(`!document.getElementById('resultContent').hidden &&
+    document.getElementById('toggleResults').getAttribute('aria-expanded')==='true'`),
+  'Completion did not reveal Results & downloads');
+  const expectedNames = state.candidate.media.files.map(file => file.name);
+  const rows = await shell(`Array.from(document.querySelectorAll('#outputFileList .output-file-row')).map(row=>({
+    name:row.querySelector('.output-file-detail strong').textContent,
+    metadata:row.querySelector('.output-file-detail span').textContent,
+    downloadLabel:row.querySelector('.output-file-save').getAttribute('aria-label'),
+    disabled:row.querySelector('.output-file-save').disabled}))`);
+  assert.deepEqual(rows.map(row => row.name), expectedNames);
+  for (const row of rows) {
+    assert.equal(row.downloadLabel, `Download ${row.name}`); assert.equal(row.disabled, false);
+    assert.match(row.metadata, /SHA-256 [a-f0-9]{12}/, 'A visible download must identify its retained bytes.');
+  }
+  assert.equal(await shell(`document.getElementById('deliveryStatus').textContent`), 'Final reviewed result');
+  assert.equal(await shell(`document.getElementById('saveFiles').disabled`), false);
+  assert.match(await shell(`document.getElementById('saveFiles').textContent`), /Download all final files/);
+  async function synchronizedBounds() {
+    await waitFor(async () => {
+      const slots = await shell(`['left','right'].map(side=>{const r=document.getElementById(side+'Slot').getBoundingClientRect();return {x:Math.round(r.x),y:Math.round(r.y),width:Math.round(r.width),height:Math.round(r.height)}})`);
+      return ['left', 'right'].every((side, index) => {
+        const actual = desktop.views[side].getBounds();
+        return desktop.views[side].getVisible() && ['x', 'y', 'width', 'height'].every(key => Math.abs(actual[key] - slots[index][key]) <= 1);
+      });
+    }, 'Results panel did not synchronize both visible native worker bounds');
+    const [width, height] = desktop.mainWindow.getContentSize();
+    const bounds = Object.fromEntries(['left', 'right'].map(side => [side, desktop.views[side].getBounds()]));
+    for (const [side, view] of Object.entries(bounds)) {
+      assert.ok(view.width >= 200 && view.height >= 100, `${side} needs usable bounds with the downloads panel`);
+      assert.ok(view.x >= 0 && view.y >= 0 && view.x + view.width <= width && view.y + view.height <= height);
+    }
+    return bounds;
+  }
+  const expanded = await synchronizedBounds();
+  await click('toggleResults');
+  assert.equal(await shell(`document.getElementById('resultContent').hidden`), true);
+  assert.equal(await shell(`document.getElementById('toggleResults').getAttribute('aria-expanded')`), 'false');
+  const collapsed = await synchronizedBounds();
+  for (const side of ['left', 'right']) assert.ok(collapsed[side].height >= expanded[side].height + 200,
+    `${side} must regain substantial vertical space when downloads collapse`);
+  const bar = await shell(`(()=>{const r=document.querySelector('.result-header').getBoundingClientRect();return {height:r.height,label:document.querySelector('.results-access-label').textContent,saveDisabled:document.getElementById('saveFilesCompact').disabled}})()`);
+  assert.ok(bar.height > 0 && bar.height <= 70, 'Collapsed results retain a compact accessible bottom bar');
+  assert.equal(bar.label, 'Results & downloads'); assert.equal(bar.saveDisabled, false);
+  await click('toggleResults');
+  await waitFor(() => shell(`!document.getElementById('resultContent').hidden && document.getElementById('answerPanel').hidden===false`), 'Downloads did not reopen on the final answer');
+  const reopened = await synchronizedBounds();
+  for (const side of ['left', 'right']) assert.ok(Math.abs(reopened[side].height - expanded[side].height) <= 2, 'Reopening downloads restores the prior worker layout');
+  await click('toggleResults');
+  await synchronizedBounds();
+  pass('Completion reveals exact final files and individual download controls; collapse keeps a usable bottom download bar and restores tall native workers; reopening restores the final result.');
+}
+
 function verifyFourRounds(state, sends = []) {
   assert.equal(state.minReviewRounds, 4);
   assert.ok(state.round >= 4, 'An improvement fixture stopped before four full rounds');
@@ -332,6 +401,31 @@ async function verifyClearSession() {
   pass('Clear session removes the imported cookie, resets local run state and unloads both pages.');
 }
 
+async function verifyPartialAttachment() {
+  await changeResponseMode('upload-failure', ['left']);
+  // Large production uploads can legitimately take 30 minutes. This negative
+  // fixture exposes a real visible rejection instead of silently omitting its
+  // preview and spending that whole upload budget waiting for an error.
+  await page('left', `document.getElementById('fileInput').addEventListener('change',()=>{
+    const failure=document.createElement('div');failure.setAttribute('role','alert');
+    failure.textContent='File upload failed for source.txt. Please try again.';
+    document.getElementById('previews').append(failure);
+  },{once:true})`);
+  let attachmentFailureTimer;
+  const attachment = await Promise.race([
+    desktop.coordinator.request('ATTACH_FILES', { files: [{ name: 'source.txt', mimeType: 'text/plain', base64: Buffer.from('Fixture source evidence.').toString('base64') }] }),
+    new Promise((_, reject) => { attachmentFailureTimer = setTimeout(() => reject(new Error('Visible attachment rejection did not finish within 15 seconds.')), 15_000); }),
+  ]).finally(() => clearTimeout(attachmentFailureTimer));
+  assert.equal(attachment.ok, false);
+  const attachmentState = await desktop.coordinator.getState();
+  assert.equal(attachmentState.attachments.status, 'partial');
+  assert.match(attachmentState.attachments.error, /left:.*rejected an attachment.*File upload failed for source\.txt/i);
+  await shell(`document.getElementById('question').value='Review the attached source';document.getElementById('question').dispatchEvent(new Event('input'));`);
+  assert.equal(await shell(`document.getElementById('start').disabled`), true);
+  assert.equal((await desktop.browserSession.cookies.get({ name: 'converge_fixture' })).length, 1);
+  pass('A visible source upload rejection on one page produces a partial attachment error within 15 seconds and blocks Start while retaining the session.');
+}
+
 async function run() {
   progress('Starting isolated desktop QA fixture server');
   fixture = await createFixtureServer();
@@ -353,9 +447,7 @@ async function run() {
       return { canceled: false, filePaths: [selectedSourcePath] };
     },
     async showSaveDialog(_window, options) {
-      saveDialogCalls += 1;
-      assert.match(options.defaultPath, /\.(?:pdf|mq5)$/i);
-      return { canceled: false, filePath: /\.mq5$/i.test(options.defaultPath) ? savedEaPath : saveDialogCalls === 1 ? savedPdfPath : savedCurrentPdfPath };
+      throw new Error('Legacy coordinator QA must not claim the current retained-file Save API. Run the packaged studio gate for native Save integration.');
     },
   } });
   progress('Production desktop created; waiting for shell preload');
@@ -402,13 +494,9 @@ async function run() {
   pass('Import clears its field and retains the in-memory cookie while waiting for the selected chat type and OK.');
   if (clearOnly) {
     await selectModeAndOpen('normal');
-    await changeResponseMode('upload-failure', ['left']);
-    const upload = await desktop.coordinator.request('ATTACH_FILES', { files: [{ name: 'source.txt', mimeType: 'text/plain', base64: Buffer.from('Fixture source evidence.').toString('base64') }] });
-    assert.equal(upload.ok, false);
-    assert.equal((await desktop.coordinator.getState()).attachments.status, 'partial');
-    pass('Focused clear-session regression opened both pages and reached partial-upload recovery.');
+    await verifyPartialAttachment();
     await verifyClearSession(); completed = true;
-    fs.writeFileSync(reportPath, JSON.stringify({ passed: true, localFixturesOnly: true, tests: log }, null, 2));
+    fs.writeFileSync(reportPath, JSON.stringify({ passed: true, localFixturesOnly: true, focusedScope: 'partial attachment rejection and session clearing', tests: log }, null, 2));
     return;
   }
   assert.equal(await shell(`document.getElementById('modeNormal').checked`), true, 'Normal must be the initial selection.');
@@ -459,7 +547,7 @@ async function run() {
   assert.equal(await shell(`document.getElementById('answer').textContent`), state.answer);
   assert.doesNotMatch(JSON.stringify(state), /base64|fixture-only-value/);
   assert.equal(await shell(`document.getElementById('toggleSidebar').getAttribute('aria-expanded')`), 'false');
-  assert.equal(await shell(`document.getElementById('resultContent').hidden`), true, 'Completion must retain the compact bottom bar');
+  await verifyCompletedDownloads(state);
   pass('Start completes ten real IPC sends across four full improvement rounds: independent drafts, challenge, corrected image/file transfer and eight fresh reviews before exact dual acceptance.');
 
   const loadsBeforeFollowup = fixture.state.pageLoads;
@@ -526,15 +614,12 @@ async function run() {
     assert.ok(candidate[0].size > 0, 'The current candidate must be a genuine uploaded PDF.');
   }
   await waitFor(() => shell(`typeof window.convergeBrowser.saveFiles==='function' && !document.getElementById('saveFiles').hidden && !document.getElementById('saveFiles').disabled`), 'Final file save control was not exposed');
-  await click('saveFiles');
-  await waitFor(() => fs.existsSync(savedPdfPath), 'Save final files did not write the accepted PDF');
-  assert.equal(saveDialogCalls, 1);
-  const savedPdf = fs.readFileSync(savedPdfPath);
+  const savedPdf = await exportExactCandidate(pdfState, savedPdfPath, makePdf('Corrected report: 2 + 2 = 4'));
   assert.deepEqual(savedPdf, makePdf('Corrected report: 2 + 2 = 4'), 'The saved PDF must be the exact accepted revised output bytes.');
   assert.equal(savedPdf.subarray(0, 5).toString(), '%PDF-');
-  await waitFor(() => shell(`document.getElementById('fileSaveStatus').textContent.length>0`), 'Saved files did not receive an inline status');
+  assert.match(await shell(`document.getElementById('outputFileList').textContent`), /corrected-report\.pdf/);
   assert.ok(savedPdf.includes(Buffer.from('xref\n')) && savedPdf.includes(Buffer.from('%%EOF')));
-  pass('Native Attach reads a real source PDF into both chats; generated PDF revisions are relayed for exact-file review and final accepted bytes save as a valid PDF.');
+  pass('Native Attach reads a real source PDF into both legacy chats; revisions are relayed for exact-file review and page EXPORT_MEDIA returns byte-identical accepted PDF contents. Native Save is covered by the current studio gate.');
   try {
     desktop.mainWindow.showInactive();
     await shell(`if(document.getElementById('resultContent').hidden)document.getElementById('toggleResults').click()`);
@@ -554,18 +639,28 @@ async function run() {
       (await page('right', 'window.fixtureSends.length')) === pdfSendsBeforeStop.right + 2 &&
       (await page('right', '!document.getElementById("stopFixture").hidden'));
   }, 'PDF candidate did not enter its slow review stage');
+  // The legacy page registry intentionally retires its run on Stop. Capture
+  // the completed candidate before cancellation; the current boss/studio
+  // integration separately tests downloading its retained bytes after Stop.
+  const completedPdfBeforeStop = await desktop.coordinator.getState();
+  await exportExactCandidate(completedPdfBeforeStop, savedCurrentPdfPath, makePdf('Initial report: 2 + 2 = 5'));
   await click('stop');
   await waitFor(async () => (await desktop.coordinator.getState()).status === 'stopped', 'Stop did not retain the completed current PDF');
-  await waitFor(() => shell(`document.getElementById('saveFiles').textContent.endsWith('Save current files') && !document.getElementById('saveFiles').disabled`), 'Stopped PDF did not expose Save current files');
-  await click('saveFiles');
-  await waitFor(() => fs.existsSync(savedCurrentPdfPath), 'Explicit Save current files rejected the completed PDF after Stop');
-  assert.equal(saveDialogCalls, 2);
+  await waitFor(() => shell(`document.getElementById('saveFiles').textContent.endsWith('Download all draft files') && !document.getElementById('saveFiles').disabled &&
+    document.getElementById('deliveryStatus').textContent==='Current draft · review unfinished'`), 'Stopped PDF did not expose clearly labelled draft downloads');
+  const stoppedPdfState = await desktop.coordinator.getState();
+  assert.deepEqual(stoppedPdfState.candidate.media.files, completedPdfBeforeStop.candidate.media.files,
+    'Stop must retain the exact completed draft identities.');
+  const retiredExport = await desktop.sendToPage(stoppedPdfState.candidate.media.side, { type: 'EXPORT_MEDIA',
+    runId: stoppedPdfState.candidate.media.runId, requestId: stoppedPdfState.candidate.media.requestId,
+    ids: stoppedPdfState.candidate.media.files.map(file => file.id) });
+  assert.equal(retiredExport.ok, false); assert.match(retiredExport.error, /cancelled|canceled|retired/i);
   assert.deepEqual(fs.readFileSync(savedCurrentPdfPath), makePdf('Initial report: 2 + 2 = 5'), 'A stopped run must save its completed current candidate rather than stale accepted files.');
   await new Promise((resolve) => setTimeout(resolve, 300));
   assert.equal((await page('left', 'window.fixtureSends.length')), pdfSendsBeforeStop.left + 1);
   assert.equal((await page('right', 'window.fixtureSends.length')), pdfSendsBeforeStop.right + 2);
   assert.equal((await desktop.coordinator.getState()).status, 'stopped');
-  pass('Stop during PDF review preserves the completed candidate; explicit Save current files writes its exact bytes and no late review is sent.');
+  pass('Stop during PDF review preserves unfinished candidate identities and exact bytes exported before cancellation; the legacy page rejects retired-run export and no late review is sent. Current studio tests cover retained downloads after Stop.');
 
   await verifyEaTransport();
 
@@ -695,16 +790,7 @@ async function run() {
   await resetChats();
   fixture.setMode('media');
   await selectModeAndOpen('normal');
-  await changeResponseMode('upload-failure', ['left']);
-  const attachment = await desktop.coordinator.request('ATTACH_FILES', { files: [{ name: 'source.txt', mimeType: 'text/plain', base64: Buffer.from('Fixture source evidence.').toString('base64') }] });
-  assert.equal(attachment.ok, false);
-  const attachmentState = await desktop.coordinator.getState();
-  assert.equal(attachmentState.attachments.status, 'partial');
-  assert.match(attachmentState.attachments.error, /left|preview|document|name/i);
-  await shell(`document.getElementById('question').value='Review the attached source';document.getElementById('question').dispatchEvent(new Event('input'));`);
-  assert.equal(await shell(`document.getElementById('start').disabled`), true);
-  assert.equal((await desktop.browserSession.cookies.get({ name: 'converge_fixture' })).length, 1);
-  pass('A source file confirmed on only one page shows a partial attachment error and blocks Start while retaining the session.');
+  await verifyPartialAttachment();
 
   await verifyClearSession();
 
@@ -717,7 +803,8 @@ async function run() {
     screenshots: capturedScreenshots,
     screenshotNote: 'Window images capture the shell; embedded native views are captured separately when supported. All pages are offline simulations.',
     captureWarnings, blockedRemoteOrigins: [...new Set(networkBlocked)], eaRegression,
-    finalAnswer: state.answer, sends: { left: leftTurns.length, right: rightTurns.length }, generatedTypes: ['image/png', 'text/plain'] }, null, 2));
+    finalAnswer: state.answer, sends: { left: leftTurns.length, right: rightTurns.length }, generatedTypes: ['image/png', 'text/plain'],
+    downloadScope: 'Legacy sandboxed page EXPORT_MEDIA with exact PDF/MQL5 byte validation and local fixture persistence. Native retained-file Save integration is verified separately by the current packaged studio gate.' }, null, 2));
 }
 
 app.whenReady().then(run).catch((error) => {

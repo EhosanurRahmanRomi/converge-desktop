@@ -1,33 +1,49 @@
-> Historical project record. This preserves an earlier design or test scope; it is not the current installation guide. Machine-specific links have been converted or removed. Raw local evidence and private session data are not published.
+# Session setup
 
-# Authentication options for the debate app
+[User guide](USER_GUIDE.md) · [Mac setup](MACOS_GUIDE.md) · [Recovery](MODEL_ERROR_RECOVERY.md)
 
-The desktop app needs a supported way to make two independent model requests. Automatic mode now supports a signed-in Codex CLI or an OpenAI API key. Neither uses Chrome cookies or accesses existing ChatGPT conversations.
+## Current desktop connection
 
-## 1. Signed-in Codex CLI (implemented, default)
+Converge **1.9.9** embeds three ChatGPT browser pages: the boss and two workers. The current desktop connection imports your own browser-session export. It does not require an API key and does not use the older API/Codex adapters retained in the source tree.
 
-Converge bundles Codex CLI 0.154.0 and calls its supported noninteractive `codex exec` command. The user signs in to Codex with their ChatGPT account; this PC is already signed in. Each model turn is ephemeral, uses a read-only temporary workspace, and is asked for a structured JSON answer. Converge copies the resulting critique into the other analyst's next model input. The app keeps the debate transcript in memory and removes temporary source files after each turn. It does not use or inspect the user's Chrome cookies.
+Converge is an independent application. Session import does not grant a new account, subscription, model entitlement or usage allowance. Its browser adapter depends on the provider's current page behavior.
 
-Model availability depends on the signed-in account and Codex CLI version. The tested default is `gpt-5.6-sol` at Max effort; `gpt-6-sol` was rejected by this CLI's ChatGPT-account route. Usage limits can interrupt a debate. See [Codex noninteractive mode](https://developers.openai.com/codex/noninteractive).
+## Import your session
 
-## 2. User supplied OpenAI API key
+1. Open the controls drawer.
+2. Choose **Import JSON file** and select your current ChatGPT cookie export. Pasting the JSON array is also available.
+3. Choose **Temporary**, **Normal** or **Work mode**.
+4. Press **Open the team** and allow all three pages to become ready.
+5. Select the model independently in the boss and each worker page.
 
-**Prerequisites:** The user creates an API key in the OpenAI Platform, has access to the selected API model, and has API billing or credits available. API usage is separate from ChatGPT subscription usage. The app must never ship with a developer key; store a user supplied key in the operating system's secure credential store or use it for the current session only.
+Chat modes and models depend on the account. The app reports loading, authentication or unsupported-mode problems instead of treating them as completed work. A loading error can occur independently of whether the export parses successfully.
 
-**Current implementation:** `src/core/api.js` sends Responses requests with `store: false`, strict JSON Schema output, inline image/file inputs, cancellation, and bounded retries. Converge keeps the debate transcript in memory. `store: false` does not mean zero retention: ordinary API abuse monitoring logs may retain content. Attachments are sent inline, without using the Files upload API.
+## Session lifetime
 
-**Sources:** [API key guidance](https://developers.openai.com/api/docs/guides/production-best-practices), [API models](https://developers.openai.com/api/docs/models), [conversation state](https://developers.openai.com/api/docs/guides/conversation-state), [data controls](https://developers.openai.com/api/docs/guides/your-data), [ChatGPT plan versus API key usage](https://learn.chatgpt.com/docs/pricing).
+The imported session uses Converge's in-memory browser profile. Converge does not read, modify or sign out the Chrome profile. Reset retains the imported session while creating fresh team conversations.
 
-## 3. Direct Sign in with ChatGPT integration (not implemented)
+Closing the workspace clears its imported session. On Mac, opening a fresh workspace through application activation requires importing again. Project recovery is separate: saved projects retain task history and file bytes, not cookie values or live request state.
 
-**Prerequisites:** Publish the client as an open-source, locally hosted app; the user needs an eligible ChatGPT Plus or Pro account and must authorize the app's Responses scopes. Implement the official OAuth registration and PKCE sign-in flow, persist a stable host ID and issued client ID, validate tokens and scopes, refresh credentials, and store tokens securely. Paid or remotely hosted apps require OpenAI's partner interest process. This is account sign-in, not cookie import; it does not give the app the user's ChatGPT chats, memories, or API key.
+## Keep exports private
 
-**Inference requirements:** Fetch the signed-in account's model list and use its model slugs. Send its OAuth access token to the public Responses endpoint with `store: false` and `stream: true`; consume events through `response.completed`. Supply full context in `input` on each HTTP request. `previous_response_id` is unsupported over HTTP in this flow. Text, images, and inline files are supported when the model accepts them; the Files upload API, image generation, file search, Code Interpreter, and several other tools and request fields are unavailable. The current nonstreaming API key adapter cannot be reused without a streaming implementation.
+Treat session exports as credentials. Import them through the app's setup controls; keep them out of Git, public screenshots, issue attachments and delivery archives.
 
-**Sources:** [Sign in quickstart](https://developers.openai.com/siwc/quickstart), [open-source plan usage overview](https://developers.openai.com/siwc/token-sharing-open-source), [models and inference](https://developers.openai.com/siwc/token-sharing-open-source/models-and-inference), [preview limitations](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations).
+Public release source, verification fixtures and manuals contain no session exports. Project archives exclude browser authentication, but they can contain your task inputs and generated files. Inspect them before sharing.
 
-## Browser cookie route
+## If setup fails
 
-Electron can display two web pages and set cookies in its own browser session, but importing a Chrome session is not a documented OpenAI authentication method. OpenAI's current Terms of Use prohibit automatically or programmatically extracting ChatGPT Output, which an automatic browser-page relay would require. A user-controlled dual-page view with manual copying can be offered separately. ChatGPT's Temporary > Unpersonalized choice is made in its own UI before the first message; an API `store: false` request is not the same product mode.
+| Symptom | Action |
+|---|---|
+| JSON is rejected | Choose the JSON-array export for your own ChatGPT session |
+| Signed-out or expired session | Import a current export, then open the team again |
+| Loading timeout | Inspect the page and network status; retry opening the team after resolving the reported blocker |
+| Account challenge or limit | Complete the provider's requested action or wait for the allowance to recover |
+| Only one page is ready | Resolve that page's state before starting coordinated work |
+| Work mode is unavailable | Choose a mode that the account exposes |
+| Model differs between pages | Select it separately on all three pages |
 
-**Sources:** [OpenAI Terms of Use](https://openai.com/policies/terms-of-use/), [Temporary Chat](https://help.openai.com/en/articles/8914046-temporary-chat-in-chatgpt), [Electron sessions](https://www.electronjs.org/docs/latest/api/session), [Electron cookies](https://www.electronjs.org/docs/latest/api/cookies).
+An accepted export is not proof that the provider will accept a session or a long-running task. Do not repeatedly replay a task after ambiguous submission; use the app's owned-request recovery and retained results.
+
+## Historical adapters
+
+Earlier prototypes and authentication research are preserved in [historical authentication notes](AUTH_OPTIONS_HISTORY.md). Their adapters, model examples and integration proposals describe those earlier implementations and are not current setup instructions.

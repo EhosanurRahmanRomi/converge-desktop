@@ -9,6 +9,7 @@ const zlib = require('node:zlib');
 const { spawnSync } = require('node:child_process');
 const { readMachO, isMachO, validateZipEntry, validateSymlinkTarget, readIcns, validateRuntimeCoverage } = require('./macos-package-lib');
 const { validateMachORuntime } = require('./macos-macho-runtime');
+const { verifyDependencyPackageMetadata } = require('./macos-dependency-metadata');
 
 const root = path.join(__dirname, '..');
 const metadata = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
@@ -106,24 +107,32 @@ function inspectBundle(application, label) {
     assert.deepEqual(packaged, source, `${label}: packaged source differs: ${filename}`);
     return { file: filename, bytes: source.length, sha256: digestBytes(source) };
   });
-  const dependencyParity = [];
+  const dependencyParity = [], dependencyMetadata = [];
   const dependencyFile = filename => {
     const bytes = asar.extractFile(asarPath, filename), source = fs.readFileSync(path.join(root, filename));
     assert.deepEqual(bytes, source, `${label}: production dependency source differs: ${filename}`);
     dependencyParity.push({ file: filename, bytes: bytes.length, sha256: digestBytes(bytes) });
     return bytes;
   };
-  const pdfMetadata = JSON.parse(dependencyFile('node_modules/pdfjs-dist/package.json').toString('utf8'));
+  const dependencyPackage = filename => {
+    const packaged = asar.extractFile(asarPath, filename), source = fs.readFileSync(path.join(root, filename));
+    const verified = verifyDependencyPackageMetadata(source, packaged, { file: `${label}: ${filename}`, configuration: metadata.build });
+    dependencyMetadata.push({ ...verified.evidence, file: filename });
+    return verified.metadata;
+  };
+  const pdfMetadata = dependencyPackage('node_modules/pdfjs-dist/package.json');
   assert.equal(pdfMetadata.version, metadata.dependencies['pdfjs-dist'], `${label}: PDF parser dependency version differs.`);
   for (const filename of ['node_modules/pdfjs-dist/legacy/build/pdf.mjs', 'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs',
-    'node_modules/@napi-rs/canvas/package.json', 'node_modules/@napi-rs/canvas/index.js', 'node_modules/@napi-rs/canvas/js-binding.js']) dependencyFile(filename);
-  const canvasMetadata = JSON.parse(asar.extractFile(asarPath, 'node_modules/@napi-rs/canvas-darwin-arm64/package.json').toString('utf8'));
+    'node_modules/@napi-rs/canvas/index.js', 'node_modules/@napi-rs/canvas/js-binding.js']) dependencyFile(filename);
+  const canvasRuntime = dependencyPackage('node_modules/@napi-rs/canvas/package.json');
+  const canvasMetadata = dependencyPackage('node_modules/@napi-rs/canvas-darwin-arm64/package.json');
+  assert.equal(canvasMetadata.version, canvasRuntime.version, `${label}: native PDF renderer version differs from its wrapper.`);
   assert.ok(canvasMetadata.cpu?.includes('arm64') && canvasMetadata.os?.includes('darwin'), `${label}: native PDF renderer is not configured for Apple Silicon.`);
   assert.ok(binaries.some(item => item.file.includes('/@napi-rs/canvas-darwin-arm64/') && item.file.endsWith('.node')),
     `${label}: signed ARM64 PDF rendering dependency is absent.`);
   return { label, bundleIdentifier: info.CFBundleIdentifier, version: info.CFBundleShortVersionString, minimumSystemVersion: info.LSMinimumSystemVersion,
     signature: { verified: true, type: 'ad-hoc', notarized: false, detail: signature.stderr.trim() },
-    binaries, symlinks, sourceParity: parity, dependencyParity,
+    binaries, symlinks, sourceParity: parity, dependencyParity, dependencyMetadata,
     productionDependencies: { pdfjsVersion: pdfMetadata.version, canvasVersion: canvasMetadata.version, nativeCanvas: 'darwin-arm64' },
     asarSha256: digestBytes(fs.readFileSync(asarPath)) };
 }
